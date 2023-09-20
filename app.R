@@ -1732,6 +1732,7 @@ server <- function(input, output, session) {
         
         anterior_disc_constructed_df <- all_object_ids_df %>%
           filter(category == "anterior_disc") %>%
+          filter(object != "anterior_disc_arthroplasty") %>%
           left_join(fread("coordinates/anterior_disc.csv") %>%
                       group_by(object_id) %>%
                       nest() %>%
@@ -1825,6 +1826,7 @@ server <- function(input, output, session) {
         
         anterior_disc_constructed_df <- all_object_ids_df %>%
           filter(category == "anterior_disc") %>%
+          filter(object != "anterior_disc_arthroplasty") %>%
           left_join(fread("coordinates/anterior_disc.csv") %>%
                       group_by(object_id) %>%
                       nest() %>%
@@ -2829,7 +2831,7 @@ server <- function(input, output, session) {
     
   })
   
-  observeEvent(input$add_left_accessory_rod, {
+  observeEvent(input$add_left_accessory_rod, ignoreInit = TRUE, {
     if(input$add_left_accessory_rod == TRUE){
       start_list <- jh_supplementary_rods_choices_function(all_objects_df = left_rod_implants_df_reactive(),
                                                            rod_type = "accessory_rod")
@@ -2848,7 +2850,7 @@ server <- function(input, output, session) {
   }
   )
   
-  observeEvent(input$add_left_satellite_rod, {
+  observeEvent(input$add_left_satellite_rod, ignoreInit = TRUE, {
     if(input$add_left_satellite_rod == TRUE){
       start_list <- jh_supplementary_rods_choices_function(all_objects_df = left_rod_implants_df_reactive(),
                                                            osteotomy_site = osteotomy_level_reactive(),
@@ -2869,7 +2871,7 @@ server <- function(input, output, session) {
   }
   )
   
-  observeEvent(list(input$add_left_intercalary_rod, input$left_intercalary_rod_junction), {
+  observeEvent(list(input$add_left_intercalary_rod, input$left_intercalary_rod_junction), ignoreInit = TRUE, {
     if(input$add_left_intercalary_rod == TRUE && input$left_intercalary_rod_junction %in% implant_levels_numbered_df$level){
       
       left_implant_df <- left_rod_implants_df_reactive() %>%
@@ -2950,7 +2952,7 @@ server <- function(input, output, session) {
     }
   })
   
-  observeEvent(list(input$add_left_intercalary_rod), {
+  observeEvent(list(input$add_left_intercalary_rod), ignoreInit = TRUE, {
     if(input$add_left_intercalary_rod == TRUE){
       # junction_choices_vector <-  (implant_levels_numbered_df %>%
       #                                filter(between(vertebral_number, jh_get_vertebral_number_function(input$left_intercalary_rod[1]), jh_get_vertebral_number_function(input$left_intercalary_rod[2]))) %>%
@@ -3068,7 +3070,7 @@ server <- function(input, output, session) {
                         choices = left_implants_df$implant_label)
     }
   }) %>%
-    bindEvent(input$add_left_custom_rods, input$left_custom_rods_number)
+    bindEvent(input$add_left_custom_rods, input$left_custom_rods_number, ignoreInit = TRUE)
   
   
   observeEvent(list(input$plot_click,input$double_click, input$reset_all), ignoreInit = TRUE, ignoreNULL = TRUE, {
@@ -3565,7 +3567,7 @@ server <- function(input, output, session) {
     
   })
   
-  observeEvent(input$add_right_accessory_rod, {
+  observeEvent(input$add_right_accessory_rod,ignoreInit = TRUE, {
     if(input$add_right_accessory_rod == TRUE){
       start_list <- jh_supplementary_rods_choices_function(all_objects_df = right_rod_implants_df_reactive(),
                                                            rod_type = "accessory_rod")
@@ -3584,7 +3586,7 @@ server <- function(input, output, session) {
   }
   )
   
-  observeEvent(input$add_right_satellite_rod, {
+  observeEvent(input$add_right_satellite_rod,ignoreInit = TRUE, {
     if(input$add_right_satellite_rod == TRUE){
       start_list <- jh_supplementary_rods_choices_function(all_objects_df = right_rod_implants_df_reactive(),
                                                            osteotomy_site = osteotomy_level_reactive(),
@@ -3605,7 +3607,7 @@ server <- function(input, output, session) {
   }
   )
   
-  observeEvent(list(input$add_right_intercalary_rod, input$right_intercalary_rod_junction), {
+  observeEvent(list(input$add_right_intercalary_rod, input$right_intercalary_rod_junction), ignoreInit = TRUE, {
     if(input$add_right_intercalary_rod == TRUE && input$right_intercalary_rod_junction %in% implant_levels_numbered_df$level){
       
       right_implant_df <- right_rod_implants_df_reactive() %>%
@@ -3686,7 +3688,7 @@ server <- function(input, output, session) {
     }
   })
   
-  observeEvent(list(input$add_right_intercalary_rod), {
+  observeEvent(list(input$add_right_intercalary_rod), ignoreInit = TRUE, {
     if(input$add_right_intercalary_rod == TRUE){
       # junction_choices_vector <-  (implant_levels_numbered_df %>%
       #                                filter(between(vertebral_number, jh_get_vertebral_number_function(input$right_intercalary_rod[1]), jh_get_vertebral_number_function(input$right_intercalary_rod[2]))) %>%
@@ -3804,7 +3806,7 @@ server <- function(input, output, session) {
                         choices = right_implants_df$implant_label)
     }
   }) %>%
-    bindEvent(input$add_right_custom_rods, input$right_custom_rods_number)
+    bindEvent(input$add_right_custom_rods, input$right_custom_rods_number, ignoreInit = TRUE)
   
   
   observeEvent(list(input$plot_click,input$double_click, input$reset_all), ignoreInit = TRUE, ignoreNULL = TRUE, {
@@ -4486,24 +4488,7 @@ server <- function(input, output, session) {
     }else{
       posterior_approach_yes_no <- "no" 
     }
-    if(any(input$diagnosis_category == "deformity")){
-      deformity_correction_techniques_vector <- c(
-        "The Pro-axis bed was bent to achieve the desired sagittal plane alignment and the rods were then secured into place. ",
-        "The rods were secured into place with set screws. ",
-        "The working rod was secured into place on the concavity and rotated to corrected the coronal plane. ",
-        "The concave rod was secured proximally and distally with set screws and reduction clips were used to sequentially reduce the curve. ",
-        "In situ rod benders were then used to correct the coronal and sagittal plane. ",
-        "The set screws at the neutral vertebrae were tightened, and the adjacenet vertebrae were sequentially derotated. ",
-        "A series of compression along the convexity and distraction along the concavity was performed to further correct the coronal plane and balance the screws. ",
-        "Other",
-        "NA")
-    }else{
-      deformity_correction_techniques_vector <- c(
-        "The rods were secured into place with set screws. ",
-        "In situ rod benders were then used to correct the coronal and sagittal plane. ",
-        "Other",
-        "NA")
-    }
+
     
     if(input$implants_complete > 1){
       showModal(
@@ -4764,7 +4749,7 @@ server <- function(input, output, session) {
   
   ## NOW OBSERVE THE COMPLETION OF MODAL BOX 1 AND THEN SHOW MODAL BOX 2
   
-  observeEvent(input$additional_surgical_details_1_complete, {
+  observeEvent(input$additional_surgical_details_1_complete, ignoreInit = TRUE, {
     add_procedures_list <- list()
     
     showModal(
@@ -4891,14 +4876,14 @@ server <- function(input, output, session) {
   })
   
   ### NOw show Modal 1 if 'edit additional surgical details' is clicked: ###
-  observeEvent(input$edit_additional_surgical_details,  {
+  observeEvent(input$edit_additional_surgical_details,ignoreInit = TRUE,  {
     showModal(modal_box_surgical_details_reactive())
     
   })
   
   ### NOw show Modal 2 if 'edit additional surgical details' is clicked: ###
   
-  observeEvent(input$page_2_complete_button, {
+  observeEvent(input$page_2_complete_button, ignoreInit = TRUE,{
     removeModal() ## removes the current modal
     showModal(
       modal_box_surgical_details_2_reactive()
@@ -4933,28 +4918,28 @@ server <- function(input, output, session) {
   posterior_bmp_kit_list$"M Kits:" <- 0
   posterior_bmp_kit_list$"L Kits:" <- 0
   
-  observeEvent(input$add_posterior_xxs_bmp_button, {
+  observeEvent(input$add_posterior_xxs_bmp_button,ignoreInit = TRUE, {
     posterior_bmp_dose_list$xxs <- posterior_bmp_dose_list$xxs + 1.05
     posterior_bmp_kit_list$"XXS Kits:" <- posterior_bmp_kit_list$"XXS Kits:" + 1
   })
-  observeEvent(input$add_posterior_xs_bmp_button, {
+  observeEvent(input$add_posterior_xs_bmp_button,ignoreInit = TRUE, {
     posterior_bmp_dose_list$xs <- posterior_bmp_dose_list$xs + 2.1
     posterior_bmp_kit_list$"XS Kits:" <- posterior_bmp_kit_list$"XS Kits:" + 1
   })
-  observeEvent(input$add_posterior_sm_bmp_button, {
+  observeEvent(input$add_posterior_sm_bmp_button,ignoreInit = TRUE, {
     posterior_bmp_dose_list$sm <- posterior_bmp_dose_list$sm + 4.2
     posterior_bmp_kit_list$"Sm Kits:" <- posterior_bmp_kit_list$"Sm Kits:"+1
   })
-  observeEvent(input$add_posterior_m_bmp_button, {
+  observeEvent(input$add_posterior_m_bmp_button, ignoreInit = TRUE,{
     posterior_bmp_dose_list$m <- posterior_bmp_dose_list$m + 8.04
     posterior_bmp_kit_list$"M Kits:" <- posterior_bmp_kit_list$"M Kits:" +1
   })
-  observeEvent(input$add_posterior_l_bmp_button, {
+  observeEvent(input$add_posterior_l_bmp_button,ignoreInit = TRUE, {
     posterior_bmp_dose_list$l <- posterior_bmp_dose_list$l + 12
     posterior_bmp_kit_list$"L Kits:" <- posterior_bmp_kit_list$"L Kits:" + 1
   })
   
-  observeEvent(input$reset_posterior_bmp, {
+  observeEvent(input$reset_posterior_bmp,ignoreInit = TRUE, {
     posterior_bmp_dose_list$xxs <- 0
     posterior_bmp_dose_list$xs <- 0
     posterior_bmp_dose_list$sm <- 0
@@ -5008,23 +4993,23 @@ server <- function(input, output, session) {
   anterior_bmp_kit_list$"M Kits:" <- 0
   anterior_bmp_kit_list$"L Kits:" <- 0
   
-  observeEvent(input$add_anterior_xxs_bmp_button, {
+  observeEvent(input$add_anterior_xxs_bmp_button, ignoreInit = TRUE,{
     anterior_bmp_dose_list$xxs <- anterior_bmp_dose_list$xxs + 1.05
     anterior_bmp_kit_list$"XXS Kits:" <- anterior_bmp_kit_list$"XXS Kits:" + 1
   })
-  observeEvent(input$add_anterior_xs_bmp_button, {
+  observeEvent(input$add_anterior_xs_bmp_button, ignoreInit = TRUE,{
     anterior_bmp_dose_list$xs <- anterior_bmp_dose_list$xs + 2.1
     anterior_bmp_kit_list$"XS Kits:" <- anterior_bmp_kit_list$"XS Kits:" + 1
   })
-  observeEvent(input$add_anterior_sm_bmp_button, {
+  observeEvent(input$add_anterior_sm_bmp_button, ignoreInit = TRUE,{
     anterior_bmp_dose_list$sm <- anterior_bmp_dose_list$sm + 4.2
     anterior_bmp_kit_list$"Sm Kits:" <- anterior_bmp_kit_list$"Sm Kits:"+1
   })
-  observeEvent(input$add_anterior_m_bmp_button, {
+  observeEvent(input$add_anterior_m_bmp_button,ignoreInit = TRUE, {
     anterior_bmp_dose_list$m <- anterior_bmp_dose_list$m + 8.04
     anterior_bmp_kit_list$"M Kits:" <- anterior_bmp_kit_list$"M Kits:" +1
   })
-  observeEvent(input$add_anterior_l_bmp_button, {
+  observeEvent(input$add_anterior_l_bmp_button, ignoreInit = TRUE,{
     anterior_bmp_dose_list$l <- anterior_bmp_dose_list$l + 12
     anterior_bmp_kit_list$"L Kits:" <- anterior_bmp_kit_list$"L Kits:" + 1
   })
@@ -6065,12 +6050,15 @@ server <- function(input, output, session) {
     
     ##########   number of fused vertebrae  #############
     surgery_details_list$number_of_fusion_levels <- if_else(surgery_details_list$fusion == "yes", 
-                                                            paste(length(input$posterior_fusion_levels_confirmed) + length(input$anterior_fusion_levels_confirmed)), 
+                                                            paste(length(union(input$posterior_fusion_levels_confirmed, input$anterior_fusion_levels_confirmed))+1), 
                                                             "0")
     
     ##########   interspaces_fused #############
-    if(surgery_details_list$fusion == "yes"){
-      surgery_details_list$interspaces_fused <- glue_collapse(union(input$posterior_fusion_levels_confirmed, input$anterior_fusion_levels_confirmed), sep = "; ")
+    if(length(input$fusion_levels_confirmed) >0){
+      surgery_details_list$interspaces_fused <- glue_collapse((tibble(level = union(input$posterior_fusion_levels_confirmed, input$anterior_fusion_levels_confirmed)
+      ) %>%
+        left_join(levels_numbered_df) %>%
+        arrange(vertebral_number))$level, sep = ": ")
     }
     
     ##########   interbody_fusion #############
