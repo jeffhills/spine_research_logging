@@ -101,6 +101,7 @@ ui <- dashboardPage(skin = "black",
                 max-width: -webkit-fill-available;
                         text-align: left;
                 }"),
+                tags$style(type="text/css", "#spine_plan.recalculating { opacity: 1.0; }"),
                 tags$style(
                   "#posterior_bmp_number {
                         width: -webkit-fill-available;
