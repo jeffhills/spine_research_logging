@@ -1923,6 +1923,7 @@ server <- function(input, output, session) {
     if(input$lumbar_vertebrae_count == "6"){
       ## first backup L5
       # source("build_anterior_objects.R", local = TRUE)
+      source("load_coordinates_build_objects_6_lumbar.R", local = TRUE)
       
       l5_levels_vector <<- levels_vector
       l5_labels_df <<- labels_df
@@ -3199,7 +3200,8 @@ server <- function(input, output, session) {
   
   observeEvent(list(
     input$reset_all,
-    left_rod_implants_df_reactive(),
+    input$plot_click,
+    # left_rod_implants_df_reactive(),
     input$add_left_accessory_rod,
     input$left_accessory_rod,
     input$left_accessory_rod_material,
@@ -3936,7 +3938,8 @@ server <- function(input, output, session) {
   
   observeEvent(list(
     input$reset_all,
-    right_rod_implants_df_reactive(),
+    input$plot_click,
+    # right_rod_implants_df_reactive(),
     input$add_right_accessory_rod,
     input$right_accessory_rod,
     input$right_accessory_rod_material,
@@ -4512,20 +4515,7 @@ server <- function(input, output, session) {
   )
   
   
-  observeEvent(input$approach_robot_navigation, ignoreInit = TRUE, {
-    if(input$approach_robot_navigation == "Fluoroscopy-guided"){
-      updateAwesomeRadio(session = session, 
-                         inputId = "implant_start_point_method", 
-                         selected = "Intraoperative fluoroscopy was used to identify and confirm implant start points." 
-      )  
-    }
-    if(input$approach_robot_navigation == "Navigated" | input$approach_robot_navigation == "Robotic" ){
-      updateAwesomeRadio(session = session, 
-                         inputId = "implant_start_point_method", 
-                         selected = "Intraoperative navigation was used for identifying start points."
-      )  
-    }
-  })
+
   
   ###~~~~~~~~~~~~~~~ #########    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!   #########   COMPLETED CONFIRM FUSION LEVELS and TECHNIQUE DETAILS MODAL FUNCTION  #########    !!!!!!!!!!!!!
   ###~~~~~~~~~~~~~~~ #########    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!   #########   COMPLETED CONFIRM FUSION LEVELS and TECHNIQUE DETAILS MODAL FUNCTION  #########    !!!!!!!!!!!!!
@@ -5328,7 +5318,8 @@ server <- function(input, output, session) {
           )
       )
     }
-  }) 
+  }) %>%
+    bindEvent(input$implants_complete, ignoreInit = TRUE)
   # bindEvent(input$screws_implanted_picker_for_ui, ignoreInit = TRUE)
   
   
@@ -5355,8 +5346,8 @@ server <- function(input, output, session) {
           screw_type == "P" ~ "Polyaxial",
           screw_type == "Red" ~ "Reduction",
           screw_type == "Offset" ~ "Offset",
-          screw_type == "Anterior" ~ "Anterior"
-        )) %>%
+          screw_type == "Anterior" ~ "Anterior" 
+        )) %>% 
         mutate(remove_unused_anterior_screws = if_else(screw_type == "Anterior" & (is.na(screw_length) | screw_length == "" | screw_length == screw_diameter), "remove", "keep")) %>%
         filter(remove_unused_anterior_screws == "keep") %>%
         select(-remove_unused_anterior_screws) %>%
@@ -5501,7 +5492,8 @@ server <- function(input, output, session) {
       added_rods_statement
     }
     added_rods_statement
-  })
+  }) %>%
+    bindEvent(input$implants_complete, ignoreInit = TRUE)
   
   
   
