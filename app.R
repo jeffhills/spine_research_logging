@@ -2547,13 +2547,15 @@ server <- function(input, output, session) {
         filter(level %in% input$open_canal) %>%
         mutate(category = "revision")
       
-      geoms_list_revision_posterior$open_canal_sf <- ggpattern::geom_sf_pattern(
-        data =  st_union(st_combine(st_multipolygon(open_df$object_constructed)), by_feature = TRUE, is_coverage = TRUE),
-        pattern_orientation = "radial",
-        pattern = "gradient",
-        fill = "grey50",
-        pattern_fill2 = NA,
-        colour = NA)
+      geoms_list_revision_posterior$open_canal_sf <- geom_sf(data = st_union(st_combine(st_multipolygon(open_df$object_constructed)), by_feature = TRUE, is_coverage = TRUE), fill = "lightblue", alpha = 0.5)
+      
+      # geoms_list_revision_posterior$open_canal_sf <- ggpattern::geom_sf_pattern(
+      #   data =  st_union(st_combine(st_multipolygon(open_df$object_constructed)), by_feature = TRUE, is_coverage = TRUE),
+      #   pattern_orientation = "radial",
+      #   pattern = "gradient",
+      #   fill = "grey50",
+      #   pattern_fill2 = NA,
+      #   colour = NA)
     }
   }
   )
@@ -6047,11 +6049,9 @@ server <- function(input, output, session) {
                                                             "0")
     
     ##########   interspaces_fused #############
-    if(length(input$fusion_levels_confirmed) >0){
-      surgery_details_list$interspaces_fused <- glue_collapse((tibble(level = union(input$posterior_fusion_levels_confirmed, input$anterior_fusion_levels_confirmed)
-      ) %>%
-        left_join(levels_numbered_df) %>%
-        arrange(vertebral_number))$level, sep = ": ")
+    
+    if(surgery_details_list$fusion == "yes"){
+      surgery_details_list$interspaces_fused <- glue_collapse(x = keep(.x = levels_vector, .p = ~ .x %in% union(input$posterior_fusion_levels_confirmed, input$anterior_fusion_levels_confirmed)), sep = "; ")
     }
     
     ##########   interbody_fusion #############
@@ -6081,6 +6081,220 @@ server <- function(input, output, session) {
       surgery_details_list$number_of_interbody_fusions <- "0"
     }
     
+    ##########   UIV  #############
+    all_vertebrae_fixation_df <- all_objects_to_add_list$objects_df %>%
+      filter(fixation_uiv_liv == "yes") %>%
+      select(level, vertebral_number, body_interspace) %>%
+      distinct() %>%
+      arrange(vertebral_number)
+    
+    if(any(all_objects_to_add_list$objects_df$object == "occipital_screw")){
+      surgery_details_list$uiv <- "Occiput"
+    }else{
+      if(nrow(all_vertebrae_fixation_df) > 0){
+        upper_level <- (all_vertebrae_fixation_df %>% filter(vertebral_number == min(vertebral_number)) %>% select(level) %>% distinct())$level
+        
+        if(jh_check_body_or_interspace_function(upper_level) == "interspace"){
+          surgery_details_list$uiv <- jh_get_cranial_caudal_interspace_body_list_function(level = upper_level)$cranial_level
+        }else{
+          surgery_details_list$uiv <- upper_level
+        }
+      }else{
+        surgery_details_list$uiv <- "not instrumented"
+      }    
+    }
+    
+    ##########   LIV  #############
+    if(nrow(all_vertebrae_fixation_df) > 0){
+      lowest_level <- (all_vertebrae_fixation_df %>% filter(vertebral_number == max(vertebral_number)) %>% select(level) %>% distinct())$level
+      
+      if(jh_check_body_or_interspace_function(lowest_level) == "interspace"){
+        surgery_details_list$liv <- jh_get_cranial_caudal_interspace_body_list_function(level = lowest_level)$caudal_level
+      }else if(jh_check_body_or_interspace_function(lowest_level) == "pelvis"){
+        surgery_details_list$liv <- "pelvis"
+      }else{
+        surgery_details_list$liv <- lowest_level
+      }
+    }else{
+      surgery_details_list$liv <- "not instrumented"
+    }
+    
+    ##########   UPPER & LOWER TREATED  #############
+    
+    spine_treated_df <- all_objects_to_add_list$objects_df %>%
+      filter(str_detect(level, "S2AI") == FALSE, 
+             str_detect(level, "Iliac") == FALSE) %>%
+      filter(level != "Occiput")
+    
+    spine_treated <- if_else(nrow(spine_treated_df) > 0, TRUE, FALSE)
+    
+    if(nrow(spine_treated_df) > 0){
+      ##### UPPER TREATED #####
+      surgery_details_list$upper_treated_vertebrae <- (spine_treated_df %>% filter(vertebral_number == min(vertebral_number)) %>% select(level) %>% distinct())$level[[1]]
+      
+      if(jh_check_body_or_interspace_function(surgery_details_list$upper_treated_vertebrae) == "interspace"){
+        surgery_details_list$upper_treated_vertebrae <- jh_get_cranial_caudal_interspace_body_list_function(level = surgery_details_list$upper_treated_vertebrae)$cranial_level
+      }
+      
+      ######### LOWER TREATED ######
+      surgery_details_list$lower_treated_vertebrae <- (spine_treated_df %>% filter(vertebral_number == max(vertebral_number)) %>% select(level) %>% distinct())$level[[1]]
+      
+      if(jh_check_body_or_interspace_function(surgery_details_list$lower_treated_vertebrae) == "interspace"){
+        surgery_details_list$lower_treated_vertebrae <- jh_get_cranial_caudal_interspace_body_list_function(level = surgery_details_list$lower_treated_vertebrae)$caudal_level
+      }
+      
+    }else{
+      surgery_details_list$upper_treated_vertebrae <- "none"
+      surgery_details_list$lower_treated_vertebrae <- "none"
+    }
+    
+    ##########   PELVIC FIXATION  #############
+    surgery_details_list$pelvic_fixation <- if_else(any(str_detect(string = all_objects_to_add_list$objects_df$object, pattern = "pelvic_screw")), "yes", "no")
+    
+    if(surgery_details_list$pelvic_fixation == "yes"){
+      surgery_details_list$pelvic_fixation_screws <- glue_collapse((all_objects_to_add_list$objects_df %>% filter(str_detect(object, "pelvic_screw")))$level, sep = "; ")
+    }
+    
+    ##########   RODS  #############
+    if(str_detect(surgery_details_list$main_approach, "posterior")){
+      surgery_details_list$left_rod <- if_else(input$left_main_rod_size == "None", "None", paste(input$left_main_rod_size, input$left_main_rod_material))
+      surgery_details_list$right_rod <- if_else(input$right_main_rod_size == "None", "None", paste(input$right_main_rod_size, input$right_main_rod_material))
+    }
+    if(any(input$add_left_accessory_rod,
+           input$add_left_satellite_rod,
+           input$add_left_intercalary_rod,
+           input$add_left_linked_rods,
+           input$add_right_accessory_rod,
+           input$add_right_satellite_rod,
+           input$add_right_intercalary_rod,
+           input$add_right_linked_rods)){
+      
+      supplemental_rods_df <- tibble(supplemental_rod = c("accessory_rod",
+                                                          "satellite_rod",
+                                                          "intercalary_rod",
+                                                          "linked_rods",
+                                                          "accessory_rod",
+                                                          "satellite_rod",
+                                                          "intercalary_rod",
+                                                          "linked_rods"),
+                                     side = c("left", "left", "left", "left", "right", "right", "right", "right"),
+                                     yes_no = c(input$add_left_accessory_rod,
+                                                input$add_left_satellite_rod,
+                                                input$add_left_intercalary_rod,
+                                                input$add_left_linked_rods,
+                                                input$add_right_accessory_rod,
+                                                input$add_right_satellite_rod,
+                                                input$add_right_intercalary_rod,
+                                                input$add_right_linked_rods)) %>%
+        filter(yes_no == TRUE)
+      if(nrow(supplemental_rods_df %>% filter(side == "left")) >0){
+        surgery_details_list$left_supplemental_rods <- glue_collapse((supplemental_rods_df %>% filter(side == "left"))$supplemental_rod, sep = "; ")
+      }else{
+        surgery_details_list$left_supplemental_rods <- "none"
+      }
+      
+      if(nrow(supplemental_rods_df %>% filter(side == "right")) >0){
+        surgery_details_list$right_supplemental_rods <- glue_collapse((supplemental_rods_df %>% filter(side == "right"))$supplemental_rod, sep = "; ")
+      }else{
+        surgery_details_list$right_supplemental_rods <- "none"
+      }
+    }else{
+      surgery_details_list$left_supplemental_rods <- "none"
+      surgery_details_list$right_supplemental_rods <- "none"
+    }
+    # if(str_detect(surgery_details_list$main_approach, "posterior")){
+    #   surgery_details_list$left_rod <- if_else(input$left_main_rod_size == "None", "None", paste(input$left_main_rod_size, input$left_main_rod_material))
+    #   surgery_details_list$right_rod <- if_else(input$right_main_rod_size == "None", "None", paste(input$right_main_rod_size, input$right_main_rod_material))
+    #   
+    #   supplemental_rods_df <- tibble(supplemental_rod = c("accessory_rod",
+    #                                                       "satellite_rod",
+    #                                                       "intercalary_rod",
+    #                                                       "linked_rods",
+    #                                                       "kickstand_rod",
+    #                                                       "custom_rods",
+    #                                                       "accessory_rod",
+    #                                                       "satellite_rod",
+    #                                                       "intercalary_rod",
+    #                                                       "linked_rods",
+    #                                                       "kickstand_rod",
+    #                                                       "custom_rods"),
+    #                                  side = c("left", "left", "left", "left","left", "left", "right", "right", "right", "right", "right", "right"),
+    #                                  yes_no = c(input$add_left_accessory_rod,
+    #                                             input$add_left_satellite_rod,
+    #                                             input$add_left_intercalary_rod,
+    #                                             input$add_left_linked_rods,
+    #                                             input$add_left_kickstand_rod,
+    #                                             input$add_left_custom_rods,
+    #                                             input$add_right_accessory_rod,
+    #                                             input$add_right_satellite_rod,
+    #                                             input$add_right_intercalary_rod,
+    #                                             input$add_right_linked_rods,
+    #                                             input$add_right_kickstand_rod,
+    #                                             input$add_right_custom_rods)) %>%
+    #     filter(yes_no == TRUE) %>%
+    #     mutate(supplemental_rod_span_input_name = paste0(side, "_", supplemental_rod)) %>%
+    #     mutate(supplemental_rod_span = map(.x = supplemental_rod_span_input_name, .f = ~ paste(glue_collapse(input[[.x]], sep = "-")))) %>%
+    #     mutate(supplemental_rod_with_span = paste0(supplemental_rod, " (", supplemental_rod_span, ")"))
+    #   
+    #   if(nrow(supplemental_rods_df %>% filter(side == "left")) >0){
+    #     surgery_details_list$left_supplemental_rods <- glue_collapse((supplemental_rods_df %>% filter(side == "left"))$supplemental_rod, sep = "; ")
+    #   }else{
+    #     surgery_details_list$left_supplemental_rods <- "none"
+    #   }
+    #   
+    #   if(nrow(supplemental_rods_df %>% filter(side == "left")) >0){
+    #     surgery_details_list$left_supplemental_rods_with_span <- glue_collapse((supplemental_rods_df %>% filter(side == "left"))$supplemental_rod_with_span, sep = "; ")
+    #   }else{
+    #     surgery_details_list$left_supplemental_rods_with_span <- "none"
+    #   }
+    #   
+    #   
+    #   if(nrow(supplemental_rods_df %>% filter(side == "right")) >0){
+    #     surgery_details_list$right_supplemental_rods <- glue_collapse((supplemental_rods_df %>% filter(side == "right"))$supplemental_rod, sep = "; ")
+    #   }else{
+    #     surgery_details_list$right_supplemental_rods <- "none"
+    #   }
+    #   
+    #   if(nrow(supplemental_rods_df %>% filter(side == "right")) >0){
+    #     surgery_details_list$right_supplemental_rods_with_span <- glue_collapse((supplemental_rods_df %>% filter(side == "right"))$supplemental_rod_with_span, sep = "; ")
+    #   }else{
+    #     surgery_details_list$right_supplemental_rods_with_span <- "none"
+    #   }
+    
+    ############# CROSSLINKS #############
+    
+    if(length(input$crosslink_connectors) > 0){
+      surgery_details_list$crosslink_connector_levels <- glue_collapse(input$crosslink_connectors, sep = "; ")
+    }else{
+      surgery_details_list$crosslink_connector_levels <- "none"
+    }
+    
+    #################### SPINE UIV PPX  #########################
+    if(surgery_details_list$fusion == "yes"){
+      uiv_ppx_df <- all_objects_to_add_list$objects_df %>%
+        filter(between(vertebral_number, jh_get_vertebral_number_function(surgery_details_list$uiv) -3, jh_get_vertebral_number_function(surgery_details_list$uiv) + 1.5)) %>%
+        filter(str_detect(string = object, pattern = "hook") |
+                 str_detect(string = object, pattern = "tether") |
+                 str_detect(string = object, pattern = "wire") |
+                 str_detect(string = object, pattern = "vertebroplasty") |
+                 str_detect(string = object, pattern = "vertebral_cement_augmentation")) %>%
+        select(level, object) %>%
+        distinct()
+      if(nrow(uiv_ppx_df) > 0){
+        surgery_details_list$uiv_ppx_used <- "yes"
+        surgery_details_list$uiv_ppx <- str_replace(string = glue_collapse(x = unique(uiv_ppx_df$object), sep = "; "), pattern = "_", replacement = " ")
+      }else{
+        surgery_details_list$uiv_ppx_used <- "no"
+      }
+    }
+    
+    ###### SPINE CERVICAL VS LUMBAR FOR PRO CAPTURE #####
+    if(surgery_details_list$lower_treated_vertebrae %in% c("Occiput", "C1", "C2", "C3", "C4", "C5", "C6", "C7", "T1", "T2", "T3", "T4", "T5", "T6")){
+      surgery_details_list$spine_region <- "cervical"
+    }else{
+      surgery_details_list$spine_region <- "lumbar"
+    }
+    
     
     ##########   interspaces decompressed  #############
     decompressions_df <- all_objects_to_add_list$objects_df %>%
@@ -6107,78 +6321,6 @@ server <- function(input, output, session) {
       surgery_details_list$number_of_levels_decompressed <- "0"
     }
     
-    ##########   UIV  #############
-    all_vertebrae_fixation_df <- all_objects_to_add_list$objects_df %>%
-      filter(str_detect(object, "pelvic_screw") == FALSE) %>%
-      # filter(level != "S2AI") %>%
-      # filter(level != "Iliac") %>%
-      filter(fixation_uiv_liv == "yes") %>%
-      select(level, vertebral_number, body_interspace) %>%
-      distinct() %>%
-      arrange(vertebral_number)
-    
-    if(any(all_objects_to_add_list$objects_df$object == "occipital_screw")){
-      surgery_details_list$uiv <- "Occiput"
-    }else if(nrow(all_vertebrae_fixation_df) > 0){
-      surgery_details_list$uiv <- (all_vertebrae_fixation_df %>% filter(vertebral_number == min(vertebral_number)) %>% select(level) %>% distinct())$level
-    }else {
-      surgery_details_list$uiv <- "not instrumented"
-    }
-    
-    ##########   LIV  #############
-    if(nrow(all_vertebrae_fixation_df) > 0){
-      if(any(str_detect(all_objects_to_add_list$objects_df$object, "pelvic_screw"))){
-        surgery_details_list$liv <- "S1"
-      }else{
-        surgery_details_list$liv <- (all_vertebrae_fixation_df %>% filter(vertebral_number == max(vertebral_number)) %>% select(level) %>% distinct())$level
-      }
-    }else{
-      surgery_details_list$liv <- "not instrumented"
-    }
-    
-    ##########   UPPER & LOWER TREATED  #############
-    
-    spine_treated_df <- all_objects_to_add_list$objects_df %>%
-      filter(level != "S2AI") %>%
-      filter(level != "Iliac") %>%
-      filter(level != "Occiput")
-    
-    spine_treated <- if_else(nrow(spine_treated_df) > 0, TRUE, FALSE)
-    
-    if(nrow(spine_treated_df) > 0){
-      ##### UPPER TREATED #####
-      surgery_details_list$upper_treated_vertebrae <- (spine_treated_df %>% filter(vertebral_number == min(vertebral_number)) %>% select(level) %>% distinct())$level[[1]]
-      
-      if(jh_check_body_or_interspace_function(surgery_details_list$upper_treated_vertebrae) == "interspace"){
-        surgery_details_list$upper_treated_vertebrae <- jh_get_cranial_caudal_interspace_body_list_function(level = surgery_details_list$upper_treated_vertebrae)$cranial_level
-      }
-      
-      ######### LOWER TREATED ######
-      surgery_details_list$lower_treated_vertebrae <- (spine_treated_df %>% filter(vertebral_number == max(vertebral_number)) %>% select(level) %>% distinct())$level[[1]]
-      
-      if(jh_check_body_or_interspace_function(surgery_details_list$lower_treated_vertebrae) == "interspace"){
-        surgery_details_list$lower_treated_vertebrae <- jh_get_cranial_caudal_interspace_body_list_function(level = surgery_details_list$lower_treated_vertebrae)$caudal_level
-      }
-      
-    }else{
-      surgery_details_list$upper_treated_vertebrae <- "none"
-      surgery_details_list$lower_treated_vertebrae <- "none"
-    }
-    
-    ###### SPINE CERVICAL VS LUMBAR FOR PRO CAPTURE #####
-    if(surgery_details_list$lower_treated_vertebrae %in% c("Occiput", "C1", "C2", "C3", "C4", "C5", "C6", "C7", "T1", "T2", "T3", "T4", "T5", "T6")){
-      surgery_details_list$spine_region <- "cervical"
-    }else{
-      surgery_details_list$spine_region <- "lumbar"
-    }
-    
-    
-    ##########   PELVIC FIXATION  #############
-    surgery_details_list$pelvic_fixation <- if_else(any(str_detect(string = all_objects_to_add_list$objects_df$object, pattern = "pelvic_screw")), "yes", "no")
-    
-    if(surgery_details_list$pelvic_fixation == "yes"){
-      surgery_details_list$pelvic_fixation_screws <- glue_collapse((all_objects_to_add_list$objects_df %>% filter(str_detect(object, "pelvic_screw")))$level, sep = "; ")
-    }
     
     ##########   THREE COLUMN OSTEOTOMY #############
     surgery_details_list$three_column_osteotomy <- if_else(any(all_objects_to_add_list$objects_df$object == "grade_3") |
@@ -6194,95 +6336,7 @@ server <- function(input, output, session) {
       
     }
     
-    ##########   RODS  #############
-    
-    if(str_detect(surgery_details_list$main_approach, "posterior")){
-      surgery_details_list$left_rod <- if_else(input$left_main_rod_size == "None", "None", paste(input$left_main_rod_size, input$left_main_rod_material))
-      surgery_details_list$right_rod <- if_else(input$right_main_rod_size == "None", "None", paste(input$right_main_rod_size, input$right_main_rod_material))
-      
-      supplemental_rods_df <- tibble(supplemental_rod = c("accessory_rod",
-                                                          "satellite_rod",
-                                                          "intercalary_rod",
-                                                          "linked_rods",
-                                                          "kickstand_rod",
-                                                          "custom_rods",
-                                                          "accessory_rod",
-                                                          "satellite_rod",
-                                                          "intercalary_rod",
-                                                          "linked_rods",
-                                                          "kickstand_rod",
-                                                          "custom_rods"),
-                                     side = c("left", "left", "left", "left","left", "left", "right", "right", "right", "right", "right", "right"),
-                                     yes_no = c(input$add_left_accessory_rod,
-                                                input$add_left_satellite_rod,
-                                                input$add_left_intercalary_rod,
-                                                input$add_left_linked_rods,
-                                                input$add_left_kickstand_rod,
-                                                input$add_left_custom_rods,
-                                                input$add_right_accessory_rod,
-                                                input$add_right_satellite_rod,
-                                                input$add_right_intercalary_rod,
-                                                input$add_right_linked_rods,
-                                                input$add_right_kickstand_rod,
-                                                input$add_right_custom_rods)) %>%
-        filter(yes_no == TRUE) %>%
-        mutate(supplemental_rod_span_input_name = paste0(side, "_", supplemental_rod)) %>%
-        mutate(supplemental_rod_span = map(.x = supplemental_rod_span_input_name, .f = ~ paste(glue_collapse(input[[.x]], sep = "-")))) %>%
-        mutate(supplemental_rod_with_span = paste0(supplemental_rod, " (", supplemental_rod_span, ")"))
-      
-      if(nrow(supplemental_rods_df %>% filter(side == "left")) >0){
-        surgery_details_list$left_supplemental_rods <- glue_collapse((supplemental_rods_df %>% filter(side == "left"))$supplemental_rod, sep = "; ")
-      }else{
-        surgery_details_list$left_supplemental_rods <- "none"
-      }
-      
-      if(nrow(supplemental_rods_df %>% filter(side == "left")) >0){
-        surgery_details_list$left_supplemental_rods_with_span <- glue_collapse((supplemental_rods_df %>% filter(side == "left"))$supplemental_rod_with_span, sep = "; ")
-      }else{
-        surgery_details_list$left_supplemental_rods_with_span <- "none"
-      }
-      
-      
-      if(nrow(supplemental_rods_df %>% filter(side == "right")) >0){
-        surgery_details_list$right_supplemental_rods <- glue_collapse((supplemental_rods_df %>% filter(side == "right"))$supplemental_rod, sep = "; ")
-      }else{
-        surgery_details_list$right_supplemental_rods <- "none"
-      }
-      
-      if(nrow(supplemental_rods_df %>% filter(side == "right")) >0){
-        surgery_details_list$right_supplemental_rods_with_span <- glue_collapse((supplemental_rods_df %>% filter(side == "right"))$supplemental_rod_with_span, sep = "; ")
-      }else{
-        surgery_details_list$right_supplemental_rods_with_span <- "none"
-      }
-      
-      ############# CROSSLINKS #############
-      
-      if(length(input$crosslink_connectors) > 0){
-        surgery_details_list$crosslink_connector_levels <- glue_collapse(input$crosslink_connectors, sep = "; ")
-      }else{
-        surgery_details_list$crosslink_connector_levels <- "none"
-      }
-      
-      #################### SPINE UIV PPX  #########################
-      if(nrow(all_vertebrae_fixation_df) > 0){
-        uiv_ppx_df <- all_objects_to_add_list$objects_df %>%
-          filter(level == surgery_details_list$upper_treated_vertebrae | level == surgery_details_list$uiv) %>%
-          filter(str_detect(string = object, pattern = "hook") |
-                   str_detect(string = object, pattern = "tether") |
-                   str_detect(string = object, pattern = "wire") |
-                   str_detect(string = object, pattern = "vertebroplasty") |
-                   str_detect(string = object, pattern = "vertebral_cement_augmentation")) %>%
-          select(level, object) %>%
-          distinct()
-        if(nrow(uiv_ppx_df) > 0){
-          surgery_details_list$uiv_ppx_used <- "yes"
-          surgery_details_list$uiv_ppx <- str_replace(string = glue_collapse(x = unique(uiv_ppx_df$object), sep = "; "), pattern = "_", replacement = " ")
-        }else{
-          surgery_details_list$uiv_ppx_used <- "no"
-        }
-      }
-    }
-    
+
     #################### BMP & ALLOGRAFT  #######################
     if(str_detect(surgery_details_list$main_approach, "anterior") & surgery_details_list$fusion == "yes"){
       surgery_details_list$anterior_bmp_mg_dose <-  anterior_bmp_dose_reactive()
