@@ -2935,6 +2935,41 @@ server <- function(input, output, session) {
   }
   )
   
+  observeEvent(list(input$add_left_intercalary_rod), ignoreInit = TRUE, {
+    if(input$add_left_intercalary_rod == TRUE){
+      left_implants_df <- all_objects_to_add_list$left_rod_implants_df %>%
+        arrange(vertebral_number)
+      
+      distal_limit <- if_else(tail(left_implants_df$vertebral_number, 2)[1] >= 25, 25, tail(left_implants_df$vertebral_number, 2)[1])
+      
+      junction_choices_vector <- (implant_levels_numbered_df %>%
+                                    filter(between(vertebral_number, left_implants_df$vertebral_number[2], distal_limit)) %>%
+                                    filter(level %in% left_implants_df$level  == FALSE ))$level
+      
+      
+      if(!is.null(osteotomy_level_reactive()) && osteotomy_level_reactive()[1] %in% junction_choices_vector){
+        starting_junction <- osteotomy_level_reactive()[1]
+      }else{
+        starting_junction <- junction_choices_vector[round(length(junction_choices_vector)/2, 0)]
+      }
+      
+      if(length(junction_choices_vector) > 0){
+        updatePickerInput(session = session, 
+                          inputId = "left_intercalary_rod_junction",
+                          label = "Junction:",
+                          choices = junction_choices_vector,
+                          selected = starting_junction
+        )
+      }
+    }else{
+      updatePickerInput(session = session,
+                        inputId = "left_intercalary_rod_junction",
+                        choices = c("a", "b"), 
+                        selected = "a")
+    }
+  }
+  )
+  
   observeEvent(list(input$add_left_intercalary_rod, input$left_intercalary_rod_junction), ignoreInit = TRUE, {
     if(input$add_left_intercalary_rod == TRUE && input$left_intercalary_rod_junction %in% implant_levels_numbered_df$level){
       
@@ -3016,40 +3051,7 @@ server <- function(input, output, session) {
     }
   })
   
-  observeEvent(list(input$add_left_intercalary_rod), ignoreInit = TRUE, {
-    if(input$add_left_intercalary_rod == TRUE){
-      # junction_choices_vector <-  (implant_levels_numbered_df %>%
-      #                                filter(between(vertebral_number, jh_get_vertebral_number_function(input$left_intercalary_rod[1]), jh_get_vertebral_number_function(input$left_intercalary_rod[2]))) %>%
-      #                                filter(level %in% all_objects_to_add_list$left_rod_implants_df$level == FALSE))$level
-      distal_limit <- if_else(tail(all_objects_to_add_list$left_rod_implants_df$vertebral_number, 2)[1] >= 25, 25, tail(all_objects_to_add_list$left_rod_implants_df$vertebral_number, 2)[1])
-      
-      junction_choices_vector <- (implant_levels_numbered_df %>%
-                                    filter(between(vertebral_number, all_objects_to_add_list$left_rod_implants_df$vertebral_number[2], distal_limit)) %>% 
-                                    filter(level %in% all_objects_to_add_list$left_rod_implants_df$level  == FALSE ))$level
-      
-      
-      if(!is.null(osteotomy_level_reactive()) && osteotomy_level_reactive()[1] %in% junction_choices_vector){
-        starting_junction <- osteotomy_level_reactive()[1]
-      }else{
-        starting_junction <- junction_choices_vector[round(length(junction_choices_vector)/2, 0)]
-      }
-      
-      if(length(junction_choices_vector) > 0){
-        updatePickerInput(session = session, 
-                          inputId = "left_intercalary_rod_junction",
-                          label = "Junction:",
-                          choices = junction_choices_vector,
-                          selected = starting_junction
-        )
-      }
-    }else{
-      updatePickerInput(session = session,
-                        inputId = "left_intercalary_rod_junction",
-                        choices = c("a", "b"), 
-                        selected = "a")
-    }
-  }
-  )
+
   
   observeEvent(input$add_left_linked_rods,
                ignoreNULL = TRUE, 
@@ -3571,6 +3573,41 @@ server <- function(input, output, session) {
   }
   )
   
+  observeEvent(list(input$add_right_intercalary_rod), ignoreInit = TRUE, {
+    if(input$add_right_intercalary_rod == TRUE){
+      right_implants_df <- all_objects_to_add_list$right_rod_implants_df %>%
+        arrange(vertebral_number)
+      
+      distal_limit <- if_else(tail(right_implants_df$vertebral_number, 2)[1] >= 25, 25, tail(right_implants_df$vertebral_number, 2)[1])
+      
+      junction_choices_vector <- (implant_levels_numbered_df %>%
+                                    filter(between(vertebral_number, right_implants_df$vertebral_number[2], distal_limit)) %>%
+                                    filter(level %in% right_implants_df$level  == FALSE ))$level
+      
+      
+      if(!is.null(osteotomy_level_reactive()) && osteotomy_level_reactive()[1] %in% junction_choices_vector){
+        starting_junction <- osteotomy_level_reactive()[1]
+      }else{
+        starting_junction <- junction_choices_vector[round(length(junction_choices_vector)/2, 0)]
+      }
+      
+      if(length(junction_choices_vector) > 0){
+        updatePickerInput(session = session, 
+                          inputId = "right_intercalary_rod_junction",
+                          label = "Junction:",
+                          choices = junction_choices_vector,
+                          selected = starting_junction
+        )
+      }
+    }else{
+      updatePickerInput(session = session,
+                        inputId = "right_intercalary_rod_junction",
+                        choices = c("a", "b"), 
+                        selected = "a")
+    }
+  }
+  )
+  
   observeEvent(list(input$add_right_intercalary_rod, input$right_intercalary_rod_junction),  ignoreInit = TRUE, {
     if(input$add_right_intercalary_rod == TRUE && input$right_intercalary_rod_junction %in% implant_levels_numbered_df$level){
       
@@ -3651,41 +3688,7 @@ server <- function(input, output, session) {
       }
     }
   })
-  
-  observeEvent(list(input$add_right_intercalary_rod),  ignoreInit = TRUE, {
-    if(input$add_right_intercalary_rod == TRUE){
-      # junction_choices_vector <-  (implant_levels_numbered_df %>%
-      #                                filter(between(vertebral_number, jh_get_vertebral_number_function(input$right_intercalary_rod[1]), jh_get_vertebral_number_function(input$right_intercalary_rod[2]))) %>%
-      #                                filter(level %in% all_objects_to_add_list$right_rod_implants_df$level == FALSE))$level
-      distal_limit <- if_else(tail(all_objects_to_add_list$right_rod_implants_df$vertebral_number, 2)[1] >= 25, 25, tail(all_objects_to_add_list$right_rod_implants_df$vertebral_number, 2)[1])
-      
-      junction_choices_vector <- (implant_levels_numbered_df %>%
-                                    filter(between(vertebral_number, all_objects_to_add_list$right_rod_implants_df$vertebral_number[2], distal_limit)) %>% 
-                                    filter(level %in% all_objects_to_add_list$right_rod_implants_df$level  == FALSE ))$level
-      
-      
-      if(!is.null(osteotomy_level_reactive()) && osteotomy_level_reactive()[1] %in% junction_choices_vector){
-        starting_junction <- osteotomy_level_reactive()[1]
-      }else{
-        starting_junction <- junction_choices_vector[round(length(junction_choices_vector)/2, 0)]
-      }
-      
-      if(length(junction_choices_vector) > 0){
-        updatePickerInput(session = session, 
-                          inputId = "right_intercalary_rod_junction",
-                          label = "Junction:",
-                          choices = junction_choices_vector,
-                          selected = starting_junction
-        )
-      }
-    }else{
-      updatePickerInput(session = session,
-                        inputId = "right_intercalary_rod_junction",
-                        choices = c("a", "b"), 
-                        selected = "a")
-    }
-  }
-  )
+ 
   
   observeEvent(input$add_right_linked_rods,
                ignoreNULL = TRUE, 
@@ -7421,7 +7424,7 @@ server <- function(input, output, session) {
     if(length(names(left_rods_connectors_list$rod_list))>0){
       
       lines_df <-  labels_df %>%
-        mutate(vertebral_number = vertebral_number + 0.5) %>%
+        mutate(vertebral_number = vertebral_number - 0.5) %>%
         select(-level) %>%
         left_join(levels_numbered_df) %>%
         filter(!is.na(level)) %>%
@@ -7562,7 +7565,7 @@ server <- function(input, output, session) {
     if(length(names(right_rods_connectors_list$rod_list))>0){
       
       lines_df <-  labels_df %>%
-        mutate(vertebral_number = vertebral_number + 0.5) %>%
+        mutate(vertebral_number = vertebral_number - 0.5) %>%
         select(-level) %>%
         left_join(levels_numbered_df) %>%
         filter(!is.na(level)) %>%
@@ -7616,7 +7619,7 @@ server <- function(input, output, session) {
     if(input$implants_complete > 0){
       
       bilateral_rods_crossing_df <-  labels_df %>%
-        mutate(vertebral_number = vertebral_number + 0.5) %>%
+        mutate(vertebral_number = vertebral_number - 0.5) %>%
         select(-level) %>%
         left_join(levels_numbered_df) %>%
         filter(!is.na(level)) %>%
