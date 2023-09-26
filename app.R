@@ -1008,7 +1008,7 @@ ui <- dashboardPage(skin = "black",
                                    )
                             ),
                             column(3, 
-                                   box(width = 12, title = div(style = "font-size:22px; font-weight:bold; text-align:center", "Rods Count By Level"),status = "success", collapsible = TRUE,solidHeader = TRUE,
+                                   box(width = 12, title = div(style = "font-size:22px; font-weight:bold; text-align:center", "Rod Count By Level"),status = "success", collapsible = TRUE,solidHeader = TRUE,
                                        tableOutput(outputId = "rods_crossing_by_level_table")
                                    )
                                    ),
@@ -7420,15 +7420,18 @@ server <- function(input, output, session) {
     
     if(length(names(left_rods_connectors_list$rod_list))>0){
       
-      lines_df <- labels_df %>%
+      lines_df <-  labels_df %>%
+        mutate(vertebral_number = vertebral_number + 0.5) %>%
+        select(-level) %>%
+        left_join(levels_numbered_df) %>%
+        filter(!is.na(level)) %>%
+        select(level, vertebral_number, y) %>%
         mutate(x_left = 0.4, x_right = 0.6) %>%
         mutate(y = case_when(
           vertebral_number < 6.75 ~ y + 0.015,
           between(vertebral_number, 6.75, 18.75) ~ y + 0.0125,
-          vertebral_number > 18.5 ~ y + 0.015
+          vertebral_number > 18.75 ~ y + 0.015
         )) %>%
-        mutate(level = jh_get_cranial_caudal_interspace_body_list_function(level = level)$cranial_interspace) %>%
-        filter(!is.na(level), level != "Iliac 2") %>%
         mutate(y = if_else(level == "Sacro-iliac", y - 0.01, y)) 
       
       lines_list <- pmap(.l = list(..1 = lines_df$x_left, ..2 = lines_df$x_right, ..3 = lines_df$y), 
@@ -7558,15 +7561,18 @@ server <- function(input, output, session) {
     
     if(length(names(right_rods_connectors_list$rod_list))>0){
       
-      lines_df <- labels_df %>%
+      lines_df <-  labels_df %>%
+        mutate(vertebral_number = vertebral_number + 0.5) %>%
+        select(-level) %>%
+        left_join(levels_numbered_df) %>%
+        filter(!is.na(level)) %>%
+        select(level, vertebral_number, y) %>%
         mutate(x_left = 0.4, x_right = 0.6) %>%
         mutate(y = case_when(
           vertebral_number < 6.75 ~ y + 0.015,
           between(vertebral_number, 6.75, 18.75) ~ y + 0.0125,
-          vertebral_number > 18.5 ~ y + 0.015
+          vertebral_number > 18.75 ~ y + 0.015
         )) %>%
-        mutate(level = jh_get_cranial_caudal_interspace_body_list_function(level = level)$cranial_interspace) %>%
-        filter(!is.na(level), level != "Iliac 2") %>%
         mutate(y = if_else(level == "Sacro-iliac", y - 0.01, y)) 
       
       lines_list <- pmap(.l = list(..1 = lines_df$x_left, ..2 = lines_df$x_right, ..3 = lines_df$y), 
@@ -7608,17 +7614,20 @@ server <- function(input, output, session) {
   output$rods_crossing_by_level_table <- renderTable({
 
     if(input$implants_complete > 0){
-    bilateral_rods_crossing_df <- labels_df %>%
-      mutate(level = jh_get_cranial_caudal_interspace_body_list_function(level = level)$cranial_interspace) %>%
-      filter(!is.na(level), level != "Iliac 2") %>%
-      select(level) %>%
-      left_join(left_rod_crossing_table_reactive()) %>%
-      left_join(right_rod_crossing_table_reactive()) %>%
-      replace_na(list(left_rod_count = 0, right_rod_count = 0, left_rods_crossing = "", right_rods_crossing = "")) %>%
-      mutate(total_rods_crossing = left_rod_count + right_rod_count) %>%
-      filter(total_rods_crossing >0) %>%
-      select(level, total_rods_crossing)
-
+      
+      bilateral_rods_crossing_df <-  labels_df %>%
+        mutate(vertebral_number = vertebral_number + 0.5) %>%
+        select(-level) %>%
+        left_join(levels_numbered_df) %>%
+        filter(!is.na(level)) %>%
+        select(level) %>%
+        left_join(left_rod_crossing_table_reactive()) %>%
+        left_join(right_rod_crossing_table_reactive()) %>%
+        replace_na(list(left_rod_count = 0, right_rod_count = 0, left_rods_crossing = "", right_rods_crossing = "")) %>%
+        mutate(total_rods_crossing = left_rod_count + right_rod_count) %>%
+        filter(total_rods_crossing >0) %>%
+        select(level, total_rods_crossing)
+      
     bilateral_rods_crossing_df
     }
 
