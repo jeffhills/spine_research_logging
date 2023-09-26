@@ -127,8 +127,12 @@ jh_convert_interspace_to_body_vector_function <- function(interspaces_vector){
 
 #################################
 jh_check_body_or_interspace_function <- function(level){
-  result <- case_when(level %in% vertebral_bodies_vector ~ "body",
-                      level %in% interspaces_vector ~ "interspace")
+  result <- case_when(str_detect(str_to_lower(level), "ilia")~ "pelvis",
+                      str_detect(str_to_lower(level), "s2ai") ~ "pelvis",
+                      str_detect(str_to_lower(level), "occip") ~ "occiput",
+                      level %in% vertebral_bodies_vector ~ "body",
+                      level %in% interspaces_vector ~ "interspace") 
+  
   
   result
 }
