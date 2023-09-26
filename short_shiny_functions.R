@@ -2024,13 +2024,14 @@ build_unilateral_rods_list_function <- function(unilateral_full_implant_df,
                  side == rod_side) %>%
           mutate(connector_count = row_number()) %>%
           select(connector_count, x, y) %>%
-          mutate(y = y - 0.005)
+          mutate(x = if_else(x < 0.5, x - 0.01, x + 0.01)) %>% ## start left closer to the new rod
+          mutate(y = y - 0.01)
         
         prior_rod_connector_matrix_list <-  map(.x = revision_rod_overlap$connector_count, .f =  ~ revision_rod_overlap %>%
                                                   filter(connector_count == .x) %>%
                                                   bind_rows(revision_rod_overlap %>%
                                                               filter(connector_count == .x) %>%
-                                                              mutate(x = if_else(x < 0.5, x + 0.01, x - 0.01))) %>%
+                                                              mutate(x = if_else(x < 0.5, x + 0.02, x - 0.02))) %>%
                                                   select(x, y) %>%
                                                   remove_missing() %>%
                                                   as.matrix())
@@ -2065,7 +2066,8 @@ build_unilateral_rods_list_function <- function(unilateral_full_implant_df,
                object == "pedicle_screw", 
                side == rod_side) %>%
         select(x, y) %>%
-        mutate(y = y - 0.01)
+        mutate(x = if_else(x < 0.5, x-0.01, x + 0.01)) %>%
+        mutate(y = y - 0.015)
       
     }else{
       revision_rod_overlap <- tibble(x = double(), 
@@ -2123,6 +2125,18 @@ build_unilateral_rods_list_function <- function(unilateral_full_implant_df,
     #################### MAIN ROD ###################
     if(nrow(main_rod_df) >1){
       
+      main_rod_matrix <- main_rod_df %>%
+        arrange(rev(y)) %>%
+        select(x, y) %>%
+        bind_rows(revision_rod_overlap) %>%
+        arrange(rev(y)) %>%
+        distinct() %>%
+        remove_missing() %>%
+        select(x, y) %>%
+        as.matrix()
+      
+      rods_list$main_rod_sf <- jh_sf_rod_object_from_matrix_function(main_rod_matrix) 
+    }else if(nrow(main_rod_df) == 1 && nrow(revision_rod_overlap)>0){
       main_rod_matrix <- main_rod_df %>%
         arrange(rev(y)) %>%
         select(x, y) %>%
