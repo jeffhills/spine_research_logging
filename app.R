@@ -5295,9 +5295,7 @@ server <- function(input, output, session) {
           )
       )
     }
-  }) %>%
-    bindEvent(input$implants_complete, ignoreInit = TRUE)
-  # bindEvent(input$screws_implanted_picker_for_ui, ignoreInit = TRUE)
+  }) 
   
   
   ################------------------  Screw Size RESULTS  ----------------------######################  
@@ -6128,32 +6126,42 @@ server <- function(input, output, session) {
     surgery_details_list$pelvic_fixation <- if_else(any(str_detect(string = all_objects_to_add_list$objects_df$object, pattern = "pelvic_screw")), "yes", "no")
     
     if(surgery_details_list$pelvic_fixation == "yes"){
+      surgery_details_list$pelvic_fixation_screw_count <- length((all_objects_to_add_list$objects_df %>% filter(str_detect(object, "pelvic_screw")))$object)
       surgery_details_list$pelvic_fixation_screws <- glue_collapse((all_objects_to_add_list$objects_df %>% filter(str_detect(object, "pelvic_screw")))$level, sep = "; ")
     }
     
     ##########   RODS  #############
+    ##LEFT
+    left_rod_count <- 0
     if(str_detect(surgery_details_list$main_approach, "posterior")){
       surgery_details_list$left_rod <- if_else(input$left_main_rod_size == "None", "None", paste(input$left_main_rod_size, input$left_main_rod_material))
-      surgery_details_list$right_rod <- if_else(input$right_main_rod_size == "None", "None", paste(input$right_main_rod_size, input$right_main_rod_material))
+    }
+    if(input$left_main_rod_size != "None"){
+      left_rod_count <- left_rod_count + 1
     }
     left_supplemental_rod_list <- list()
     if(input$add_left_accessory_rod){
       left_supplemental_rod_list$accessory <- glue("accessory rod ({input$left_accessory_rod_size}, {input$left_accessory_rod_material}): {input$left_accessory_rod[1]}-{input$left_accessory_rod[2]}")  
+      left_rod_count <- left_rod_count + 1
     }
     if(input$add_left_satellite_rod){
       left_supplemental_rod_list$satellite <- glue("satellite rod ({input$left_satellite_rod_size}, {input$left_accessory_rod_material}): {input$left_satellite_rod[1]}-{input$left_satellite_rod[2]}")  
+      left_rod_count <- left_rod_count + 1
     }
     
     if(input$add_left_intercalary_rod){
       left_supplemental_rod_list$intercalary <- glue("intercalary rod ({input$left_intercalary_rod_size}, {input$left_intercalary_rod_material}): {input$left_intercalary_rod[1]}-{input$left_intercalary_rod[2]}, {input$left_intercalary_rod_junction} junction")  
-    }  
+      left_rod_count <- left_rod_count + 1
+      }  
     
     if(input$add_left_linked_rods){
       left_supplemental_rod_list$linked <- glue("linked rod ({input$left_linked_rods_size}, {input$left_linked_rods_material}): {input$left_linked_rods[1]}-{input$left_linked_rods[2]} overlap")  
+      left_rod_count <- left_rod_count + 1
     }
     
     if(input$add_left_kickstand_rod){
       left_supplemental_rod_list$kickstand <- glue("kickstand rod ({input$left_kickstand_rod_size}, {input$left_kickstand_rod_material}): {input$left_kickstand_rod[1]}-{input$left_kickstand_rod[2]}")  
+      left_rod_count <- left_rod_count + 1
     }
     
     if(length(left_supplemental_rod_list)>0){
@@ -6161,33 +6169,48 @@ server <- function(input, output, session) {
     }else{
       surgery_details_list$left_supplemental_rods <- "none"
     }
+    surgery_details_list$left_rod_count <- left_rod_count
     
     ## RIGHT
+    right_rod_count <- 0
+    if(str_detect(surgery_details_list$main_approach, "posterior")){
+      surgery_details_list$right_rod <- if_else(input$right_main_rod_size == "None", "None", paste(input$right_main_rod_size, input$right_main_rod_material))
+    }
+    if(input$right_main_rod_size != "None"){
+      right_rod_count <- right_rod_count + 1
+    }
     right_supplemental_rod_list <- list()
     if(input$add_right_accessory_rod){
       right_supplemental_rod_list$accessory <- glue("accessory rod ({input$right_accessory_rod_size}, {input$right_accessory_rod_material}): {input$right_accessory_rod[1]}-{input$right_accessory_rod[2]}")  
+      right_rod_count <- right_rod_count + 1
     }
     if(input$add_right_satellite_rod){
       right_supplemental_rod_list$satellite <- glue("satellite rod ({input$right_satellite_rod_size}, {input$right_accessory_rod_material}): {input$right_satellite_rod[1]}-{input$right_satellite_rod[2]}")  
+      right_rod_count <- right_rod_count + 1
     }
     
     if(input$add_right_intercalary_rod){
       right_supplemental_rod_list$intercalary <- glue("intercalary rod ({input$right_intercalary_rod_size}, {input$right_intercalary_rod_material}): {input$right_intercalary_rod[1]}-{input$right_intercalary_rod[2]}, {input$right_intercalary_rod_junction} junction")  
+      right_rod_count <- right_rod_count + 1
     }  
     
     if(input$add_right_linked_rods){
       right_supplemental_rod_list$linked <- glue("linked rod ({input$right_linked_rods_size}, {input$right_linked_rods_material}): {input$right_linked_rods[1]}-{input$right_linked_rods[2]} overlap")  
+      right_rod_count <- right_rod_count + 1
     }
     
     if(input$add_right_kickstand_rod){
       right_supplemental_rod_list$kickstand <- glue("kickstand rod ({input$right_kickstand_rod_size}, {input$right_kickstand_rod_material}): {input$right_kickstand_rod[1]}-{input$right_kickstand_rod[2]}")  
+      right_rod_count <- right_rod_count + 1
     }
     
     if(length(right_supplemental_rod_list)>0){
-      surgery_details_list$right_supplemental_rods <- str_remove_all(string = glue_collapse(x = right_supplemental_rod_list, sep = " +AND+ "), pattern = "_2")
+      surgery_details_list$right_supplemental_rods <- str_remove_all(string = glue_collapse(x = right_supplemental_rod_list, sep = " -AND- "), pattern = "_2")
     }else{
       surgery_details_list$right_supplemental_rods <- "none"
     }
+    surgery_details_list$right_rod_count <- right_rod_count
+    
     # if(any(input$add_left_accessory_rod,
     #        input$add_left_satellite_rod,
     #        input$add_left_intercalary_rod,
