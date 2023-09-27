@@ -255,6 +255,7 @@ ui <- dashboardPage(skin = "black",
                                                 ),
                                                 circle = TRUE
                                  )
+                                 # tableOutput(outputId = "rods_crossing_by_level_table1")
                           ),
                           column(width = 9, 
                                  box(width = 12, title = tags$div(style = "font-size:22px; font-weight:bold", "Surgical Procedures:"), solidHeader = TRUE, status = "primary",
@@ -4034,8 +4035,6 @@ server <- function(input, output, session) {
                             inputId = "add_right_custom_rods", 
                             value = FALSE) 
       
-      rods_list$right_connector_list_sf_geom <- NULL
-      rods_list$left_connector_list_sf_geom <- NULL
     }
     
   })
@@ -4175,8 +4174,24 @@ server <- function(input, output, session) {
   #############~~~~~~~~~~~~~~~~~~~ ##################### MAKE THE PLOTS    #############~~~~~~~~~~~~~~~~~~~ ##################### 
   #############~~~~~~~~~~~~~~~~~~~ ##################### MAKE THE PLOTS    #############~~~~~~~~~~~~~~~~~~~ ##################### 
   
-  # ############# ~~~~~~~~~~~~~~ ################## MAKE THE SUMMARY TABLE FOR THE PLOT    ############# ~~~~~~~~~~~~~~ ################## 
+  # ############# ~~~~~~~~~########  DELETE ALL WITH A RESET ALL BUTTON CLICK ############# ~~~~~~~~~~~~~~ ################## 
   
+  observeEvent(input$reset_all, ignoreInit = TRUE, {
+    
+    clear_reactive_values_function <- function(reactive_value_list_to_clear){
+      for (name in names(reactive_value_list_to_clear)){
+    reactive_value_list_to_clear[[name]] <- NULL
+      } 
+    }
+    clear_reactive_values_function(geoms_list_revision_posterior)
+    clear_reactive_values_function(geoms_list_posterior)
+    clear_reactive_values_function(rods_list)
+    
+    clear_reactive_values_function(geoms_list_revision_anterior)
+    clear_reactive_values_function(geoms_list_anterior_diskectomy)
+    clear_reactive_values_function(geoms_list_anterior_interbody)
+    clear_reactive_values_function(geoms_list_anterior_instrumentation)
+  })
   
   
   
@@ -4188,7 +4203,6 @@ server <- function(input, output, session) {
   ######### ~~~~~~~~~~~~~~  ############# MAKE REACTIVE PLOT    ######### ~~~~~~~~~~~~~~  ############# 
   ######### ~~~~~~~~~~~~~~  ############# MAKE REACTIVE PLOT    ######### ~~~~~~~~~~~~~~  ############# 
   spine_plan_plot_anterior_reactive <- reactive({
-    # if(str_detect(str_to_lower(input$approach_sequence), "anterior")){
     if(str_to_lower(input$spine_approach) == "anterior"){
       x_left_limit <- 0.3 - input$label_text_offset/100
       x_right_limit <- 1-x_left_limit
@@ -4289,10 +4303,12 @@ server <- function(input, output, session) {
         size = input$label_text_size,
         fontface = "bold"
       ) +
-      # plan_table_geom +
       annotate("text", x = 0.5, 
                y = input$crop_y[1] + 0.01, 
                label = l6_statement) +
+      reactiveValuesToList(geoms_list_revision_posterior) +
+      reactiveValuesToList(geoms_list_posterior) +
+      reactiveValuesToList(rods_list) +
       coord_sf(xlim = c(x_left_limit, x_right_limit),
                ylim = input$crop_y, default = TRUE) 
   })
@@ -4304,14 +4320,11 @@ server <- function(input, output, session) {
   
   
   output$spine_plan <-  renderPlot(res = 48, {
-    # main_page_reactive_plot()
+
     if(str_to_lower(input$spine_approach) == "anterior"){
       spine_plan_plot_anterior_reactive()
     }else{
-      spine_plan_plot_posterior_reactive() +
-        reactiveValuesToList(geoms_list_revision_posterior) +
-        reactiveValuesToList(geoms_list_posterior) +
-        reactiveValuesToList(rods_list) 
+      spine_plan_plot_posterior_reactive() 
     }
   })
   
@@ -4360,20 +4373,14 @@ server <- function(input, output, session) {
     
     if(length(approach_vector) <2){
       if(input$approach_sequence == "posterior"){
-        panel_2_plot <- spine_plan_plot_posterior_reactive() +
-          reactiveValuesToList(geoms_list_revision_posterior) +
-          reactiveValuesToList(geoms_list_posterior) +
-          reactiveValuesToList(rods_list) 
+        panel_2_plot <- spine_plan_plot_posterior_reactive() 
       }else{
         panel_2_plot <-spine_plan_plot_anterior_reactive()
       }
     }else{
       if(approach_vector[[1]] == "posterior"){
         
-        panel_2_plot <- plot_grid((spine_plan_plot_posterior_reactive() +
-                                     reactiveValuesToList(geoms_list_revision_posterior) +
-                                     reactiveValuesToList(geoms_list_posterior) +
-                                     reactiveValuesToList(rods_list)), 
+        panel_2_plot <- plot_grid(spine_plan_plot_posterior_reactive() ,
                                   NULL, 
                                   spine_plan_plot_anterior_reactive(), 
                                   nrow = 1, 
@@ -4381,10 +4388,7 @@ server <- function(input, output, session) {
       }else{
         panel_2_plot <- plot_grid(spine_plan_plot_anterior_reactive(), 
                                   NULL,
-                                  (spine_plan_plot_posterior_reactive() +
-                                     reactiveValuesToList(geoms_list_revision_posterior) +
-                                     reactiveValuesToList(geoms_list_posterior) +
-                                     reactiveValuesToList(rods_list)),
+                                  spine_plan_plot_posterior_reactive() ,
                                   nrow = 1, 
                                   rel_widths = c(1, -.1, 1))
       }
@@ -7335,123 +7339,109 @@ server <- function(input, output, session) {
   left_rod_crossing_table_reactive <- reactive({
     left_rods_connectors_list <- list()
     if(input$implants_complete > 0){
-    if(input$add_left_accessory_rod == TRUE && input$left_accessory_rod[1] %in% all_screw_coordinates_df$level && length(unique(input$left_accessory_rod)) == 2){
-      accessory_vector <- input$left_accessory_rod
-    }else{
-      accessory_vector <- c("a")
-    }
-    if(input$add_left_satellite_rod == TRUE && input$left_satellite_rod[1] %in% all_screw_coordinates_df$level && length(unique(input$left_satellite_rod)) == 2){
-      satellite_vector <- input$left_satellite_rod
-    }else{
-      satellite_vector <- c("a", "b")
-    }
-    if(input$add_left_intercalary_rod == TRUE && input$left_intercalary_rod[1] %in% all_screw_coordinates_df$level && length(unique(input$left_intercalary_rod)) == 2){
-      intercalary_vector <- input$left_intercalary_rod
-      junction <- input$left_intercalary_rod_junction
-    }else{
-      intercalary_vector <- c("a")
-      junction <- NULL
-    }
-    if(input$add_left_linked_rods == TRUE && input$left_linked_rods[1] %in% all_screw_coordinates_df$level && length(unique(input$left_linked_rods)) == 2){
-      linked_vector <- input$left_linked_rods
-    }else{
-      linked_vector <- c("a")
-    }
-    
-    if(input$add_left_kickstand_rod == TRUE && input$left_kickstand_rod[1] %in% all_screw_coordinates_df$level && length(unique(input$left_kickstand_rod)) == 2){
-      left_kickstand_rod_vector <- input$left_kickstand_rod
-    }else{
-      left_kickstand_rod_vector <- c("a")
-    }
-    
-    custom_rods_vector_list <- list()
-    if(input$add_left_custom_rods == TRUE){
-      if(input$left_custom_rods_number > 1 & length(input$left_custom_rod_1) > 1){
-        custom_rods_vector_list$custom_rod_1 <- input$left_custom_rod_1
+      if(input$add_left_accessory_rod == TRUE && input$left_accessory_rod[1] %in% all_screw_coordinates_df$level && length(unique(input$left_accessory_rod)) == 2){
+        accessory_vector <- input$left_accessory_rod
       }else{
-        custom_rods_vector_list$custom_rod_1 <- c("")
+        accessory_vector <- c("a")
       }
-      if(input$left_custom_rods_number > 1 & length(input$left_custom_rod_2) > 1){
-        custom_rods_vector_list$custom_rod_2 <- input$left_custom_rod_2
+      if(input$add_left_satellite_rod == TRUE && input$left_satellite_rod[1] %in% all_screw_coordinates_df$level && length(unique(input$left_satellite_rod)) == 2){
+        satellite_vector <- input$left_satellite_rod
       }else{
-        custom_rods_vector_list$custom_rod_2 <- c("")
+        satellite_vector <- c("a", "b")
       }
-      if(input$left_custom_rods_number > 2 & length(input$left_custom_rod_3) > 1){
-        custom_rods_vector_list$custom_rod_3 <- input$left_custom_rod_3
+      if(input$add_left_intercalary_rod == TRUE && input$left_intercalary_rod[1] %in% all_screw_coordinates_df$level && length(unique(input$left_intercalary_rod)) == 2){
+        intercalary_vector <- input$left_intercalary_rod
+        junction <- input$left_intercalary_rod_junction
       }else{
-        custom_rods_vector_list$custom_rod_3 <- c("")
+        intercalary_vector <- c("a")
+        junction <- NULL
       }
-      if(input$left_custom_rods_number > 3 & length(input$left_custom_rod_4) > 1){
-        custom_rods_vector_list$custom_rod_4 <- input$left_custom_rod_4
+      if(input$add_left_linked_rods == TRUE && input$left_linked_rods[1] %in% all_screw_coordinates_df$level && length(unique(input$left_linked_rods)) == 2){
+        linked_vector <- input$left_linked_rods
       }else{
-        custom_rods_vector_list$custom_rod_4 <- c("")
+        linked_vector <- c("a")
       }
-      if(input$left_custom_rods_number > 4 & length(input$left_custom_rod_5) > 1){
-        custom_rods_vector_list$custom_rod_5 <- input$left_custom_rod_5
-      }else{
-        custom_rods_vector_list$custom_rod_5 <- c("")
-      }
-    }
-    
-    left_implants_df <- all_objects_to_add_list$left_rod_implants_df %>%
-      select(level, vertebral_number, x, y, side, object) %>%
-      arrange(y) %>%
-      mutate(implant_label = glue("{level} {str_to_title(str_replace_all(object, '_', ' '))}"))
-    
-    if(length(left_implants_df$level) > 0){
       
-      ############# MAKE THE RODS #############
-      left_rods_connectors_list <- build_unilateral_rods_list_function(unilateral_full_implant_df = left_implants_df,
-                                                                        rod_side = "left",
-                                                                        add_accessory_rod = input$add_left_accessory_rod,
-                                                                        accessory_rod_vector = accessory_vector, 
-                                                                        add_satellite_rod = input$add_left_satellite_rod,
-                                                                        satellite_rods_vector = satellite_vector,
-                                                                        add_intercalary_rod = input$add_left_intercalary_rod, 
-                                                                        intercalary_rods_vector = intercalary_vector, 
-                                                                        intercalary_rod_junction = junction, 
-                                                                        add_linked_rods = input$add_left_linked_rods,
-                                                                        linked_rods_vector = linked_vector,
-                                                                        add_kickstand_rod = input$add_left_kickstand_rod,
-                                                                        kickstand_rod_vector = left_kickstand_rod_vector,
-                                                                        add_custom_rods = input$add_left_custom_rods,
-                                                                        custom_rods_vector_list = custom_rods_vector_list,
-                                                                        revision_rods_retained_df = left_revision_implants_reactive_list()$retained_df,
-                                                                        prior_rod_overlap_connectors = input$left_revision_implants_rod_connectors
-      )
-    }
+      if(input$add_left_kickstand_rod == TRUE && input$left_kickstand_rod[1] %in% all_screw_coordinates_df$level && length(unique(input$left_kickstand_rod)) == 2){
+        left_kickstand_rod_vector <- input$left_kickstand_rod
+      }else{
+        left_kickstand_rod_vector <- c("a")
+      }
+      
+      custom_rods_vector_list <- list()
+      if(input$add_left_custom_rods == TRUE){
+        if(input$left_custom_rods_number > 1 & length(input$left_custom_rod_1) > 1){
+          custom_rods_vector_list$custom_rod_1 <- input$left_custom_rod_1
+        }else{
+          custom_rods_vector_list$custom_rod_1 <- c("")
+        }
+        if(input$left_custom_rods_number > 1 & length(input$left_custom_rod_2) > 1){
+          custom_rods_vector_list$custom_rod_2 <- input$left_custom_rod_2
+        }else{
+          custom_rods_vector_list$custom_rod_2 <- c("")
+        }
+        if(input$left_custom_rods_number > 2 & length(input$left_custom_rod_3) > 1){
+          custom_rods_vector_list$custom_rod_3 <- input$left_custom_rod_3
+        }else{
+          custom_rods_vector_list$custom_rod_3 <- c("")
+        }
+        if(input$left_custom_rods_number > 3 & length(input$left_custom_rod_4) > 1){
+          custom_rods_vector_list$custom_rod_4 <- input$left_custom_rod_4
+        }else{
+          custom_rods_vector_list$custom_rod_4 <- c("")
+        }
+        if(input$left_custom_rods_number > 4 & length(input$left_custom_rod_5) > 1){
+          custom_rods_vector_list$custom_rod_5 <- input$left_custom_rod_5
+        }else{
+          custom_rods_vector_list$custom_rod_5 <- c("")
+        }
+      }
+      
+      left_implants_df <- all_objects_to_add_list$left_rod_implants_df %>%
+        select(level, vertebral_number, x, y, side, object) %>%
+        arrange(y) %>%
+        mutate(implant_label = glue("{level} {str_to_title(str_replace_all(object, '_', ' '))}"))
+      
+      if(length(left_implants_df$level) > 0){
+        
+        ############# MAKE THE RODS #############
+        left_rods_connectors_list <- build_unilateral_rods_list_function(unilateral_full_implant_df = left_implants_df,
+                                                                          rod_side = "left",
+                                                                          add_accessory_rod = input$add_left_accessory_rod,
+                                                                          accessory_rod_vector = accessory_vector, 
+                                                                          add_satellite_rod = input$add_left_satellite_rod,
+                                                                          satellite_rods_vector = satellite_vector,
+                                                                          add_intercalary_rod = input$add_left_intercalary_rod, 
+                                                                          intercalary_rods_vector = intercalary_vector, 
+                                                                          intercalary_rod_junction = junction, 
+                                                                          add_linked_rods = input$add_left_linked_rods,
+                                                                          linked_rods_vector = linked_vector,
+                                                                          add_kickstand_rod = input$add_left_kickstand_rod,
+                                                                          kickstand_rod_vector = left_kickstand_rod_vector,
+                                                                          add_custom_rods = input$add_left_custom_rods,
+                                                                          custom_rods_vector_list = custom_rods_vector_list,
+                                                                          revision_rods_retained_df = left_revision_implants_reactive_list()$retained_df,
+                                                                          prior_rod_overlap_connectors = input$left_revision_implants_rod_connectors
+        )
+      }
     
     if(length(names(left_rods_connectors_list$rod_list))>0){
       
-      lines_df <-  labels_df %>%
-        mutate(vertebral_number = vertebral_number - 0.5) %>%
-        select(-level) %>%
-        left_join(levels_numbered_df) %>%
-        filter(!is.na(level)) %>%
-        select(level, vertebral_number, y) %>%
-        mutate(x_left = 0.4, x_right = 0.6) %>%
-        mutate(y = case_when(
-          vertebral_number < 6.75 ~ y + 0.015,
-          between(vertebral_number, 6.75, 18.75) ~ y + 0.0125,
-          vertebral_number > 18.75 ~ y + 0.015
-        )) %>%
-        mutate(y = if_else(level == "Sacro-iliac", y - 0.01, y)) 
-      
-      lines_list <- pmap(.l = list(..1 = lines_df$x_left, ..2 = lines_df$x_right, ..3 = lines_df$y), 
-                         .f = ~ st_linestring(as.matrix(tibble(x = c(..1, ..2), y = ..3))))
-      
-      names(lines_list) <- lines_df$level
-      
-      rods_crossing_by_level_df <- tibble(level = names(lines_list))
+      # rods_crossing_by_level_df <- tibble(level = names(lines_list))
       
       for (name in names(left_rods_connectors_list$rod_list)) {
         rods_crossing_by_level_df[[name]] <- name
       } 
+      
       rods_crossing_by_level_df %>%
         pivot_longer(cols = -level, names_to = "rod_type", values_to = "value") %>%
         select(level, rod_type) %>%
-        mutate(rod_crosses = pmap(.l = list(..1 = level, ..2 = rod_type), .f = ~ st_intersects(x = lines_list[[..1]], y = left_rods_connectors_list$rod_list[[..2]], sparse = FALSE)[1])) %>%
-        unnest(rod_crosses) %>%
+        mutate(rod_crosses_lower = pmap(.l = list(..1 = level, ..2 = rod_type), .f = ~ st_intersects(x = lower_lines_list[[..1]], y = left_rods_connectors_list$rod_list[[..2]], sparse = FALSE)[1])) %>%
+        unnest(rod_crosses_lower)  %>%
+        mutate(rod_crosses_upper = pmap(.l = list(..1 = level, ..2 = rod_type), .f = ~ st_intersects(x = upper_lines_list[[..1]], y = left_rods_connectors_list$rod_list[[..2]], sparse = FALSE)[1])) %>%
+        unnest(rod_crosses_upper) %>%
+        mutate(rod_crosses = if_else(rod_crosses_lower == TRUE & rod_crosses_upper == TRUE, TRUE, FALSE)) %>%
+        select(level, rod_type, rod_crosses) %>%
         filter(rod_crosses == TRUE) %>%
         pivot_wider(names_from = rod_type, values_from = rod_crosses) %>%
         mutate(across(-level, ~if_else(is.na(.), FALSE, .))) %>%
@@ -7563,36 +7553,21 @@ server <- function(input, output, session) {
     }
     
     if(length(names(right_rods_connectors_list$rod_list))>0){
-      
-      lines_df <-  labels_df %>%
-        mutate(vertebral_number = vertebral_number - 0.5) %>%
-        select(-level) %>%
-        left_join(levels_numbered_df) %>%
-        filter(!is.na(level)) %>%
-        select(level, vertebral_number, y) %>%
-        mutate(x_left = 0.4, x_right = 0.6) %>%
-        mutate(y = case_when(
-          vertebral_number < 6.75 ~ y + 0.015,
-          between(vertebral_number, 6.75, 18.75) ~ y + 0.0125,
-          vertebral_number > 18.75 ~ y + 0.015
-        )) %>%
-        mutate(y = if_else(level == "Sacro-iliac", y - 0.01, y)) 
-      
-      lines_list <- pmap(.l = list(..1 = lines_df$x_left, ..2 = lines_df$x_right, ..3 = lines_df$y), 
-                         .f = ~ st_linestring(as.matrix(tibble(x = c(..1, ..2), y = ..3))))
-      
-      names(lines_list) <- lines_df$level
-      
-      rods_crossing_by_level_df <- tibble(level = names(lines_list))
+
       
       for (name in names(right_rods_connectors_list$rod_list)) {
         rods_crossing_by_level_df[[name]] <- name
       } 
+      
       rods_crossing_by_level_df %>%
         pivot_longer(cols = -level, names_to = "rod_type", values_to = "value") %>%
         select(level, rod_type) %>%
-        mutate(rod_crosses = pmap(.l = list(..1 = level, ..2 = rod_type), .f = ~ st_intersects(x = lines_list[[..1]], y = right_rods_connectors_list$rod_list[[..2]], sparse = FALSE)[1])) %>%
-        unnest(rod_crosses) %>%
+        mutate(rod_crosses_lower = pmap(.l = list(..1 = level, ..2 = rod_type), .f = ~ st_intersects(x = lower_lines_list[[..1]], y = right_rods_connectors_list$rod_list[[..2]], sparse = FALSE)[1])) %>%
+        unnest(rod_crosses_lower)  %>%
+        mutate(rod_crosses_upper = pmap(.l = list(..1 = level, ..2 = rod_type), .f = ~ st_intersects(x = upper_lines_list[[..1]], y = right_rods_connectors_list$rod_list[[..2]], sparse = FALSE)[1])) %>%
+        unnest(rod_crosses_upper) %>%
+        mutate(rod_crosses = if_else(rod_crosses_lower == TRUE & rod_crosses_upper == TRUE, TRUE, FALSE)) %>%
+        select(level, rod_type, rod_crosses) %>%
         filter(rod_crosses == TRUE) %>%
         pivot_wider(names_from = rod_type, values_from = rod_crosses) %>%
         mutate(across(-level, ~if_else(is.na(.), FALSE, .))) %>%
@@ -7602,7 +7577,7 @@ server <- function(input, output, session) {
         mutate(crosses = "rods_crossing") %>%
         pivot_wider(names_from = crosses, values_from = rod_type) %>%
         mutate(rods_crossing = map(.x = rods_crossing, .f = ~ glue_collapse(.x, sep = " + "))) %>%
-        unnest(rods_crossing)%>%
+        unnest(rods_crossing) %>%
         select(level, right_rod_count, right_rods_crossing = rods_crossing)
       
     }else{
@@ -7633,10 +7608,9 @@ server <- function(input, output, session) {
       
     bilateral_rods_crossing_df
     }
-
-
   })
   
+ 
   # task_items_reactive_list <- reactiveValues()
   # 
   # task_items_reactive_list$upload_to_redcap <- 0

@@ -140,6 +140,103 @@ implant_levels_numbered_df <- all_object_ids_df %>%
 
 all_screw_coordinates_df <- fread("all_screw_coordinates_df.csv")
 
+
+
+# lines_df <-  labels_df %>%
+#   mutate(vertebral_number = vertebral_number - 0.5) %>%
+#   select(-level) %>%
+#   left_join(levels_numbered_df) %>%
+#   filter(!is.na(level)) %>%
+#   select(level, vertebral_number, y) %>%
+#   mutate(x_left = 0.4, x_right = 0.6) %>%
+#   mutate(y = case_when(
+#     vertebral_number < 6.75 ~ y + 0.015,
+#     between(vertebral_number, 6.75, 18.75) ~ y + 0.0125,
+#     vertebral_number > 18.75 ~ y + 0.015
+#   )) %>%
+#   mutate(y = if_else(level == "Sacro-iliac", y - 0.01, y)) 
+# lines_df <- labels_df %>%
+#   mutate(vertebral_number = vertebral_number - 0.5) %>%
+#   select(-level) %>%
+#   left_join(levels_numbered_df) %>%
+#   filter(!is.na(level)) %>%
+#   select(level, vertebral_number, y) %>%
+#   mutate(x_left = 0.4, x_right = 0.6) 
+#   mutate(y = case_when(
+#     level ==  "O-C1" ~ y + 0.015,
+#     level ==  "C1-C2" ~ y + 0.015,
+#     level ==  "C2-C3" ~ y + 0.015,
+#     level ==  "C3-C4" ~ y + 0.015,
+#     level ==  "C4-C5" ~ y + 0.015,
+#     level ==  "C5-C6" ~ y + 0.015,
+#     level ==  "C6-C7" ~ y + 0.015,
+#     level ==  "C7-T1" ~ y + 0.015,
+#     level ==  "T1-T2" ~ y + 0.015,
+#     level ==  "T2-T3" ~ y + 0.015,
+#     level ==  "T3-T4" ~ y + 0.015,
+#     level ==  "T4-T5" ~ y + 0.015,
+#     level ==  "T5-T6" ~ y + 0.016,
+#     level ==  "T6-T7" ~ y + 0.015,
+#     level ==  "T7-T8" ~ y + 0.016,
+#     level ==  "T8-T9" ~ y + 0.016,
+#     level ==  "T9-T10" ~ y + 0.0165,
+#     level ==  "T10-T11" ~ y + 0.015, #good
+#     level ==  "T11-T12" ~ y + 0.017,
+#     level ==  "T12-L1" ~ y + 0.015,
+#     level ==  "L1-L2" ~ y + 0.015,
+#     level ==  "L2-L3" ~ y + 0.016,
+#     level ==  "L3-L4" ~ y + 0.016,
+#     level ==  "L4-L5" ~ y + 0.0125,
+#     level ==  "L5-S1" ~ y + 0.0075,
+#     level ==  "Sacro-iliac" ~ y
+#   ))
+  # mutate(y = case_when(
+  #   vertebral_number < 6.75 ~ y + 0.015,  #adjusts C6-7 and up
+  #   between(vertebral_number, 6.75, 18.75) ~ y + 0.015, #adjusts C7-T1 to T11-T12
+  #   between(vertebral_number, 18.75, 21.75) ~ y + 0.015, #adjusts T11-T12 to L2-3
+  #   vertebral_number > 21.75 ~ y + 0.01
+  # )) %>%
+  # mutate(y = if_else(level == "Sacro-iliac", y - 0.01, y)) 
+
+##notes
+#  L4-5 and L5-s1 needs to come down
+# 
+
+  lines_df <- labels_df %>%
+    mutate(vertebral_number = vertebral_number - 0.5) %>%
+    select(-level) %>%
+    left_join(levels_numbered_df) %>%
+    filter(!is.na(level)) %>%
+    select(level, vertebral_number, y) %>%
+    mutate(x_left = 0.4, x_right = 0.6) %>%
+    mutate(y = if_else(level == "Sacro-iliac", y - 0.01, y)) %>%
+    rename(y_lower = y)  %>% 
+    mutate(y_upper = y_lower + 0.018) %>%
+    mutate(y_upper = case_when(
+      vertebral_number < 10.25 ~ y_upper,
+      between(vertebral_number, 10.25, 15.75) ~ y_upper + 0.0075,
+      between(vertebral_number, 15.75, 20.75) ~ y_upper + 0.01,
+      between(vertebral_number, 20.75, 23.75) ~ y_upper + 0.012,
+      vertebral_number > 23.75 ~ y_upper
+    ))
+  
+  
+  lower_lines_list <- pmap(.l = list(..1 = lines_df$x_left, ..2 = lines_df$x_right, ..3 = lines_df$y_lower), 
+                           .f = ~ st_linestring(as.matrix(tibble(x = c(..1, ..2), y = ..3))))
+  
+  upper_lines_list <- pmap(.l = list(..1 = lines_df$x_left, ..2 = lines_df$x_right, ..3 = lines_df$y_upper), 
+                           .f = ~ st_linestring(as.matrix(tibble(x = c(..1, ..2), y = ..3))))
+  
+  
+  names(lower_lines_list) <- lines_df$level
+  
+  names(upper_lines_list) <- lines_df$level
+  rods_crossing_by_level_df <- tibble(level = names(lower_lines_list))
+  
+  
+  #########
+
+
 all_cages_df <- all_object_ids_df %>%
   filter(
     object == "anterior_interbody_implant" |
