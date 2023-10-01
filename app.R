@@ -6428,58 +6428,58 @@ server <- function(input, output, session) {
     intraop_details_list$dos_intraop_repeating <- as.character(input$date_of_surgery)
     
     ################### Abx  #########################
-    intraop_details_list$antibiotics <- glue_collapse(input$preop_antibiotics, sep = '; ')
+    # intraop_details_list$antibiotics <- glue_collapse(input$preop_antibiotics, sep = '; ')
     
     
     ################### NEUROMONINTORING  #########################
-    intraop_details_list$neuromonitoring <- if_else(length(input$neuromonitoring) >0, glue_collapse(input$neuromonitoring, sep = '; '), glue("none"))
+    # intraop_details_list$neuromonitoring <- if_else(length(input$neuromonitoring) >0, glue_collapse(input$neuromonitoring, sep = '; '), glue("none"))
     
     
     ################### antifibrinolytic  #########################
-    if(length(input$anti_fibrinolytic) > 0){
-      antifibrinolytics_vector <- str_to_lower(as.character(glue_collapse(input$anti_fibrinolytic, sep = "; ")))
-      intraop_details_list$anti_fibrinolytic <- str_replace_all(string = antifibrinolytics_vector,
-                                                                pattern = "tranexamic acid \\(txa\\)",
-                                                                replacement = glue("tranexamic acid (txa) Loading: {input$txa_loading}mg/kg, Maint: {input$txa_maintenance}mg/kg/hr"))
-    }else{
-      intraop_details_list$anti_fibrinolytic <- "none"
-    }
+    # if(length(input$anti_fibrinolytic) > 0){
+    #   antifibrinolytics_vector <- str_to_lower(as.character(glue_collapse(input$anti_fibrinolytic, sep = "; ")))
+    #   intraop_details_list$anti_fibrinolytic <- str_replace_all(string = antifibrinolytics_vector,
+    #                                                             pattern = "tranexamic acid \\(txa\\)",
+    #                                                             replacement = glue("tranexamic acid (txa) Loading: {input$txa_loading}mg/kg, Maint: {input$txa_maintenance}mg/kg/hr"))
+    # }else{
+    #   intraop_details_list$anti_fibrinolytic <- "none"
+    # }
     
     ####### surgical findings #####
-    intraop_details_list$surgical_findings <- if_else(input$surgical_findings == "", "none", input$surgical_findings)
+    # intraop_details_list$surgical_findings <- if_else(input$surgical_findings == "", "none", input$surgical_findings)
     
     ####### Specimens  #####
-    intraop_details_list$specimens <- if_else(input$specimens_removed == "", "none", input$specimens_removed)
+    # intraop_details_list$specimens <- if_else(input$specimens_removed == "", "none", input$specimens_removed)
     
     ####### EBL  #####
     intraop_details_list$ebl_ml <- if_else(is.na(input$ebl), "xx", paste(input$ebl))
     
     ####### Urine Output  #####
-    intraop_details_list$urine_output <- if_else(is.na(input$urine_output), "xx", paste(input$urine_output)) 
+    # intraop_details_list$urine_output <- if_else(is.na(input$urine_output), "xx", paste(input$urine_output)) 
     
     ####### Crystalloids  #####
-    intraop_details_list$crystalloids_ml <- if_else(is.na(input$crystalloids_administered), "xx", paste(input$crystalloids_administered))
+    # intraop_details_list$crystalloids_ml <- if_else(is.na(input$crystalloids_administered), "xx", paste(input$crystalloids_administered))
     
     ####### Colloids  #####
-    intraop_details_list$colloids_ml <- if_else(is.na(input$colloids_administered), "xx", paste(input$colloids_administered)) 
+    # intraop_details_list$colloids_ml <- if_else(is.na(input$colloids_administered), "xx", paste(input$colloids_administered)) 
     
     ####### Transfusion  #####
-    intraop_details_list$transfusion <- if_else(input$transfusion == TRUE, "yes", "no")
+    # intraop_details_list$transfusion <- if_else(input$transfusion == TRUE, "yes", "no")
     
     ####### cell_saver  #####
-    intraop_details_list$cell_saver_cc <- if_else(is.na(input$cell_saver_transfused), "xx", paste(input$cell_saver_transfused)) 
+    # intraop_details_list$cell_saver_cc <- if_else(is.na(input$cell_saver_transfused), "xx", paste(input$cell_saver_transfused)) 
     
     ####### prbc  #####
-    intraop_details_list$prbc_units <- if_else(is.na(input$prbc_transfused), "xx", paste(input$prbc_transfused)) 
+    # intraop_details_list$prbc_units <- if_else(is.na(input$prbc_transfused), "xx", paste(input$prbc_transfused)) 
     
     ####### ffp  #####
-    intraop_details_list$ffp_units <- if_else(is.na(input$ffp_transfused), "xx", paste(input$ffp_transfused)) 
+    # intraop_details_list$ffp_units <- if_else(is.na(input$ffp_transfused), "xx", paste(input$ffp_transfused)) 
     
     ####### cryoprecipitate  #####
-    intraop_details_list$cryoprecipitate_units <- if_else(is.na(input$cryoprecipitate_transfused), "xx", paste(input$cryoprecipitate_transfused)) 
+    # intraop_details_list$cryoprecipitate_units <- if_else(is.na(input$cryoprecipitate_transfused), "xx", paste(input$cryoprecipitate_transfused)) 
     
     ####### platelets  #####
-    intraop_details_list$platelets_units <- if_else(is.na(input$platelets_transfused), "xx", paste(input$platelets_transfused))  
+    # intraop_details_list$platelets_units <- if_else(is.na(input$platelets_transfused), "xx", paste(input$platelets_transfused))  
     
     ####### complications  #####
     complication_df <- tibble(complication = append(input$intraoperative_complications_vector, input$other_intraoperative_complications)) %>%
@@ -6494,31 +6494,31 @@ server <- function(input, output, session) {
     }
     
     ####### other procedures  #####
-    if(any(all_objects_to_add_list$objects_df$approach == "anterior")){
-      intraop_details_list$deep_drains_anterior <- paste(input$deep_drains_anterior)
-      intraop_details_list$superficial_drains_anterior <- paste(input$superficial_drains_anterior) 
-    }
-    if(any(all_objects_to_add_list$objects_df$approach == "posterior")){
-      intraop_details_list$deep_drains_posterior <- paste(input$deep_drains_posterior)
-      intraop_details_list$superficial_drains_posterior <- paste(input$superficial_drains_posterior) 
-    }
-    
-    if(length(input$additional_end_procedure_details_anterior)>0){
-      intraop_details_list$end_procedure_details_anterior <- glue_collapse(input$additional_end_procedure_details_anterior, sep = "; ")
-    }else{
-      intraop_details_list$end_procedure_details_anterior <- " "
-    }
-    if(length(input$additional_end_procedure_details_posterior)>0){
-      intraop_details_list$end_procedure_details_posterior <- glue_collapse(input$additional_end_procedure_details_posterior, sep = "; ")
-    }else{
-      intraop_details_list$end_procedure_details_posterior <- " "
-    }
-    
-    intraop_details_list$closure_details_anterior <- glue_collapse(input$closure_details_anterior, sep = "; ")
-    intraop_details_list$dressing_details_anterior <- glue_collapse(input$dressing_details_anterior, sep = "; ")
-    
-    intraop_details_list$closure_details_posterior <- glue_collapse(input$closure_details_posterior, sep = "; ")
-    intraop_details_list$dressing_details_posterior <- glue_collapse(input$dressing_details_posterior, sep = "; ")
+    # if(any(all_objects_to_add_list$objects_df$approach == "anterior")){
+    #   intraop_details_list$deep_drains_anterior <- paste(input$deep_drains_anterior)
+    #   intraop_details_list$superficial_drains_anterior <- paste(input$superficial_drains_anterior) 
+    # }
+    # if(any(all_objects_to_add_list$objects_df$approach == "posterior")){
+    #   intraop_details_list$deep_drains_posterior <- paste(input$deep_drains_posterior)
+    #   intraop_details_list$superficial_drains_posterior <- paste(input$superficial_drains_posterior) 
+    # }
+    # 
+    # if(length(input$additional_end_procedure_details_anterior)>0){
+    #   intraop_details_list$end_procedure_details_anterior <- glue_collapse(input$additional_end_procedure_details_anterior, sep = "; ")
+    # }else{
+    #   intraop_details_list$end_procedure_details_anterior <- " "
+    # }
+    # if(length(input$additional_end_procedure_details_posterior)>0){
+    #   intraop_details_list$end_procedure_details_posterior <- glue_collapse(input$additional_end_procedure_details_posterior, sep = "; ")
+    # }else{
+    #   intraop_details_list$end_procedure_details_posterior <- " "
+    # }
+    # 
+    # intraop_details_list$closure_details_anterior <- glue_collapse(input$closure_details_anterior, sep = "; ")
+    # intraop_details_list$dressing_details_anterior <- glue_collapse(input$dressing_details_anterior, sep = "; ")
+    # 
+    # intraop_details_list$closure_details_posterior <- glue_collapse(input$closure_details_posterior, sep = "; ")
+    # intraop_details_list$dressing_details_posterior <- glue_collapse(input$dressing_details_posterior, sep = "; ")
     
     ####### GENERATE DATAFRAME #####
     

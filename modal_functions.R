@@ -144,6 +144,7 @@ startup_modal_box <-
             inputId = "redcap_institution",
             label = "Institution:",
             choices = c("UTHSCSA", 
+                        "UCSD", 
                         "OTHER"),
             individual = TRUE,
             selected = "UTHSCSA",
