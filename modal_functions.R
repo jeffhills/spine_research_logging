@@ -650,7 +650,11 @@ startup_modal_box_diagnosis_symptoms <-
                                              inputId = "left_revision_implants",
                                              label = "Present:",
                                              selected = left_prior_implants,
-                                             choices = unique((revision_screws_df %>% filter(x < 0.5))$level)
+                                             choices = unique((all_object_ids_df %>%
+                                                                 filter(object == "pedicle_screw" | str_detect(object, "pelvic_screw") | object == "occipital_screw" | object == "lateral_mass_screw") %>%
+                                                                 filter((str_detect(string = level, pattern = "C1|C3|C4|C5|C6") & object == "pedicle_screw") == FALSE) %>%
+                                                                 arrange(vertebral_number) %>%
+                                                                 filter(x < 0.5))$level)
                                            )
                                          ),
                                          column(
@@ -660,7 +664,11 @@ startup_modal_box_diagnosis_symptoms <-
                                              label = "Removed:",
                                              status = "danger",
                                              selected = left_prior_implants_removed,
-                                             choices = unique((revision_screws_df %>% filter(x < 0.5))$level)
+                                             choices = unique((all_object_ids_df %>%
+                                                                 filter(object == "pedicle_screw" | str_detect(object, "pelvic_screw") | object == "occipital_screw" | object == "lateral_mass_screw") %>%
+                                                                 filter((str_detect(string = level, pattern = "C1|C3|C4|C5|C6") & object == "pedicle_screw") == FALSE) %>%
+                                                                 arrange(vertebral_number) %>%
+                                                                 filter(x > 0.5))$level)
                                            )
                                          )
                                        ),
@@ -673,7 +681,11 @@ startup_modal_box_diagnosis_symptoms <-
                                              inputId = "right_revision_implants",
                                              label = "Present:",
                                              selected = right_prior_implants,
-                                             choices = unique((revision_screws_df %>% filter(x < 0.5))$level)
+                                             choices = unique((all_object_ids_df %>%
+                                                                 filter(object == "pedicle_screw" | str_detect(object, "pelvic_screw") | object == "occipital_screw" | object == "lateral_mass_screw") %>%
+                                                                 filter((str_detect(string = level, pattern = "C1|C3|C4|C5|C6") & object == "pedicle_screw") == FALSE) %>%
+                                                                 arrange(vertebral_number) %>%
+                                                                 filter(x < 0.5))$level)
                                            )
                                          ),
                                          column(
@@ -683,7 +695,11 @@ startup_modal_box_diagnosis_symptoms <-
                                              label = "Removed:",
                                              status = "danger",
                                              selected = right_prior_implants_removed,
-                                             choices = unique((revision_screws_df %>% filter(x < 0.5))$level)
+                                             choices = unique((all_object_ids_df %>%
+                                                                 filter(object == "pedicle_screw" | str_detect(object, "pelvic_screw") | object == "occipital_screw" | object == "lateral_mass_screw") %>%
+                                                                 filter((str_detect(string = level, pattern = "C1|C3|C4|C5|C6") & object == "pedicle_screw") == FALSE) %>%
+                                                                 arrange(vertebral_number) %>%
+                                                                 filter(x > 0.5))$level)
                                            )
                                          )
                                        )
@@ -782,7 +798,6 @@ startup_modal_box_diagnosis_symptoms <-
       )
     )
   }
-
 
 ################################################    FUSION AND TECHNIQUE DETAILS MODAL  ######################################
 ################################################    FUSION AND TECHNIQUE DETAILS MODAL  ######################################

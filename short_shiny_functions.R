@@ -14,6 +14,15 @@ jh_replace_checkbox_other_with_text_function <- function(input_vector = c(" "),
   new_vector
 }
 
+format_plan_list_function <- function(plan_label, input_vector){
+  if(length(input_vector) > 1){
+    plan_formatted <- paste0("  - ", plan_label, ":", glue_collapse(prepend(x = input_vector, values = " "), sep = "\n       > "))
+  }else{
+    plan_formatted <- paste0("  - ", plan_label, ": ", input_vector)
+  }
+  plan_formatted
+}
+
 jh_make_op_note_test_df_function <- function(posterior_or_anterior = "posterior", spine_region = "lumbar", object = c("pre_selected")){
   
   surgical_objects <- as_vector(object)
@@ -55,7 +64,8 @@ jh_make_op_note_test_df_function <- function(posterior_or_anterior = "posterior"
   }
   
   selected_objects_df <- selected_objects_df %>%
-    select(level, vertebral_number, body_interspace, approach, category, implant, object, side, everything())
+    mutate(screw_size_type = "", implant_statement = "") %>%
+    select(level, vertebral_number, body_interspace, approach, category, implant, object, side, screw_size_type, implant_statement)
   
   if(posterior_or_anterior == "anterior"){
     selected_objects_df <- selected_objects_df %>%
@@ -64,7 +74,7 @@ jh_make_op_note_test_df_function <- function(posterior_or_anterior = "posterior"
   return(selected_objects_df)
 }
 
-# Now in load coordinates
+# now in load coordinates
 # levels_vector <- c('Occiput', 'O-C1', 'C1', 'C1-C2', 'C2', 'C2-C3', 'C3', 'C3-C4', 'C4', 'C4-C5', 'C5', 'C5-C6', 'C6', 'C6-C7', 'C7', 'C7-T1', 'T1', 'T1-T2', 'T2', 'T2-T3', 'T3', 'T3-T4', 'T4', 'T4-T5', 'T5', 'T5-T6', 'T6', 'T6-T7', 'T7', 'T7-T8', 'T8', 'T8-T9', 'T9', 'T9-T10', 'T10', 'T10-T11', 'T11', 'T11-T12', 'T12', 'T12-L1', 'L1', 'L1-L2', 'L2', 'L2-L3', 'L3', 'L3-L4', 'L4', 'L4-L5', 'L5', 'L5-S1', 'S1', 'Sacro-iliac', 'Iliac', 'S2AI')
 # 
 # vertebral_numbers_vector <- c(0,0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10, 10.5, 11, 11.5, 12, 12.5, 13, 13.5, 14, 14.5, 15, 15.5, 16, 16.5, 17, 17.5, 18, 18.5, 19, 19.5, 20, 20.5, 21, 21.5, 22, 22.5, 23, 23.5, 24, 24.5, 25, 25.5, 26, 27)
@@ -1008,14 +1018,20 @@ fusion_levels_df_function <- function(all_objects_to_add_df){
       arrange(vertebral_number) 
     
     if(any(fusion_range_df$body_interspace == "body")){
-      fusion_bodies_df <- fusion_range_df %>%
-        filter(body_interspace == "body") %>%
-        filter(vertebral_number == min(vertebral_number) | vertebral_number == max(vertebral_number)) %>%
-        select(vertebral_number) %>%
-        distinct() %>%
-        mutate(vertebral_number = if_else(vertebral_number == min(vertebral_number), vertebral_number + 0.5, vertebral_number - 0.5))
+      # fusion_bodies_df <- fusion_range_df %>%
+      #   filter(body_interspace == "body") %>%
+      #   filter(vertebral_number == min(vertebral_number) | vertebral_number == max(vertebral_number)) %>%
+      #   select(vertebral_number) %>%
+      #   distinct() 
+      # mutate(vertebral_number = if_else(vertebral_number == min(vertebral_number), vertebral_number + 0.5, vertebral_number - 0.5))
       
-      fusions_levels_df <- tibble(vertebral_number = seq(from = min(fusion_bodies_df$vertebral_number), to = max(fusion_bodies_df$vertebral_number), by = 1)) %>%
+      interspaces <- seq(from = min(fusion_range_df$vertebral_number) + 0.5, to = max(fusion_range_df$vertebral_number) - 0.5, by = 1)
+      
+      # interspaces <- fusion_vertebral_numbers_df$vertebral_number - 0.5
+      # interspaces <- append(interspaces, fusion_vertebral_numbers_df$vertebral_number + 0.5) 
+      
+      fusions_levels_df <- tibble(vertebral_number = interspaces) %>%
+        # fusions_levels_df <- tibble(vertebral_number = seq(from = min(fusion_bodies_df$vertebral_number), to = max(fusion_bodies_df$vertebral_number), by = 1)) %>%
         mutate(level = jh_get_vertebral_level_function(number = vertebral_number))  %>%
         bind_rows(fusion_range_df %>%
                     filter(body_interspace == "interspace") %>%
@@ -1620,16 +1636,28 @@ jh_connected_rod_all_implants_range_function <- function(all_objects_df, cranial
   }
   
   return(implant_range)
-  
 }
 
+# left_revision_implants_reactive_list()$retained_df #tibble(level, side, vertebral_number, object, x, y)
+
+
+
 jh_supplementary_rods_choices_function <- function(all_objects_df, 
+                                                   revision_objects_retained_df = tibble(level = character(), side = character(), vertebral_number = double(), object = character()),
                                                    osteotomy_site = NULL, 
-                                                   rod_type = "accessory_rod"){
+                                                   rod_type = "accessory_rod"){ 
   
-  implant_df <- all_objects_df %>%
-    filter(str_detect(string = object, pattern = "screw|hook|wire")) %>%
-    arrange(vertebral_number)
+  if(nrow(revision_objects_retained_df)>0){
+    implant_df <- all_objects_df %>%
+      filter(str_detect(string = object, pattern = "screw|hook|wire")) %>%
+      bind_rows(revision_objects_retained_df) %>%
+      arrange(vertebral_number)
+  }else{
+    implant_df <-  all_objects_df %>%
+      filter(str_detect(string = object, pattern = "screw|hook|wire")) %>%
+      arrange(vertebral_number)
+  }
+  
   
   supplemental_starts_vector <- c("a", "b")
   supplemental_choices_vector <- c("a", "b")
@@ -1719,10 +1747,37 @@ jh_supplementary_rods_choices_function <- function(all_objects_df,
   
   ### LINKED ROD
   if(str_detect(rod_type, "linked")){
+    
+    # if(nrow(revision_objects_retained_df %>% filter(prior_rod_connected == "yes"))>0){
+    #   implant_df <- all_objects_df %>%
+    #     filter(str_detect(string = object, pattern = "screw|hook|wire")) %>%
+    #     bind_rows(revision_objects_retained_df) %>%
+    #     arrange(vertebral_number)
+    # }else{
+    #   implant_df <-  all_objects_df %>%
+    #     filter(str_detect(string = object, pattern = "screw|hook|wire")) %>%
+    #     arrange(vertebral_number)
+    # }
+    
     if(nrow(implant_df) > 3){
-      
-      proximal_rod <- head(implant_df$level, n = round(length(implant_df$level)/1.25, 0))
-      distal_rod <- tail(implant_df$level, n = round(length(implant_df$level)/1.25, 0))
+      if(nrow(revision_objects_retained_df)>0){
+        # implant_df <- all_objects_df %>%
+        #   filter(str_detect(string = object, pattern = "screw|hook|wire")) %>%
+        #   # bind_rows(revision_objects_retained_df) %>%
+        #   arrange(vertebral_number)
+        
+        if(max(revision_objects_retained_df$vertebral_number) < min(all_objects_df$vertebral_number)){ ## this would mean the proximal rod is the old rod
+          proximal_rod <- revision_objects_retained_df$level
+          distal_rod <- tail(implant_df$level, n = round(length(implant_df$level)/1.25, 0))
+        }else{  ## this means the distal rod is the old rod. IE extending up
+          proximal_rod <- head(implant_df$level, n = round(length(implant_df$level)/1.25, 0))
+          distal_rod <- revision_objects_retained_df$level
+        } 
+        
+      }else{
+        proximal_rod <- head(implant_df$level, n = round(length(implant_df$level)/1.25, 0))
+        distal_rod <- tail(implant_df$level, n = round(length(implant_df$level)/1.25, 0)) 
+      }
       
       overlapping_region <- keep(.x = proximal_rod, .p = ~ .x %in% distal_rod)
       
@@ -1932,7 +1987,7 @@ jh_rod_construct_connector_matrices_function <- function(full_rod_matrix, x_nudg
   proximal_connector_point_df <- full_rod_matrix %>%
     as_tibble() %>%
     filter(y == max(y))  
-
+  
   
   matrix_list$top_connector_matrix <- proximal_connector_point_df %>%
     mutate(x = if_else(x < 0.5, 
@@ -1983,13 +2038,13 @@ jh_sf_rod_object_from_matrix_function <- function(matrix_input = as.matrix(tibbl
         as.matrix()
       rod_object_sf <-  st_buffer(st_linestring(rod_matrix), dist = buffer_distance, endCapStyle = "ROUND")
     }else{
-        rod_matrix <- as_tibble(matrix_input) %>%
-          union_all(as_tibble(matrix_input)) %>%
-          mutate(y = if_else(y == max(y), y + 0.0065, y)) %>%
-          mutate(y = if_else(y == min(y), y - 0.0065, y)) %>%
-          as.matrix()
-        rod_object_sf <-  st_buffer(st_linestring(rod_matrix), dist = buffer_distance, endCapStyle = "ROUND")
-
+      rod_matrix <- as_tibble(matrix_input) %>%
+        union_all(as_tibble(matrix_input)) %>%
+        mutate(y = if_else(y == max(y), y + 0.0065, y)) %>%
+        mutate(y = if_else(y == min(y), y - 0.0065, y)) %>%
+        as.matrix()
+      rod_object_sf <-  st_buffer(st_linestring(rod_matrix), dist = buffer_distance, endCapStyle = "ROUND")
+      
     }
   }else{
     rod_object_sf <- NULL
@@ -2013,8 +2068,9 @@ build_unilateral_rods_list_function <- function(unilateral_full_implant_df,
                                                 kickstand_rod_vector = c("a"),
                                                 add_custom_rods = FALSE, 
                                                 custom_rods_vector_list = list(),
-                                                revision_rods_retained_df = tibble(level = character(), vertebral_number = double(), x = double(), y = double()),
-                                                prior_rod_overlap_connectors = c("")
+                                                revision_rods_retained_df = tibble(level = character(), vertebral_number = double(), x = double(), y = double(), prior_rod_connected = character()),
+                                                prior_rod_overlap_connectors = c(""),
+                                                include_revision_rods_in_list = FALSE
 ){
   
   # full_implant_range <- all_screw_coordinates_df %>%
@@ -2035,6 +2091,20 @@ build_unilateral_rods_list_function <- function(unilateral_full_implant_df,
       
       revision_implants_retained_df <- revision_rods_retained_df %>% 
         filter(prior_rod_connected == "yes")  
+      
+      if(include_revision_rods_in_list == TRUE){
+        revision_rod_matrix <- revision_implants_retained_df %>%
+          select(x, y) %>%
+          # filter(!is.na(y)) %>%
+          mutate(y = if_else(y == max(y), y + 0.005, y)) %>%
+          mutate(y = if_else(y == min(y), y - 0.005, y)) %>%
+          mutate(x = if_else(x < 0.5, x + 0.003, x - 0.003)) %>%
+          arrange(y) %>%
+          distinct() %>%
+          as.matrix()
+        
+        rods_list$revision_rod_sf <-  jh_sf_rod_object_from_matrix_function(revision_rod_matrix) 
+      }
       
       if(length(prior_rod_overlap_connectors)>0){
         revision_rod_overlap <- all_implants_constructed_df %>%
@@ -2086,12 +2156,14 @@ build_unilateral_rods_list_function <- function(unilateral_full_implant_df,
                side == rod_side) %>%
         select(x, y) %>%
         mutate(x = if_else(x < 0.5, x-0.01, x + 0.01)) %>%
+        arrange(y) %>%
         mutate(y = y - 0.015)
       
     }else{
       revision_rod_overlap <- tibble(x = double(), 
                                      y = double())
     }
+    
     
     
     #################### KICKSTAND ROD ###################
@@ -2132,38 +2204,36 @@ build_unilateral_rods_list_function <- function(unilateral_full_implant_df,
         filter(level != kickstand_rod_vector[2])%>%
         mutate(y = if_else(y == max(y), y + 0.005, y)) %>%
         mutate(y = if_else(y == min(y), y - 0.005, y)) %>%
-        arrange(rev(y)) 
+        arrange(y)
       
     }else{
       main_rod_df <- unilateral_full_implant_df %>%
         mutate(y = if_else(y == max(y), y + 0.005, y)) %>%
         mutate(y = if_else(y == min(y), y - 0.005, y)) %>%
-        arrange(rev(y)) 
+        arrange(y)
     } 
     
     #################### MAIN ROD ###################
     if(nrow(main_rod_df) >1){
       
       main_rod_matrix <- main_rod_df %>%
-        arrange(rev(y)) %>%
         select(x, y) %>%
         bind_rows(revision_rod_overlap) %>%
-        arrange(rev(y)) %>%
         distinct() %>%
         remove_missing() %>%
         select(x, y) %>%
+        arrange(y) %>%
         as.matrix()
       
       rods_list$main_rod_sf <- jh_sf_rod_object_from_matrix_function(main_rod_matrix) 
     }else if(nrow(main_rod_df) == 1 && nrow(revision_rod_overlap)>0){
       main_rod_matrix <- main_rod_df %>%
-        arrange(rev(y)) %>%
         select(x, y) %>%
         bind_rows(revision_rod_overlap) %>%
-        arrange(rev(y)) %>%
         distinct() %>%
         remove_missing() %>%
         select(x, y) %>%
+        arrange(y) %>%
         as.matrix()
       
       rods_list$main_rod_sf <- jh_sf_rod_object_from_matrix_function(main_rod_matrix) 
@@ -2180,8 +2250,6 @@ build_unilateral_rods_list_function <- function(unilateral_full_implant_df,
       
       satellite_rod_matrix <- satellite_rods_vector_df %>%
         mutate(x = if_else(x < 0.5, x + 0.003, x - 0.003)) %>%
-        # mutate(y = if_else(y == max(y), y + 0.01, y)) %>%
-        # mutate(y = if_else(y == min(y), y - 0.01, y)) %>%
         remove_missing() %>%
         select(x, y) %>%
         as.matrix()
@@ -2207,28 +2275,57 @@ build_unilateral_rods_list_function <- function(unilateral_full_implant_df,
     
     #################### LINKED ROD ###################
     if(add_linked_rods == TRUE && linked_rods_vector[1] %in% all_screw_coordinates_df$level && (linked_rods_vector[1] !=linked_rods_vector[2])){
+      if(nrow(revision_rods_retained_df) > 0){
+        if(tail(revision_rods_retained_df$level, 1) == linked_rods_vector[2]){
+          revision_rod_is <-  "proximal"
+        }else if(head(revision_rods_retained_df$level, 1) == linked_rods_vector[1]){
+          revision_rod_is <-  "distal"
+        }else{
+          revision_rod_is <-  "na"
+        }  
+      }else{
+        revision_rod_is <-  "na"
+      }
+      main_rod_df <-  revision_rods_retained_df %>%
+        bind_rows(main_rod_df) %>%
+        arrange(vertebral_number) %>%
+        distinct()
       
-      proximal_rod_distal_point <- (all_screw_coordinates_df %>%  filter(side == rod_side, level == linked_rods_vector[2]))$level
+      if(revision_rod_is == "proximal"){
+        proximal_rod_levels_vector <- (revision_rods_retained_df %>%
+                                         filter(prior_rod_connected == "yes"))$level
+        
+      }else{
+        proximal_rod_distal_point <- (all_screw_coordinates_df %>%  filter(side == rod_side, level == linked_rods_vector[2]))$level
+        
+        proximal_rod_vector <- c(main_rod_df$level[1],
+                                 proximal_rod_distal_point)
+        
+        proximal_rod_levels_vector <- jh_connected_rod_all_implants_range_function(all_objects_df = main_rod_df, 
+                                                                                   cranial_caudal_vector = proximal_rod_vector)
+      }
       
-      proximal_rod_vector <- c(main_rod_df$level[1],
-                               proximal_rod_distal_point)
+      if(revision_rod_is == "distal"){
+        distal_rod_levels_vector <- (revision_rods_retained_df %>%
+                                       filter(prior_rod_connected == "yes"))$level
+        
+      }else{
+        distal_rod_proximal_point <- (all_screw_coordinates_df %>%  filter(side == rod_side, level == linked_rods_vector[1]))$level
+        
+        distal_rod_vector <- c(distal_rod_proximal_point, 
+                               main_rod_df$level[length(main_rod_df$level)])
+        
+        
+        distal_rod_levels_vector <- jh_connected_rod_all_implants_range_function(all_objects_df = main_rod_df, 
+                                                                                 cranial_caudal_vector = distal_rod_vector)
+      }
       
-      distal_rod_proximal_point <- (all_screw_coordinates_df %>%  filter(side == rod_side, level == linked_rods_vector[1]))$level
-      
-      distal_rod_vector <- c(distal_rod_proximal_point, 
-                             main_rod_df$level[length(main_rod_df$level)])
-      
-      
-      proximal_rod_levels_vector <- jh_connected_rod_all_implants_range_function(all_objects_df = main_rod_df, 
-                                                                                 cranial_caudal_vector = proximal_rod_vector)
-      
-      distal_rod_levels_vector <- jh_connected_rod_all_implants_range_function(all_objects_df = main_rod_df, 
-                                                                               cranial_caudal_vector = distal_rod_vector)
       
       x_linked_rod_modifier <- if_else(rod_side == "left", 0.004, -.004)
       
-      # proximal_linked_rod_matrix <- tibble(level = proximal_rod_levels_vector) %>%
-      #   left_join(main_rod_df) %>%
+      if(revision_rod_is == "proximal" | revision_rod_is == "distal"){
+        x_linked_rod_modifier <- if_else(rod_side == "left", 0.006, -.006)
+      }
       
       proximal_linked_rod_matrix <- main_rod_df %>% 
         filter(level %in% proximal_rod_levels_vector) %>%
@@ -2236,18 +2333,13 @@ build_unilateral_rods_list_function <- function(unilateral_full_implant_df,
         select(x, y) %>%
         as.matrix()
       
-      # distal_linked_rod_matrix <- tibble(level = distal_rod_levels_vector) %>%
-      #   left_join(main_rod_df) %>%
+      
       distal_linked_rod_matrix <- main_rod_df %>% 
         filter(level %in% distal_rod_levels_vector) %>%
         mutate(x = if_else(level %in% proximal_rod_levels_vector, x + x_linked_rod_modifier, x)) %>%
         select(x, y) %>%
         as.matrix()
       
-      
-      # linked_rods_overlap_matrix <- tibble(level = linked_rods_vector) %>%
-      #   left_join(all_screw_coordinates_df %>%
-      #   filter(side == rod_side))  %>%
       
       linked_rods_overlap_matrix <- all_screw_coordinates_df %>%
         filter(side == rod_side, 
@@ -2267,12 +2359,36 @@ build_unilateral_rods_list_function <- function(unilateral_full_implant_df,
       rods_list$linked_proximal_rod_sf <- jh_sf_rod_object_from_matrix_function(proximal_linked_rod_matrix)
       rods_list$linked_distal_rod_sf <- jh_sf_rod_object_from_matrix_function(distal_linked_rod_matrix)
       
-      
       rods_list$main_rod_sf <- NULL
+      
+      if(revision_rod_is == "distal"){
+        
+        rods_list$linked_distal_rod_sf <- NULL
+      }
+      if(revision_rod_is == "proximal"){
+        rods_list$linked_proximal_rod_sf <- NULL
+      }
     }
     
     #################### INTERCALARY ROD ###################
     if(add_intercalary_rod == TRUE && intercalary_rods_vector[1] %in% all_screw_coordinates_df$level && intercalary_rod_junction %in% all_screw_coordinates_df$level && (intercalary_rods_vector[1] !=intercalary_rods_vector[2])){
+      
+      if(all(main_rod_df$vertebral_number > jh_get_vertebral_number_function(intercalary_rod_junction))){
+        revision_rod_is <- "proximal_intercalary"
+      }else if(all(main_rod_df$vertebral_number < jh_get_vertebral_number_function(intercalary_rod_junction))){
+        revision_rod_is <- "distal_intercalary"
+      }else{
+        revision_rod_is <- "na"
+      }
+      
+      if(all(main_rod_df$vertebral_number > jh_get_vertebral_number_function(intercalary_rod_junction)) | all(main_rod_df$vertebral_number < jh_get_vertebral_number_function(intercalary_rod_junction))){
+        main_rod_df <-   revision_rods_retained_df %>%
+          # filter(prior_rod_connected == "yes") %>%
+          select(level, vertebral_number, x, y) %>%
+          bind_rows(main_rod_df)%>%
+          arrange(y) %>%
+          distinct()
+      }
       
       proximal_intercalary_rod_matrix <- main_rod_df %>%
         filter(vertebral_number <= jh_get_vertebral_number_function(level_to_get_number = intercalary_rod_junction)) %>%
@@ -2286,9 +2402,6 @@ build_unilateral_rods_list_function <- function(unilateral_full_implant_df,
         mutate(y = if_else(y == max(y), y + 0.01, y)) %>%
         as.matrix()
       
-      # intercalary_rod_matrix <- tibble(level = intercalary_rods_vector) %>%
-      #   left_join(all_screw_coordinates_df %>%
-      #   filter(side == rod_side))  %>%
       
       intercalary_rod_matrix <- all_screw_coordinates_df %>%
         filter(side == rod_side, 
@@ -2301,9 +2414,7 @@ build_unilateral_rods_list_function <- function(unilateral_full_implant_df,
         mutate(x = if_else(x < 0.5, x - 0.007, x + 0.007)) %>%
         as.matrix()
       
-      # intercalary_rod_connector_matrix <- tibble(level = intercalary_rods_vector) %>%
-      #   left_join(all_screw_coordinates_df %>%
-      #   filter(side == rod_side))  %>%
+      
       intercalary_rod_connector_matrix <- all_screw_coordinates_df %>%
         filter(side == rod_side, 
                level %in% intercalary_rods_vector) %>%
@@ -2328,9 +2439,15 @@ build_unilateral_rods_list_function <- function(unilateral_full_implant_df,
       connector_list$intercalary_distal_rod_bottom_connector <- jh_sf_rod_object_from_matrix_function(intercalary_connector_matrix_list$bottom_connector_matrix)
       
       rods_list$intercalary_rod_sf <- jh_sf_rod_object_from_matrix_function(intercalary_rod_matrix)
-      rods_list$intercalary_distal_rod_sf <- jh_sf_rod_object_from_matrix_function(distal_intercalary_rod_matrix)
-      rods_list$intercalary_proximal_rod_sf <- jh_sf_rod_object_from_matrix_function(proximal_intercalary_rod_matrix)
+      # rods_list$intercalary_distal_rod_sf <- jh_sf_rod_object_from_matrix_function(distal_intercalary_rod_matrix)
+      # rods_list$intercalary_proximal_rod_sf <- jh_sf_rod_object_from_matrix_function(proximal_intercalary_rod_matrix)
       
+      if(revision_rod_is != "proximal_intercalary"){
+        rods_list$intercalary_proximal_rod_sf <- jh_sf_rod_object_from_matrix_function(proximal_intercalary_rod_matrix)
+      }
+      if(revision_rod_is != "distal_intercalary"){
+        rods_list$intercalary_distal_rod_sf <- jh_sf_rod_object_from_matrix_function(distal_intercalary_rod_matrix)
+      }
       
       rods_list$main_rod_sf <- NULL
     }
@@ -2398,6 +2515,7 @@ build_unilateral_rods_list_function <- function(unilateral_full_implant_df,
 
 
 
+
 jh_generate_supplemental_rod_statement_function <- function(rod_type = "accessory_rod",
                                                             rod_side = "left", 
                                                             rod_size = "5.5", 
@@ -2433,7 +2551,7 @@ jh_generate_supplemental_rod_statement_function <- function(rod_type = "accessor
     }
     
     if(str_detect(rod_type, "kickstand")){
-      rod_statement <- str_squish(glue("On the {rod_side}, a {rod_size} {rod_material} kickstand rod was used to aide in coronal correction. The rod was anchored to the ilium distally and connected proximally at the {rod_vector[2]} level."))
+      rod_statement <- str_squish(glue("On the {rod_side}, a {rod_size} {rod_material} kickstand rod was used to aide in coronal correction. The rod was anchored to the ilium distally and connected proximally at the {rod_vector[1]} level."))
     }
     
   }else{
@@ -2445,6 +2563,95 @@ jh_generate_supplemental_rod_statement_function <- function(rod_type = "accessor
 
 
 
+procedure_classifier_type_df <- tribble(~object_name, ~procedure_label, ~paragraph_type, 
+                                        'incision_drainage', 'Incision and drainage', 'combine',
+                                        'vertebroplasty', 'Vertebroplasty', 'combine',
+                                        'vertebral_cement_augmentation', 'Vertebral body augmentation', 'combine',
+                                        'laminar_downgoing_hook', 'Posterior spinal instrumentation', 'combine',
+                                        'laminar_upgoing_hook', 'Posterior spinal instrumentation', 'combine',
+                                        'c1_lateral_mass_screw', 'Posterior spinal instrumentation', 'combine',
+                                        'lateral_mass_screw', 'Posterior spinal instrumentation', 'combine',
+                                        'occipital_screw', 'Occiput instrumentation', 'combine',
+                                        'pars_screw', 'Posterior spinal instrumentation', 'combine',
+                                        'pedicle_hook', 'Posterior spinal instrumentation', 'combine',
+                                        'pedicle_screw', 'Posterior spinal instrumentation', 'combine',
+                                        'crosslink', 'Posterior spinal instrumentation', 'combine',
+                                        'laminar_downgoing_hook', 'Posterior spinal instrumentation', 'combine',
+                                        'sublaminar_wire', 'Posterior spinal instrumentation', 'combine',
+                                        'tp_hook', 'Posterior spinal instrumentation', 'combine',
+                                        'translaminar_screw', 'Posterior spinal instrumentation', 'combine',
+                                        'pelvic_screw', 'Pelvic instrumentation', 'combine',
+                                        'pelvic_screw_1', 'Pelvic instrumentation', 'combine',
+                                        'pelvic_screw_2', 'Pelvic instrumentation', 'combine',
+                                        'reinsertion_screw', 'Reinsertion of spinal fixation', 'combine',
+                                        'tether', 'Spinous process posterior tethering/wiring', 'combine',
+                                        'costovertebral_approach', 'Costovertebral approach with decompression of the spinal cord', 'distinct',
+                                        'revision_costovertebral_approach', 'Reexploration and revision decompression using a costovertebral approach', 'distinct',
+                                        'transpedicular_approach', 'Transpedicular approach with decompression', 'distinct',
+                                        'lateral_extraforaminal_approach', 'Decompression using a lateral extraforaminal approach', 'distinct',
+                                        'lateral_extracavitary_approach', 'Arthrodesis using a modified lateral extracavitary approach', 'distinct',
+                                        'corpectomy_extracavitary_tumor', 'Partial Corpectomy with decompression using a modified lateral extracavitary approach for tumor', 'distinct',
+                                        'laminectomy_for_tumor', 'Laminectomy for biopsy and excision of extradural spinal tumor', 'combine',
+                                        'laminectomy_for_facet_cyst', 'Laminectomy for excision of facet cyst (intraspinal lesion, not neoplasm)', 'combine',
+                                        'revision_transpedicular_approach', 'Reexploration and revision decompression using a transpedicular approach', 'distinct',
+                                        'sublaminar_decompression', 'Bilateral laminectomy, foraminotomy, and medial facetectomy for decompression of the cauda equina and nerve roots', 'combine',
+                                        'laminectomy', 'Central Laminectomy for decompression', 'combine',
+                                        'diskectomy', 'Laminotomy and discectomy for decompression of the nerve root', 'combine',
+                                        'laminotomy', 'Partial laminectomy with facetectomy & foraminotomy for decompression of the cauda equina and nerve roots', 'combine',
+                                        'cervical_foraminotomy', 'Posterior cervical foraminotomy for decompression of the nerve root', 'combine',
+                                        'revision_diskectomy', 'Reexploration and revision laminotomy and discectomy for decompression of the nerve root', 'combine',
+                                        'revision_sublaminar_decompression', 'Reexploration and revision decompression with bilateral partial laminectomies, foraminotomies, and medial facetectomies', 'combine',
+                                        'revision_laminectomy', 'Reexploration and revision decompression with central laminectomy', 'combine',
+                                        'revision_laminotomy', 'Reexploration and revision decompression with laminotomy and medial facetectomy', 'combine',
+                                        'laminoplasty', 'Laminoplasty', 'combine',
+                                        'grade_1', 'Inferior facetectomies', 'combine',
+                                        'complete_facetectomy', 'Partial laminectomy with complete facetectomy & foraminotomy for decompression of the nerve root', 'combine',
+                                        'revision_complete_facetectomy', 'Reexploration and revision decompression with a laminotomy and complete facetectomy', 'combine',
+                                        'grade_2', 'Posterior column osteotomy', 'combine',
+                                        'grade_3', 'Pedicle subtraction osteotomy', 'distinct',
+                                        'grade_4', 'Extended three column osteotomy (vertebral body partial corpectomy)', 'distinct',
+                                        'grade_5', 'Vertebral column resection', 'distinct',
+                                        'costotransversectomy', 'Costovertebral approach with costotransversectomy', 'combine',
+                                        'no_implant_interbody_fusion', 'Interbody fusion (without interbody implant)', 'distinct',
+                                        'llif', 'Lateral lumbar interbody fusion and insertion of interbody device', 'distinct',
+                                        'plif', 'Posterior lumbar interbody fusion and insertion of interbody device', 'distinct',
+                                        'tlif', 'Transforaminal lumbar interbody fusion and insertion of interbody device', 'distinct',
+                                        'intervertebral_cage', 'Insertion of intervertebral biomechanical implant', 'distinct',
+                                        'structural_allograft', 'Application of structural allograft', 'combine',
+                                        'anterior_disc_arthroplasty', 'Total disk arthroplasty', 'distinct',
+                                        'decompression_diskectomy_fusion', 'Anterior discectomy and fusion with decompression of the central canal and nerve roots', 'distinct',
+                                        'diskectomy_fusion', 'Anterior discectomy and fusion', 'distinct',
+                                        'diskectomy_fusion_no_interbody_device', 'Anterior discectomy and fusion', 'distinct',
+                                        'anterior_interbody_implant', 'Insertion of interbody biomechanical implant', 'distinct',
+                                        'corpectomy', 'Anterior vertebral corpectomy', 'combine',
+                                        'partial_corpectomy', 'Anterior vertebral partial corpectomy', 'combine',
+                                        'corpectomy_cage', 'Anterior insertion of intervertebral biomechanical implant', 'combine',
+                                        'anterior_plate', 'Anterior spinal instrumentation (distinct from an interbody implant)', 'combine',
+                                        'anterior_plate_screw', 'Anterior spinal instrumentation (distinct from an interbody implant)', 'combine',
+                                        'anterior_buttress_plate', 'Anterior spinal instrumentation (distinct from an interbody implant)', 'combine',
+                                        'screw_washer', 'Anterior spinal instrumentation (distinct from an interbody implant)', 'combine')
 
+#### ADDING AN OBJECT: you must do the following:
+# - add the object to the "op_note_procedure_performed_summary_classifier_function"
+# - add the object to the "op_note_number_of_paragraphs_for_procedure_category"
+# - add the revision objects if needed
+# - add the geom
+
+
+################-------------------------#################### -------- ANTERIOR & POSTERIOR FUNCTIONS  -----------################-------------------------#################### 
+################-------------------------#################### -------- ANTERIOR & POSTERIOR FUNCTIONS  -----------################-------------------------#################### 
+################-------------------------#################### -------- ANTERIOR & POSTERIOR FUNCTIONS  -----------################-------------------------#################### 
+
+
+
+op_note_procedure_performed_summary_classifier_function <- function(object){
+  
+  label_df <- procedure_classifier_type_df %>%
+    filter(object_name == object)
+  
+  procedure_category <- label_df$procedure_label[[1]]
+  
+  return(procedure_category)
+}
 
 
