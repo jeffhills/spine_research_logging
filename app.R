@@ -167,16 +167,39 @@ ui <- dashboardPage(skin = "black",
                 }"),
                 ################# STYLE OF MODAL TAB TABLES ###############
                 tags$style(
-                  "#procedures_by_level_redcap_df_modal_tab {
+                  "#patient_details_redcap_table_modal {
                         overflow-x: auto;
                 }"),
                 tags$style(
-                  "#interbody_details_redcap_df_modal_tab {
+                  "#surgical_details_redcap_table_modal {
                         overflow-x: auto;
                 }"),
-
                 tags$style(
-                  "#screw_details_redcap_df_modal_tab {
+                  "#intraoperative_details_redcap_table_modal {
+                        overflow-x: auto;
+                }"),
+                tags$style(
+                  "#rods_crossing_by_level_table_modal {
+                        overflow-x: auto;
+                }"),
+                tags$style(
+                  "#procedures_by_level_redcap_table_modal {
+                        overflow-x: auto;
+                }"),
+                tags$style(
+                  "#screw_details_redcap_table_modal {
+                        overflow-x: auto;
+                }"),
+                tags$style(
+                  "#interbody_details_redcap_table_modal {
+                        overflow-x: auto;
+                }"),
+                tags$style(
+                  "#interbody_details_redcap_table_modal {
+                        overflow-x: auto;
+                }"),
+                tags$style(
+                  "#all_inputs_trimmed_table_modal {
                         overflow-x: auto;
                 }"),
                 tags$style(".nav-tabs-custom>.nav-tabs { width: max-content}"),
@@ -573,7 +596,7 @@ ui <- dashboardPage(skin = "black",
                                                             jh_make_supplemental_rod_ui_function(rod_type = "accessory_rod", input_label = "Accessory Rod"),
                                                             jh_make_supplemental_rod_ui_function(rod_type = "satellite_rod", input_label = "Satellite Rod"),
                                                             jh_make_supplemental_rod_ui_function(rod_type = "intercalary_rod", input_label = "Intercalary Rod"),
-                                                            jh_make_supplemental_rod_ui_function(rod_type = "linked_rods", input_label = "Linked Rods"),
+                                                            jh_make_supplemental_rod_ui_function(rod_type = "linked_rod", input_label = "Linked Rods"),
                                                             jh_make_supplemental_rod_ui_function(rod_type = "kickstand_rod", input_label = "Kickstand Rod"),
                                                             jh_make_shiny_table_column_function(input_type = "awesomeCheckbox", 
                                                                                                 left_input_id = "add_left_custom_rods", 
@@ -960,68 +983,64 @@ ui <- dashboardPage(skin = "black",
                           ###########################################
                   ),
                   tabItem(tabName = "tables",
+                          #         ###########################################
+                          # box(width = 12, title = div(style = "font-size:22px; font-weight:bold; text-align:center", "Procedure Approach/Sequence:"), status = "success", collapsible = TRUE,solidHeader = TRUE,
+                          #     
+                          # ), 
                           h3("Tables for Redcap Upload:"),
                           fluidRow(
-                            column(8, 
-                                   actionBttn(inputId = "preview_redcap_upload", label = "Upload to Redcap Project", icon = icon("upload"), style = "jelly", color = "primary",block = TRUE,  size = "lg"
+                            column(5, 
+                                   actionBttn(inputId = "preview_redcap_upload", label = "Upload to Redcap Project", icon = icon("upload"), style = "jelly", color = "primary", size = "md"
                                    )
                                    ),
-                            column(4,
-                                   textOutput(outputId = "timer"),
-                                   actionBttn(inputId = "stop_timer", label = "Update Timer", 
-                                              icon = icon("stopwatch"), 
+                            column(5, 
+                                   actionBttn(inputId = "stop_timer", label = "Stop Timer", 
+                                              icon = icon("upload"), 
                                               style = "jelly", 
-                                              color = "danger",
-                                              size = "sm"
+                                              color = "warning",
+                                              size = "md"
                                    )
+                                   ),
+                            column(2, 
+                                   textOutput(outputId = "timer")
                                    )
                           ),
-                          br(),
                           box(width = 12, title = div(style = "font-size:22px; font-weight:bold; text-align:center", "Patient Details"),status = "success", collapsible = TRUE,solidHeader = TRUE,
                               column(6, 
                                      tableOutput(outputId = "patient_details_redcap_table")
                               ),
                               column(6, 
-                                     radioGroupButtons(inputId = "approach_sequence", 
-                                                       label = "Spine Approach/Sequence:", 
-                                                       choices = list("Posterior" = "posterior", 
-                                                                      "Anterior/Lateral" = "anterior", 
-                                                                      "Posterior-Anterior/Lateral" = "posterior-anterior",
-                                                                      "Anterior/Lateral-Posterior" = "anterior-posterior",
-                                                                      "Posterior-Anterior/Lateral-Posterior" = "posterior-anterior-posterior" 
-                                                       ), 
-                                                       selected = " ", 
-                                                       justified = TRUE,
-                                                       checkIcon = list(
-                                                         yes = icon("ok", 
-                                                                    lib = "glyphicon")
-                                                       )
-                                     ))
+                                     pickerInput(
+                                       inputId = "approach_sequence",
+                                       label = "Spine Approach/Sequence:", 
+                                       choices = list("Posterior" = "posterior", 
+                                                      "Anterior/Lateral" = "anterior", 
+                                                      "Posterior-Anterior/Lateral" = "posterior-anterior",
+                                                      "Anterior/Lateral-Posterior" = "anterior-posterior",
+                                                      "Posterior-Anterior/Lateral-Posterior" = "posterior-anterior-posterior" 
+                                       ),
+                                       selected = " ", 
+                                     )
+                                     )
                               
                           ),
                           fluidRow(
-                            column(3, 
+                            column(4, 
                                    box(width = 12, title = div(style = "font-size:22px; font-weight:bold; text-align:center", "Surgical Details"),status = "success", collapsible = TRUE,solidHeader = TRUE,
                                        tableOutput(outputId = "surgical_details_redcap_table")
                                    )
                             ),
-                            column(9,
-                             fluidRow(
-                               column(6, 
-                                      box(width = 6, title = div(style = "font-size:22px; font-weight:bold; text-align:center", "Intraoperative Details"),status = "success", collapsible = TRUE,solidHeader = TRUE,
-                                          tableOutput(outputId = "intraoperative_details_redcap_table")
-                                      ),
-                               ),
-                               column(6, 
-                                      plotOutput("spine_plot_for_tables_tab",
-                                                 height = 725)
-                               )
-                             ),
-                             fluidRow(
-                               box(width = 12, title = div(style = "font-size:22px; font-weight:bold; text-align:center", "Rods Crossing by Level:"),status = "success", collapsible = TRUE,solidHeader = TRUE,
-                              tableOutput(outputId = "rods_crossing_by_level_table")
-                               )
-                             )
+                            column(4,
+                                   box(width = 12, title = div(style = "font-size:22px; font-weight:bold; text-align:center", "Rods Crossing by Level:"),status = "success", collapsible = TRUE,solidHeader = TRUE,
+                                       tableOutput(outputId = "rods_crossing_by_level_table")
+                                   ),
+                                   box(width = 12, title = div(style = "font-size:22px; font-weight:bold; text-align:center", "Intraoperative Details"),status = "success", collapsible = TRUE,solidHeader = TRUE,
+                                       tableOutput(outputId = "intraoperative_details_redcap_table")
+                                   )
+                            ),
+                            column(4, 
+                                   plotOutput("spine_plot_for_tables_tab",
+                                              height = 600)
                             )
                           ),
                           box(width = 12, title = div(style = "font-size:22px; font-weight:bold; text-align:center", "Procedures by Level:"),status = "success", collapsible = TRUE,solidHeader = TRUE,
@@ -1047,103 +1066,11 @@ ui <- dashboardPage(skin = "black",
                           box(width = 12, title = div(style = "font-size:22px; font-weight:bold; text-align:center", "Anterior Revision Implants table:"), status = "success", collapsible = TRUE,solidHeader = TRUE,
                               tableOutput(outputId = "anterior_revision_implants_table")
                           ),
-                          
-                          # box(width = 12, title = div(style = "font-size:22px; font-weight:bold; text-align:center", "Posterior Approach Objects for Op Note:"), status = "success", collapsible = TRUE,solidHeader = TRUE, 
-                          #     tableOutput(outputId = "posterior_approach_objects_for_op_note_df")),
-                          # box(width = 12, title = div(style = "font-size:22px; font-weight:bold; text-align:center", "Posterior: Objects passed to Op Note Generater:"), status = "success", collapsible = TRUE, solidHeader = TRUE, 
-                          #     verbatimTextOutput(outputId = "full_objects_passed_to_posterior_op_note")),
-                          # 
-                          # box(width = 12, title = div(style = "font-size:22px; font-weight:bold; text-align:center", "Anterior Approach Objects for Op Note:"), status = "success", collapsible = TRUE,solidHeader = TRUE, 
-                          #     tableOutput(outputId = "anterior_approach_objects_for_op_note_df")),
-                          # 
-                          # box(width = 12, title = div(style = "font-size:22px; font-weight:bold; text-align:center", "Anterior: Objects passed to Op Note Generater:"), status = "success", collapsible = TRUE, solidHeader = TRUE, 
-                          #     verbatimTextOutput(outputId = "full_objects_passed_to_anterior_op_note")),
-                          # box(width = 12, title = div(style = "font-size:22px; font-weight:bold; text-align:center", "Anterior: Objects passed to Op Note Generater/DATAFRAME:"), status = "success", collapsible = TRUE, solidHeader = TRUE, 
-                          #     tableOutput(outputId = "full_objects_passed_to_anterior_op_note_df")),
                           box(width = 12, title = div(style = "font-size:22px; font-weight:bold; text-align:center", "All Inputs Not Logged:"), status = "success", collapsible = TRUE, collapsed = TRUE, solidHeader = TRUE, 
                               tableOutput(outputId = "all_inputs_removed")
                           )
                           #         ###########################################
                   )
-                  # tabItem(tabName = "tables",
-                  #         box(width = 12, title = div(style = "font-size:22px; font-weight:bold; text-align:center", "Data Upload:"),status = "success", solidHeader = TRUE,
-                  #             column(6, 
-                  #                    actionBttn(inputId = "preview_redcap_upload", label = "Upload to Redcap Project", icon = icon("upload"), style = "jelly", color = "primary", size = "md"
-                  #                               )
-                  #             ), 
-                  #             column(2, 
-                  #                    dropdown(size = "xs",
-                  #                             radioGroupButtons(inputId = "approach_sequence", 
-                  #                                               label = "Spine Approach/Sequence:", 
-                  #                                               choices = list("Posterior" = "posterior", 
-                  #                                                              "Anterior/Lateral" = "anterior", 
-                  #                                                              "Posterior-Anterior/Lateral" = "posterior-anterior",
-                  #                                                              "Anterior/Lateral-Posterior" = "anterior-posterior",
-                  #                                                              "Posterior-Anterior/Lateral-Posterior" = "posterior-anterior-posterior" 
-                  #                                               ), 
-                  #                                               selected = " ", 
-                  #                                               justified = TRUE,
-                  #                                               checkIcon = list(
-                  #                                                 yes = icon("ok", 
-                  #                                                            lib = "glyphicon")
-                  #                                               )
-                  #                             )
-                  #                             ))
-                  #         ),
-                  #         fluidRow(
-                  #           column(4,
-                  #                  box(width = 12, title = div(style = "font-size:22px; font-weight:bold; text-align:center", "Surgical Summary"),status = "success", collapsible = TRUE,solidHeader = TRUE,
-                  #                      tableOutput(outputId = "surgical_details_redcap_df_sidetab")
-                  #                  )
-                  #           ),
-                  #           column(3, 
-                  #                  box(width = 12, title = div(style = "font-size:22px; font-weight:bold; text-align:center", "Rod Count By Level"),status = "success", collapsible = TRUE,solidHeader = TRUE,
-                  #                      tableOutput(outputId = "rods_crossing_by_level_table")
-                  #                  )
-                  #                  ),
-                  #           column(5,
-                  #                  plotOutput("spine_plot_for_tables_tab",
-                  #                             height = 725)
-                  #                  )
-                  #         ),
-                  #         #         ########################################### surgical_details_redcap_df_sidetab
-                  # 
-                  #         box(width = 12, title = div(style = "font-size:22px; font-weight:bold; text-align:center", "Procedures by level"),status = "success", collapsible = TRUE,solidHeader = TRUE,
-                  #             tableOutput(outputId = "procedures_by_level_redcap_df_sidetab")
-                  #         ),
-                  #         box(width = 12, title = div(style = "font-size:22px; font-weight:bold; text-align:center", "All objects table:"),status = "success", collapsible = TRUE,solidHeader = TRUE,
-                  #             tableOutput(outputId = "all_objects_table")
-                  #         ),
-                  #         box(width = 12, title = div(style = "font-size:22px; font-weight:bold; text-align:center", "Revision Implants table:"), status = "success", collapsible = TRUE,solidHeader = TRUE,
-                  #             tableOutput(outputId = "revision_implants_table")
-                  #         ),
-                  #         box(width = 12, title = div(style = "font-size:22px; font-weight:bold; text-align:center", "Anterior Revision Implants table:"), status = "success", collapsible = TRUE,solidHeader = TRUE,
-                  #             tableOutput(outputId = "anterior_revision_implants_table")
-                  #         ),
-                  #         box(width = 12, title = div(style = "font-size:22px; font-weight:bold; text-align:center", "Interbody Details:"), status = "success", collapsible = TRUE,solidHeader = TRUE,
-                  #             tableOutput(outputId = "interbody_details_df_sidetab")
-                  #         ),
-                  #         box(width = 12, title = div(style = "font-size:22px; font-weight:bold; text-align:center", "Screw Size Details:"), status = "success", collapsible = TRUE,solidHeader = TRUE,
-                  #             tableOutput(outputId = "screw_size_details_df_sidetab")
-                  #         ),
-                  #         box(width = 12, title = div(style = "font-size:22px; font-weight:bold; text-align:center", "Posterior Approach Objects for Op Note:"), status = "success", collapsible = TRUE,solidHeader = TRUE, 
-                  #             tableOutput(outputId = "posterior_approach_objects_for_op_note_df")),
-                  #         
-                  #         box(width = 12, title = div(style = "font-size:22px; font-weight:bold; text-align:center", "Posterior: Objects passed to Op Note Generater:"), status = "success", collapsible = TRUE, solidHeader = TRUE, 
-                  #             verbatimTextOutput(outputId = "full_objects_passed_to_posterior_op_note")),
-                  #         
-                  #         box(width = 12, title = div(style = "font-size:22px; font-weight:bold; text-align:center", "Anterior Approach Objects for Op Note:"), status = "success", collapsible = TRUE,solidHeader = TRUE, 
-                  #             tableOutput(outputId = "anterior_approach_objects_for_op_note_df")),
-                  #         
-                  #         box(width = 12, title = div(style = "font-size:22px; font-weight:bold; text-align:center", "Anterior: Objects passed to Op Note Generater:"), status = "success", collapsible = TRUE, solidHeader = TRUE, 
-                  #             verbatimTextOutput(outputId = "full_objects_passed_to_anterior_op_note")),
-                  #         
-                  #         box(width = 12, title = div(style = "font-size:22px; font-weight:bold; text-align:center", "All Inputs:"), status = "success", collapsible = TRUE, solidHeader = TRUE, 
-                  #             tableOutput(outputId = "all_inputs")),
-                  #         box(width = 12, title = div(style = "font-size:22px; font-weight:bold; text-align:center", "All Inputs Not Logged:"), status = "success", collapsible = TRUE, solidHeader = TRUE, 
-                  #             tableOutput(outputId = "all_inputs_removed"))
-                  #         #         ###########################################
-                  # )
                 )
                     )
 )
@@ -1189,10 +1116,6 @@ server <- function(input, output, session) {
   })
   
   output$timer <- renderText({
-    paste(logging_timer_reactive_list$elapsed_time, "seconds elapsed")
-  })
-  
-  output$timer_for_modal <- renderText({
     paste(logging_timer_reactive_list$elapsed_time, "seconds elapsed")
   })
   
@@ -3305,24 +3228,24 @@ server <- function(input, output, session) {
   
   
   
-  observeEvent(input$add_left_linked_rods,
+  observeEvent(input$add_left_linked_rod,
                ignoreNULL = TRUE, 
                ignoreInit = TRUE, {
                  
-                 if(input$add_left_linked_rods == TRUE){
+                 if(input$add_left_linked_rod == TRUE){
                    start_list <- jh_supplementary_rods_choices_function(all_objects_df = all_objects_to_add_list$left_rod_implants_df,
                                                                         revision_objects_retained_df = left_revision_implants_reactive_list()$retained_df,
                                                                         rod_type = "linked_rod")
                    
                    updateSliderTextInput(session = session,
-                                         inputId = "left_linked_rods", 
+                                         inputId = "left_linked_rod", 
                                          label = "Select Overlap Region:",
                                          choices = start_list$implant_levels[2:(length(start_list$implant_levels)-1)],
                                          selected = start_list$supplemental_starts
                    )
                  }else{
                    updateSliderTextInput(session = session,
-                                         inputId = "left_linked_rods", 
+                                         inputId = "left_linked_rod", 
                                          label = "Select Overlap Region:",
                                          choices = c("a", "b"),
                                          selected = c("a", "b")
@@ -3467,8 +3390,8 @@ server <- function(input, output, session) {
   #   input$add_left_intercalary_rod,
   #   input$left_intercalary_rod,
   #   input$left_intercalary_rod_junction,
-  #   input$add_left_linked_rods,
-  #   input$left_linked_rods,
+  #   input$add_left_linked_rod,
+  #   input$left_linked_rod,
   #   input$add_left_kickstand_rod,
   #   input$left_kickstand_rod,
   #   input$left_revision_rod_status,
@@ -3487,7 +3410,7 @@ server <- function(input, output, session) {
     if(any(input$add_left_accessory_rod == TRUE, 
            input$add_left_satellite_rod == TRUE,
            input$add_left_intercalary_rod == TRUE, 
-           input$add_left_linked_rods == TRUE, 
+           input$add_left_linked_rod == TRUE, 
            input$add_left_kickstand_rod == TRUE, 
            input$add_left_kickstand_rod == TRUE, length(input$left_revision_implants_rod_connectors)>0)){
       
@@ -3509,8 +3432,8 @@ server <- function(input, output, session) {
         intercalary_vector <- c("a")
         junction <- NULL
       }
-      if(input$add_left_linked_rods == TRUE && input$left_linked_rods[1] %in% all_screw_coordinates_df$level && length(unique(input$left_linked_rods)) == 2){
-        linked_vector <- input$left_linked_rods
+      if(input$add_left_linked_rod == TRUE && input$left_linked_rod[1] %in% all_screw_coordinates_df$level && length(unique(input$left_linked_rod)) == 2){
+        linked_vector <- input$left_linked_rod
       }else{
         linked_vector <- c("a")
       }
@@ -3567,8 +3490,8 @@ server <- function(input, output, session) {
                                                                          add_intercalary_rod = input$add_left_intercalary_rod, 
                                                                          intercalary_rods_vector = intercalary_vector, 
                                                                          intercalary_rod_junction = junction, 
-                                                                         add_linked_rods = input$add_left_linked_rods,
-                                                                         linked_rods_vector = linked_vector,
+                                                                         add_linked_rod = input$add_left_linked_rod,
+                                                                         linked_rod_vector = linked_vector,
                                                                          add_kickstand_rod = input$add_left_kickstand_rod,
                                                                          kickstand_rod_vector = left_kickstand_rod_vector,
                                                                          add_custom_rods = input$add_left_custom_rods,
@@ -4045,24 +3968,24 @@ server <- function(input, output, session) {
   
   
   
-  observeEvent(input$add_right_linked_rods,
+  observeEvent(input$add_right_linked_rod,
                ignoreNULL = TRUE, 
                ignoreInit = TRUE, {
                  
-                 if(input$add_right_linked_rods == TRUE){
+                 if(input$add_right_linked_rod == TRUE){
                    start_list <- jh_supplementary_rods_choices_function(all_objects_df = all_objects_to_add_list$right_rod_implants_df,
                                                                         revision_objects_retained_df = right_revision_implants_reactive_list()$retained_df,
                                                                         rod_type = "linked_rod")
                    
                    updateSliderTextInput(session = session,
-                                         inputId = "right_linked_rods", 
+                                         inputId = "right_linked_rod", 
                                          label = "Select Overlap Region:",
                                          choices = start_list$implant_levels[2:(length(start_list$implant_levels)-1)],
                                          selected = start_list$supplemental_starts
                    )
                  }else{
                    updateSliderTextInput(session = session,
-                                         inputId = "right_linked_rods", 
+                                         inputId = "right_linked_rod", 
                                          label = "Select Overlap Region:",
                                          choices = c("a", "b"),
                                          selected = c("a", "b")
@@ -4210,8 +4133,8 @@ server <- function(input, output, session) {
   #   input$add_right_intercalary_rod,
   #   input$right_intercalary_rod,
   #   input$right_intercalary_rod_junction,
-  #   input$add_right_linked_rods,
-  #   input$right_linked_rods,
+  #   input$add_right_linked_rod,
+  #   input$right_linked_rod,
   #   input$add_right_kickstand_rod,
   #   input$right_kickstand_rod,
   #   input$right_revision_rod_status,
@@ -4229,7 +4152,7 @@ server <- function(input, output, session) {
     if(any(input$add_right_accessory_rod == TRUE, 
            input$add_right_satellite_rod == TRUE,
            input$add_right_intercalary_rod == TRUE, 
-           input$add_right_linked_rods == TRUE, 
+           input$add_right_linked_rod == TRUE, 
            input$add_right_kickstand_rod == TRUE, 
            input$add_right_kickstand_rod == TRUE, length(input$right_revision_implants_rod_connectors)>0)){
       
@@ -4251,8 +4174,8 @@ server <- function(input, output, session) {
         intercalary_vector <- c("a")
         junction <- NULL
       }
-      if(input$add_right_linked_rods == TRUE && input$right_linked_rods[1] %in% all_screw_coordinates_df$level && length(unique(input$right_linked_rods)) == 2){
-        linked_vector <- input$right_linked_rods
+      if(input$add_right_linked_rod == TRUE && input$right_linked_rod[1] %in% all_screw_coordinates_df$level && length(unique(input$right_linked_rod)) == 2){
+        linked_vector <- input$right_linked_rod
       }else{
         linked_vector <- c("a")
       }
@@ -4309,8 +4232,8 @@ server <- function(input, output, session) {
                                                                           add_intercalary_rod = input$add_right_intercalary_rod, 
                                                                           intercalary_rods_vector = intercalary_vector, 
                                                                           intercalary_rod_junction = junction, 
-                                                                          add_linked_rods = input$add_right_linked_rods,
-                                                                          linked_rods_vector = linked_vector,
+                                                                          add_linked_rod = input$add_right_linked_rod,
+                                                                          linked_rod_vector = linked_vector,
                                                                           add_kickstand_rod = input$add_right_kickstand_rod,
                                                                           kickstand_rod_vector = right_kickstand_rod_vector,
                                                                           add_custom_rods = input$add_right_custom_rods,
@@ -4357,13 +4280,13 @@ server <- function(input, output, session) {
        any(input$add_left_accessory_rod, 
            input$add_left_satellite_rod,
            input$add_left_intercalary_rod,
-           input$add_left_linked_rods,
+           input$add_left_linked_rod,
            input$add_left_kickstand_rod, 
            input$add_left_custom_rods, 
            input$add_right_accessory_rod, 
            input$add_right_satellite_rod,
            input$add_right_intercalary_rod,
-           input$add_right_linked_rods,
+           input$add_right_linked_rod,
            input$add_right_kickstand_rod, 
            input$add_right_custom_rods)){
       updateAwesomeCheckbox(session = session, 
@@ -4379,7 +4302,7 @@ server <- function(input, output, session) {
                             value = FALSE)
       
       updateAwesomeCheckbox(session = session, 
-                            inputId = "add_left_linked_rods", 
+                            inputId = "add_left_linked_rod", 
                             value = FALSE)
       
       updateAwesomeCheckbox(session = session, 
@@ -4403,7 +4326,7 @@ server <- function(input, output, session) {
                             value = FALSE)
       
       updateAwesomeCheckbox(session = session, 
-                            inputId = "add_right_linked_rods", 
+                            inputId = "add_right_linked_rod", 
                             value = FALSE)
       
       updateAwesomeCheckbox(session = session, 
@@ -4439,7 +4362,7 @@ server <- function(input, output, session) {
                                             value = FALSE)
                       
                       updateAwesomeCheckbox(session = session, 
-                                            inputId = "add_left_linked_rods", 
+                                            inputId = "add_left_linked_rod", 
                                             value = FALSE)
                       
                       updateAwesomeCheckbox(session = session, 
@@ -4469,7 +4392,7 @@ server <- function(input, output, session) {
                                             value = FALSE)
                       
                       updateAwesomeCheckbox(session = session, 
-                                            inputId = "add_right_linked_rods", 
+                                            inputId = "add_right_linked_rod", 
                                             value = FALSE)
                       
                       updateAwesomeCheckbox(session = session, 
@@ -4891,8 +4814,6 @@ server <- function(input, output, session) {
   )
   
   
-
-  
   ###~~~~~~~~~~~~~~~ #########    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!   #########   COMPLETED CONFIRM FUSION LEVELS and TECHNIQUE DETAILS MODAL FUNCTION  #########    !!!!!!!!!!!!!
   ###~~~~~~~~~~~~~~~ #########    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!   #########   COMPLETED CONFIRM FUSION LEVELS and TECHNIQUE DETAILS MODAL FUNCTION  #########    !!!!!!!!!!!!!
   ###~~~~~~~~~~~~~~~ #########    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!   #########   COMPLETED CONFIRM FUSION LEVELS and TECHNIQUE DETAILS MODAL FUNCTION  #########    !!!!!!!!!!!!!
@@ -4903,363 +4824,41 @@ server <- function(input, output, session) {
   ###~~~~~~~~~~~~~~~ #########    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!   #########   ADDITIONAL SURGICAL DETAILS MODAL UPDATES  #########    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!   ######### ~~~~~~~~~~~~~~~###
   ###~~~~~~~~~~~~~~~ #########    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!   #########   ADDITIONAL SURGICAL DETAILS MODAL UPDATES #########    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!   ######### ~~~~~~~~~~~~~~~###
   
+  #####################   #####################   #########   RUN CONFIRM FUSION LEVELS and TECHNIQUE DETAILS MODAL FUNCTION ##################### #####################
+  #####################   #####################   #########   RUN CONFIRM FUSION LEVELS and TECHNIQUE DETAILS MODAL FUNCTION ##################### #####################
+  #####################   #####################   #########   RUN CONFIRM FUSION LEVELS and TECHNIQUE DETAILS MODAL FUNCTION ##################### #####################
+  #####################   #####################   #########   RUN CONFIRM FUSION LEVELS and TECHNIQUE DETAILS MODAL FUNCTION ##################### #####################
+  
+  observeEvent(input$page_2_complete_button, ignoreNULL = TRUE, ignoreInit = TRUE, once = TRUE, {
+    showModal(
+      operative_details_modal_box_function()
+    )
+  })
   
   
-  observeEvent(input$intraoperative_complications_vector, ignoreInit = TRUE, {
-    if(any(str_detect(string = str_to_lower(input$intraoperative_complications_vector), pattern = "dur"))){
-      updateTextInput(session = session, 
-                      inputId = "postoperative_diagnosis", 
-                      value = paste(input$postoperative_diagnosis,
-                                    "Accidental puncture or laceration of dura during a procedure (G97.41)", sep = "; "))
-      
+  
+  
+  observeEvent(input$page_2_complete_button, ignoreInit = TRUE, {
+    if(input$page_2_complete_button > 1){
+      showModal(
+        operative_details_modal_box_function(primary_surgeon_first_name_input = input$primary_surgeon_first_name, 
+                                             primary_surgeon_last_name_input = input$primary_surgeon_last_name, 
+                                             ebl = input$ebl, 
+                                             transfusion = input$transfusion,
+                                             prbc_transfused = prbc_transfused,
+                                             intraoperative_complications_yes_no = input$intraoperative_complications_yes_no,
+                                             intraoperative_complications_vector = input$intraoperative_complications_vector,
+                                             other_intraoperative_complications = input$other_intraoperative_complications)
+      )
     }
   }
   )
-  
-  ################################### ANTERIOR ADDITIONAL PROCEDURES PERFORMED #################### 
-  ################################### ANTERIOR ADDITIONAL PROCEDURES PERFORMED #################### 
-  ################################### ANTERIOR ADDITIONAL PROCEDURES PERFORMED #################### 
-  
-  additional_procedures_performed_anterior_reactive <- reactive({
-    additional_procedures_list <- list()
-    if(input$implants_complete > 0){
-    if(procedure_approach_reactive() == "anterior" | procedure_approach_reactive() == "combined"){
-      additional_procedures_list <- as.list(input$additional_procedures_anterior)
-      
-      if("Robotic" %in% input$approach_robot_navigation){
-        additional_procedures_list$robot <- "Robotic Assisted Spine Surgery"
-      }
-      if("Navigated" %in% input$approach_robot_navigation){
-        additional_procedures_list$navigation <- "Use of stereotactic navigation system for screw placement"
-      }
-      
-      if("Microscopic" %in% input$approach_robot_navigation){
-        additional_procedures_list$microscope <- "Intraoperative use of microscope for microdissection"
-      }
-      
-      if(length(input$prior_anterior_plate_removed_levels)>0){
-        additional_procedures_list$removal_instrumentation <- "Removal of anterior spinal instrumentation"
-      }
-      
-      if(any(str_detect(string = input$head_positioning_anterior, pattern = "Tongs"))){
-        additional_procedures_list$head_positioning_anterior <- "Application of Cranial Tongs"
-      }
-      if(any(str_detect(string = input$head_positioning_anterior, pattern = "Mayfield"))){
-        additional_procedures_list$head_positioning_anterior <- "Application of Cranial Tongs using Mayfield head holder"
-      }
-      
-      if(any(str_detect(string = input$head_positioning_anterior, pattern = "Halo"))){
-        age <- as.double(if_else(paste(input$date_of_birth) == "1900-01-01", "0", as.character(round(interval(start = paste(input$date_of_birth), end = paste(input$date_of_surgery))/years(1), 0))))
-        if(age < 18 & age > 0){
-          additional_procedures_list$head_positioning_anterior <- "Application of Halo for thin skull osteology (pediatric)"
-        }else{
-          additional_procedures_list$head_positioning_anterior <- "Application of Halo"
-        }
-      }
-      
-      if(jh_determine_if_section_dx_function(diagnosis_vector = input$primary_diagnosis, section_to_determine = "trauma")){
-        additional_procedures_list$fracture <- "Open treatment of vertebral fracture"
-      }
-      if(jh_determine_if_section_dx_function(diagnosis_vector = input$primary_diagnosis, section_to_determine = "infection")){
-        additional_procedures_list$incision_drainage <- "Incision and Drainage"
-      }
-      if(jh_determine_if_section_dx_function(diagnosis_vector = input$primary_diagnosis, section_to_determine = "tumor")){
-        additional_procedures_list$tumor_biopsy <- "Open Biopsy of extradural spinal lesion"
-      }
-      
-      if(any(input$dressing_details_anterior == "Wound Vac")){
-        additional_procedures_list$wound_vac_anterior <- "Application of Wound Vac (negative pressure wound therapy; CPT = 97605)"    
-      }
-    }
-    }
-    unname(unlist(additional_procedures_list))
-  })
-  
-  observeEvent(additional_procedures_performed_anterior_reactive(), ignoreInit = TRUE, {
-    if(all(additional_procedures_performed_anterior_reactive() %in% additional_procedure_options_vector) == FALSE){
-      additional_procedure_options_vector <<- union(additional_procedure_options_vector, additional_procedures_performed_anterior_reactive())
-    }
-    # updateAwesomeCheckboxGroup(session = session,
-    #                            inputId = "additional_procedures_anterior",
-    #                            choices = unique(append(additional_procedure_options_vector, additional_procedures_performed_anterior_reactive())),
-    #                            selected = additional_procedures_performed_anterior_reactive())
-  })
-  
-  additional_anterior_procedures_vector_for_op_note_reactive <- reactive({
-    if(str_detect(input$approach_sequence, "anterior")){
-      
-      additional_procedures_list <- as.list(input$additional_procedures_anterior)
-      
-      if("Other" %in% input$additional_procedures_anterior){
-        additional_procedures_list$other_anterior <- input$additional_procedures_other_anterior
-      }
-      
-      additional_procedures_list <- discard(additional_procedures_list, .p = ~ (.x == "Other"))
-      
-      unlist(additional_procedures_list, use.names = FALSE)
-    }
-  })
-  
-  ###################### ANTERIOR ADDITIONAL PROCEDURES PERFORMED #################### END
-  ###################### ANTERIOR ADDITIONAL PROCEDURES PERFORMED #################### END
-  ###################### ANTERIOR ADDITIONAL PROCEDURES PERFORMED #################### END
-  
-  ################################### POSTERIOR ADDITIONAL PROCEDURES PERFORMED ####################
-  ################################### POSTERIOR ADDITIONAL PROCEDURES PERFORMED ####################
-  ################################### POSTERIOR ADDITIONAL PROCEDURES PERFORMED ####################
-  additional_procedures_performed_posterior_reactive <- reactive({
-    additional_procedures_list <- list()
-    if(procedure_approach_reactive() == "posterior" | procedure_approach_reactive() == "combined"){
-      additional_procedures_list <- as.list(input$additional_procedures_posterior)
-      
-      if("Robotic" %in% input$approach_robot_navigation){
-        additional_procedures_list$robot <- "Robotic Assisted Spine Surgery"
-      }
-      if("Navigated" %in% input$approach_robot_navigation){
-        additional_procedures_list$navigation <- "Use of stereotactic navigation system for screw placement"
-      }
-      
-      if("Microscopic" %in% input$approach_robot_navigation){
-        additional_procedures_list$microscope <- "Intraoperative use of microscope for microdissection"
-      }
-      
-      if(length(input$left_revision_implants_removed) > 0 | length(input$right_revision_implants_removed) > 0){
-        additional_procedures_list$removal_instrumentation <- "Removal of spinal instrumentation"
-      }
-      
-      if(length(input$prior_fusion_levels)>0){
-        additional_procedures_list$exploration_prior_fusion <- "Exploration of prior spinal fusion"
-      }
-      
-      if(any(str_detect(string = input$head_positioning_posterior, pattern = "Tongs"))){
-        additional_procedures_list$head_positioning_posterior <- "Application of Cranial Tongs"
-      }
-      if(any(str_detect(string = input$head_positioning_posterior, pattern = "Mayfield"))){
-        additional_procedures_list$head_positioning_posterior <- "Application of Cranial Tongs using Mayfield head holder"
-      }
-      
-      if(any(str_detect(string = input$head_positioning_posterior, pattern = "Halo"))){
-        age <- as.double(if_else(paste(input$date_of_birth) == "1900-01-01", "0", as.character(round(interval(start = paste(input$date_of_birth), end = paste(input$date_of_surgery))/years(1), 0))))
-        if(age < 18 & age > 0){
-          additional_procedures_list$head_positioning_posterior <- "Application of Halo for thin skull osteology (pediatric)"
-        }else{
-          additional_procedures_list$head_positioning_posterior <- "Application of Halo"
-        }
-      }
-      
-      if(length(input$durotomy_repair_method)>0){
-        if(str_detect(string = toString(input$durotomy_repair_method), pattern = "No Repair") == FALSE){
-          additional_procedures_list$dural_repair <- "Repair of dural/CSF leak"
-        }
-      }
-      
-      if(jh_determine_if_section_dx_function(diagnosis_vector = input$primary_diagnosis, section_to_determine = "trauma")){
-        additional_procedures_list$fracture <- "Open treatment of vertebral fracture"
-      }
-      if(jh_determine_if_section_dx_function(diagnosis_vector = input$primary_diagnosis, section_to_determine = "infection")){
-        additional_procedures_list$incision_drainage <- "Incision and Drainage"
-      }
-      
-      if(jh_determine_if_section_dx_function(diagnosis_vector = input$primary_diagnosis, section_to_determine = "tumor")){
-        additional_procedures_list$tumor_biopsy <- "Open Biopsy of extradural spinal lesion"
-      }
-      
-      if(any(input$dressing_details_posterior == "Wound Vac")){
-        additional_procedures_list$wound_vac_anterior <- "Application of Wound Vac (negative pressure wound therapy; CPT = 97605)"    
-      }
-      
-      if(c2_nerve_transection_list_reactive()$additional_procedure_statement != "na"){
-        additional_procedures_list$c2_nerve_transection <- paste(c2_nerve_transection_list_reactive()$additional_procedure_statement)
-      }
-      
-    }
-    
-    unname(unlist(additional_procedures_list))
-  })
-  
-  
-  observeEvent(additional_procedures_performed_posterior_reactive(), ignoreInit = TRUE, {
-    if(all(additional_procedures_performed_posterior_reactive() %in% additional_procedure_options_vector) == FALSE){
-      additional_procedure_options_vector <<- union(additional_procedure_options_vector, additional_procedures_performed_posterior_reactive())
-    }
-  })
-  
-  
-  additional_posterior_procedures_vector_for_op_note_reactive <- reactive({
-    if(str_detect(input$approach_sequence, "posterior")){
-      
-      additional_procedures_list <- as.list(input$additional_procedures_posterior)
-      
-      if("Other" %in% input$additional_procedures_posterior){
-        additional_procedures_list$other_posterior <- input$additional_procedures_other_posterior
-      }
-      
-      additional_procedures_list <- discard(additional_procedures_list, .p = ~ (.x == "Other"))
-      
-      unlist(additional_procedures_list, use.names = FALSE)
-    }
-  })
-  
-  
-  ################################### POSTERIOR ADDITIONAL PROCEDURES PERFORMED #################### END
-  ################################### POSTERIOR ADDITIONAL PROCEDURES PERFORMED #################### END
-  ################################### POSTERIOR ADDITIONAL PROCEDURES PERFORMED #################### END
-  
-  
-  ######################################## RUN ADDITIONAL SURGICAL DETAILS MODAL AFTER ADVANCING TO NEXT TAB ###############################
-  ######################################## RUN ADDITIONAL SURGICAL DETAILS MODAL AFTER ADVANCING TO NEXT TAB ###############################
-  ######################################## RUN ADDITIONAL SURGICAL DETAILS MODAL AFTER ADVANCING TO NEXT TAB ###############################
-  ######################################## RUN ADDITIONAL SURGICAL DETAILS MODAL AFTER ADVANCING TO NEXT TAB ###############################
-  
-  
-  
-  ## NOW OBSERVE THE COMPLETION OF MODAL BOX 1 AND THEN SHOW MODAL BOX 2
-  
-  observeEvent(input$additional_surgical_details_1_complete, {
-    # add_procedures_list <- list()
-    
-    showModal(
-      addition_surgical_details_modal_box_2_function(required_options_missing = FALSE, 
-                                                     procedure_approach = procedure_approach_reactive(),
-                                                     additional_procedures_choices_anterior = additional_procedure_options_vector, 
-                                                     additional_procedures_choices_posterior = additional_procedure_options_vector, 
-                                                     additional_procedures_anterior = additional_procedures_performed_anterior_reactive(), 
-                                                     additional_procedures_posterior = additional_procedures_performed_posterior_reactive()
-      )
-    )
-  })
-  
-  
-  observeEvent(input$additional_surgical_details_complete, ignoreInit = TRUE, {
+  observeEvent(input$operative_details_modal_complete, ignoreNULL = TRUE, ignoreInit = TRUE, {
     removeModal()
-  })
+  }
+  )
   
-  # ### NOW SHOW MODAL 2 IF THERE ARE INCOMPLETE VALUES ###
-  # observeEvent(input$additional_surgical_details_complete, ignoreInit = TRUE,
-  #              {
-  #                if(procedure_approach_reactive() == "anterior"){
-  #                  if(length(head_positioning_anterior) == 0 | length(input$closure_details_anterior) == 0 | length(input$dressing_details_anterior) == 0 | length(input$intraoperative_complications_yes_no) == 0){
-  #                    show_again <- TRUE
-  #                  }else{
-  #                    show_again <- FALSE
-  #                  }
-  #                }
-  # 
-  #                if(procedure_approach_reactive() == "posterior"){
-  #                  if(length(head_positioning_posterior) == 0 | length(input$closure_details_posterior) == 0 | length(input$dressing_details_posterior) == 0 | length(input$intraoperative_complications_yes_no) == 0){
-  #                    show_again <- TRUE
-  #                  }else{
-  #                    show_again <- FALSE
-  #                  }
-  #                }
-  # 
-  #                if(procedure_approach_reactive() == "combined"){
-  #                  if(length(head_positioning_anterior) == 0 | length(input$closure_details_anterior) == 0 | length(input$dressing_details_anterior) == 0 | length(input$intraoperative_complications_yes_no) == 0 | length(head_positioning_posterior) == 0 | length(input$closure_details_posterior) == 0 | length(input$dressing_details_posterior) == 0 | length(input$intraoperative_complications_yes_no) == 0){
-  #                    show_again <- TRUE
-  #                  }else{
-  #                    show_again <- FALSE
-  #                  }
-  #                }
-  # 
-  #                if(show_again == TRUE){
-  #                  showModal(
-  #                    addition_surgical_details_modal_box_2_function(required_options_missing = TRUE,
-  #                                                                   procedure_approach = procedure_approach_reactive(),
-  #                                                                   head_positioning_posterior = input$head_positioning_posterior,
-  #                                                                   head_positioning_anterior = input$head_positioning_anterior,
-  #                                                                   surgical_findings = input$surgical_findings,
-  #                                                                   specimens_removed = input$specimens_removed,
-  #                                                                   ebl = input$ebl,
-  #                                                                   urine_output = input$urine_output,
-  #                                                                   crystalloids_administered = input$crystalloids_administered,
-  #                                                                   colloids_administered = input$colloids_administered,
-  #                                                                   transfusion = input$transfusion,
-  #                                                                   cell_saver_transfused = input$cell_saver_transfused,
-  #                                                                   prbc_transfused = input$prbc_transfused,
-  #                                                                   ffp_transfused = input$ffp_transfused,
-  #                                                                   cryoprecipitate_transfused = input$cryoprecipitate_transfused,
-  #                                                                   platelets_transfused = input$platelets_transfused,
-  #                                                                   intraoperative_complications_yes_no = input$intraoperative_complications_yes_no,
-  #                                                                   intraoperative_complications_vector = input$intraoperative_complications_vector,
-  #                                                                   other_intraoperative_complications = input$other_intraoperative_complications,
-  #                                                                   durotomy_timing_input = input$durotomy_timing,
-  #                                                                   durotomy_instrument_input = input$durotomy_instrument,
-  #                                                                   durotomy_repair_method_input = input$durotomy_repair_method,
-  # 
-  #                                                                   additional_procedures_choices_anterior = additional_procedures_options_reactive_vector(),
-  #                                                                   additional_procedures_anterior = input$additional_procedures_anterior,
-  #                                                                   additional_procedures_other_anterior = input$additional_procedures_other_anterior,
-  #                                                                   additional_end_procedure_details_anterior = input$additional_end_procedure_details_anterior,
-  #                                                                   closure_details_anterior = input$closure_details_anterior,
-  #                                                                   dressing_details_anterior = input$dressing_details_anterior,
-  # 
-  #                                                                   additional_procedures_choices_posterior = additional_procedures_options_reactive_vector(),
-  #                                                                   additional_procedures_posterior = input$additional_procedures_posterior,
-  #                                                                   additional_procedures_other_posterior = input$additional_procedures_other_posterior,
-  #                                                                   additional_end_procedure_details_posterior = input$additional_end_procedure_details_posterior,
-  #                                                                   closure_details_posterior = input$closure_details_posterior,
-  #                                                                   dressing_details_posterior = input$dressing_details_posterior,
-  # 
-  #                                                                   postop_dispo = input$postop_dispo,
-  #                                                                   postop_abx = input$postop_abx,
-  #                                                                   postop_map_goals = input$postop_map_goals,
-  #                                                                   postop_transfusion_threshold = input$postop_transfusion_threshold,
-  #                                                                   postop_imaging = input$postop_imaging,
-  #                                                                   postop_pain = input$postop_pain,
-  #                                                                   postop_activity = input$postop_activity,
-  #                                                                   postop_brace = input$postop_brace,
-  #                                                                   postop_diet = input$postop_diet,
-  #                                                                   postop_dvt_ppx = input$postop_dvt_ppx,
-  #                                                                   postop_drains_dressing = input$postop_drains_dressing,
-  #                                                                   postop_followup = input$postop_followup
-  #                    )
-  #                  )
-  #                }
-  #              })
-  
-  
-  ## NOW make a reactive modal for editing the info if needed ###
-  modal_box_surgical_details_2_reactive <- reactive({
-    
-    addition_surgical_details_modal_box_2_function(
-      procedure_approach = procedure_approach_reactive(),
-      # surgical_findings = input$surgical_findings,
-      # specimens_removed = input$specimens_removed,
-      ebl = input$ebl,
-      # urine_output = input$urine_output,
-      # crystalloids_administered = input$crystalloids_administered,
-      # colloids_administered = input$colloids_administered,
-      transfusion = input$transfusion,
-      cell_saver_transfused = input$cell_saver_transfused,
-      prbc_transfused = input$prbc_transfused,
-      # ffp_transfused = input$ffp_transfused,
-      # cryoprecipitate_transfused = input$cryoprecipitate_transfused,
-      # platelets_transfused = input$platelets_transfused,
-      intraoperative_complications_yes_no = input$intraoperative_complications_yes_no,
-      intraoperative_complications_vector = input$intraoperative_complications_vector,
-      other_intraoperative_complications = input$other_intraoperative_complications,
-      durotomy_timing_input = input$durotomy_timing,
-      durotomy_instrument_input = input$durotomy_instrument,
-      durotomy_repair_method_input = input$durotomy_repair_method
-    )
-  })
-  
-  ### NOw show Modal 1 if 'edit additional surgical details' is clicked: ###
-  observeEvent(input$edit_additional_surgical_details,ignoreInit = TRUE,  {
-    showModal(modal_box_surgical_details_reactive())
-    
-  })
-  
-  ### NOw show Modal 2 if 'edit additional surgical details' is clicked: ###
-  
-  observeEvent(input$page_2_complete_button, ignoreInit = TRUE,{
-    removeModal() ## removes the current modal
-    showModal(
-      modal_box_surgical_details_2_reactive()
-    )
-  })
-
-  
+ 
   ###~~~~~~~~~~~~~~~ #########    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!   #########   ADDITIONAL SURGICAL DETAILS MODAL COMPLETE  #########    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!   ######### ~~~~~~~~~~~~~~~###
   ###~~~~~~~~~~~~~~~ #########    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!   #########   ADDITIONAL SURGICAL DETAILS MODAL COMPLETE  #########    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!   ######### ~~~~~~~~~~~~~~~###
   ###~~~~~~~~~~~~~~~ #########    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!   #########   ADDITIONAL SURGICAL DETAILS MODAL COMPLETE  #########    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!   ######### ~~~~~~~~~~~~~~~###
@@ -5270,7 +4869,7 @@ server <- function(input, output, session) {
   ###################################### ---------------- BIOLOGICS -----------------------#################################
   ###################################### ---------------- BIOLOGICS -----------------------#################################
   ###################################### ---------------- BIOLOGICS -----------------------#################################
-  
+  # 
   ################## ------------- POSTERIOR BMP UI AND RESULTS ---------------#######################
   ################## ------------- POSTERIOR BMP UI AND RESULTS ---------------#######################
   posterior_bmp_dose_list <- reactiveValues()
@@ -5821,8 +5420,8 @@ server <- function(input, output, session) {
                                                                          add_intercalary_rod = input$add_left_intercalary_rod, 
                                                                          intercalary_rods_vector = input$left_intercalary_rod, 
                                                                          intercalary_rod_junction = input$left_intercalary_rod_junction, 
-                                                                         add_linked_rods = input$add_left_linked_rods,
-                                                                         linked_rods_vector = input$left_linked_rods,
+                                                                         add_linked_rod = input$add_left_linked_rod,
+                                                                         linked_rod_vector = input$left_linked_rod,
                                                                          add_kickstand_rod = input$add_left_kickstand_rod,
                                                                          kickstand_rod_vector = input$left_kickstand_rod,
                                                                          add_custom_rods = input$add_left_custom_rods,
@@ -5918,8 +5517,8 @@ server <- function(input, output, session) {
                                                                           add_intercalary_rod = input$add_right_intercalary_rod, 
                                                                           intercalary_rods_vector = input$right_intercalary_rod, 
                                                                           intercalary_rod_junction = input$right_intercalary_rod_junction, 
-                                                                          add_linked_rods = input$add_right_linked_rods,
-                                                                          linked_rods_vector = input$right_linked_rods,
+                                                                          add_linked_rod = input$add_right_linked_rod,
+                                                                          linked_rod_vector = input$right_linked_rod,
                                                                           add_kickstand_rod = input$add_right_kickstand_rod,
                                                                           kickstand_rod_vector = input$right_kickstand_rod,
                                                                           add_custom_rods = input$add_right_custom_rods,
@@ -5968,479 +5567,8 @@ server <- function(input, output, session) {
   
   
   
-  ########################################################  OPERATIVE NOTE GENERATOR    ########################################################  
-  ########################################################  OPERATIVE NOTE GENERATOR    ########################################################  
-  ########################################################  OPERATIVE NOTE GENERATOR    ########################################################  
-  
-  ########################################################  OPERATIVE NOTE GENERATOR    ########################################################  
-  ########################################################  OPERATIVE NOTE GENERATOR    ########################################################  
-  ########################################################  OPERATIVE NOTE GENERATOR    ########################################################  
-  
   ################------------------  FIRST UPDATE THE OPTIONS USING THE DETAILS ALREADY INPUTTED    ----------------------######################  
   
-  # 
-  # added_rods_statement_reactive <- reactive({
-  #   additional_rods_list <- list()
-  #   added_rods_statement <- ""
-  #   
-  #   #LEFT#
-  #   if(input$add_left_accessory_rod == TRUE){
-  #     additional_rods_list$left_accessory <-  jh_generate_supplemental_rod_statement_function(rod_type = "accessory",
-  #                                                                                             rod_side = "left",
-  #                                                                                             rod_size = input$left_accessory_rod_size,
-  #                                                                                             rod_material = input$left_accessory_rod_material,
-  #                                                                                             rod_vector = input$left_accessory_rod)
-  #   }
-  #   if(input$add_left_satellite_rod == TRUE){
-  #     additional_rods_list$left_satellite <-  jh_generate_supplemental_rod_statement_function(rod_type = "satellite",
-  #                                                                                             rod_side = "left",
-  #                                                                                             rod_size = input$left_satellite_rod_size,
-  #                                                                                             rod_material = input$left_satellite_rod_material,
-  #                                                                                             rod_vector = input$left_satellite_rod)
-  #   }
-  #   if(input$add_left_intercalary_rod == TRUE){
-  #     additional_rods_list$left_intercalary <-  jh_generate_supplemental_rod_statement_function(rod_type = "intercalary",
-  #                                                                                               rod_side = "left",
-  #                                                                                               rod_size = input$left_intercalary_rod_size,
-  #                                                                                               rod_material = input$left_intercalary_rod_material,
-  #                                                                                               rod_vector = input$left_intercalary_rod, 
-  #                                                                                               intercalary_rod_junction = input$left_intercalary_rod_junction)
-  #   }
-  #   if(input$add_left_linked_rods == TRUE){
-  #     additional_rods_list$left_linked <-  jh_generate_supplemental_rod_statement_function(rod_type = "linked",
-  #                                                                                          rod_side = "left",
-  #                                                                                          rod_size = input$left_linked_rod_size,
-  #                                                                                          rod_material = input$left_linked_rod_material,
-  #                                                                                          rod_vector = input$left_linked_rod)
-  #   }
-  #   if(input$add_left_kickstand_rod == TRUE){
-  #     additional_rods_list$left_kickstand <-  jh_generate_supplemental_rod_statement_function(rod_type = "kickstand",
-  #                                                                                             rod_side = "left",
-  #                                                                                             rod_size = input$left_kickstand_rod_size,
-  #                                                                                             rod_material = input$left_kickstand_rod_material,
-  #                                                                                             rod_vector = input$left_kickstand_rod)
-  #   }
-  #   
-  #   #RIGHT#
-  #   if(input$add_right_accessory_rod == TRUE){
-  #     additional_rods_list$right_accessory <-  jh_generate_supplemental_rod_statement_function(rod_type = "accessory",
-  #                                                                                              rod_side = "right",
-  #                                                                                              rod_size = input$right_accessory_rod_size,
-  #                                                                                              rod_material = input$right_accessory_rod_material,
-  #                                                                                              rod_vector = input$right_accessory_rod)
-  #   }
-  #   if(input$add_right_satellite_rod == TRUE){
-  #     additional_rods_list$right_satellite <-  jh_generate_supplemental_rod_statement_function(rod_type = "satellite",
-  #                                                                                              rod_side = "right",
-  #                                                                                              rod_size = input$right_satellite_rod_size,
-  #                                                                                              rod_material = input$right_satellite_rod_material,
-  #                                                                                              rod_vector = input$right_satellite_rod)
-  #   }
-  #   if(input$add_right_intercalary_rod == TRUE){
-  #     additional_rods_list$right_intercalary <-  jh_generate_supplemental_rod_statement_function(rod_type = "intercalary",
-  #                                                                                                rod_side = "right",
-  #                                                                                                rod_size = input$right_intercalary_rod_size,
-  #                                                                                                rod_material = input$right_intercalary_rod_material,
-  #                                                                                                rod_vector = input$right_intercalary_rod, 
-  #                                                                                                intercalary_rod_junction = input$right_intercalary_rod_junction)
-  #   }
-  #   if(input$add_right_linked_rods == TRUE){
-  #     additional_rods_list$right_linked <-  jh_generate_supplemental_rod_statement_function(rod_type = "linked",
-  #                                                                                           rod_side = "right",
-  #                                                                                           rod_size = input$right_linked_rod_size,
-  #                                                                                           rod_material = input$right_linked_rod_material,
-  #                                                                                           rod_vector = input$right_linked_rod)
-  #   }
-  #   if(input$add_right_kickstand_rod == TRUE){
-  #     additional_rods_list$right_kickstand <-  jh_generate_supplemental_rod_statement_function(rod_type = "kickstand",
-  #                                                                                              rod_side = "right",
-  #                                                                                              rod_size = input$right_kickstand_rod_size,
-  #                                                                                              rod_material = input$right_kickstand_rod_material,
-  #                                                                                              rod_vector = input$right_kickstand_rod)
-  #   }
-  #   
-  #   if(length(additional_rods_list) > 0){
-  #     added_rods_statement <- glue_collapse(additional_rods_list, sep = " ")
-  #   }else{
-  #     added_rods_statement <- ""
-  #   }
-  #   if(length(additional_rods_list) == 0){
-  #     added_rods_statement <- ""
-  #     added_rods_statement
-  #   }else{
-  #     added_rods_statement
-  #   }
-  #   added_rods_statement
-  # }) %>%
-  #   bindEvent(input$implants_complete, ignoreInit = TRUE)
-  # 
-  # 
-  
-  ######################### GENERATE ALL INPUTS FOR POSTERIOR OP NOTE:
-  
-  posterior_op_note_inputs_list_reactive <- reactive({
-    posterior_op_note_inputs_list_reactive <- list()
-    
-    # if(input$tabs != "patient_details_procedures"){
-    ######
-    if(input$implants_complete > 0){
-    posterior_approach_objects_df <- all_objects_to_add_list$objects_df %>%
-      filter(approach == "posterior")  %>%
-      select(-object_constructed) 
-    
-    if(nrow(interbody_details_df_reactive()) > 0){
-      posterior_approach_objects_df <- posterior_approach_objects_df %>%
-        left_join(interbody_details_df_reactive() %>% select(level, approach, object, implant_statement)) %>%
-        replace_na(list(implant_statement = " "))
-    }else{
-      posterior_approach_objects_df <- posterior_approach_objects_df %>%
-        mutate(implant_statement = " ")
-    }
-    
-    if(nrow(screw_size_details_df_reactive() %>% filter(approach == "posterior"))>0){
-      
-      screw_results_df <- screw_size_details_df_reactive() %>%
-        filter(approach == "posterior") %>%
-        select(level, side, object, screw_size_type)
-      
-      posterior_approach_objects_df <- posterior_approach_objects_df %>%
-        left_join(screw_results_df) %>%
-        replace_na(list(screw_size_type = " "))
-    }else{
-      posterior_approach_objects_df <- posterior_approach_objects_df %>%
-        mutate(screw_size_type = " ")
-    }
-    
-    posterior_approach_objects_df <- posterior_approach_objects_df %>%
-      mutate(object = if_else(level == "C1" & object == "lateral_mass_screw", "c1_lateral_mass_screw", object)) 
-    
-    
-    posterior_op_note_inputs_list_reactive$posterior_approach_objects_df <- posterior_approach_objects_df
-    # posterior_op_note_inputs_list_reactive()$posterior_approach_objects_df
-    ####### fusion levels 
-    
-    if(length(input$posterior_fusion_levels_confirmed)>0){
-      posterior_op_note_inputs_list_reactive$fusions_df <- tibble(level = input$posterior_fusion_levels_confirmed) %>%
-        left_join(levels_numbered_df)
-    }else{
-      posterior_op_note_inputs_list_reactive$fusions_df <- tibble(level = character(), vertebral_number = double(), object = character())
-    }
-    
-    ####### C2 nerve transection
-    if(c2_nerve_transection_list_reactive()$c1_screws != "none"){
-      posterior_op_note_inputs_list_reactive$c2_nerve_transection <- c2_nerve_transection_list_reactive()$c2_nerve_transection_result
-    }else{
-      posterior_op_note_inputs_list_reactive$c2_nerve_transection <- "na"
-    }
-    
-  
-    #######
-    posterior_op_note_inputs_list_reactive$approach_specified_posterior <- input$approach_specified_posterior
-    
-    #######
-    posterior_op_note_inputs_list_reactive$approach_open_mis <- input$approach_open_mis
-    
-    #######
-    posterior_op_note_inputs_list_reactive$approach_robot_navigation <- input$approach_robot_navigation
-    
-    #######
-    if(length(input$implant_position_confirmation_method) == 0){
-      implant_position_confirmation_method <- "NA"
-    }else{
-      implant_position_confirmation_method <- input$implant_position_confirmation_method
-    }
-    
-    posterior_op_note_inputs_list_reactive$implant_position_confirmation_method <- implant_position_confirmation_method
-    
-    #######
-    posterior_op_note_inputs_list_reactive$local_anesthesia <- input$local_anesthesia
-
-    # INTRAOP COMPLICATIONS STATEMENT
-    #######
-    complications_list <- list()
-    
-    if(length(input$intraoperative_complications_vector)> 0){
-      
-      complication_text <- paste(glue_collapse(x = str_to_lower(input$intraoperative_complications_vector), sep = ","))
-      
-      if(str_detect(complication_text, pattern = "durotomy")){
-        if(length(input$durotomy_timing)>0){
-          if(str_to_lower(input$durotomy_timing) == "other"){
-            durotomy_timing_instrument_statement <- glue("An incidental durotomy was created during the procedure, which caused a CSF leak.")
-          }else{
-            durotomy_timing_instrument_statement <- glue("During the {str_to_lower(input$durotomy_timing)}, an incidental durotomy was created, which caused a CSF leak.")
-          }
-        }else{
-          durotomy_timing_instrument_statement <- glue("An incidental durotomy was created during the procedure, which caused a CSF leak.")
-        }
-        
-        if(length(input$durotomy_repair_method)>0){
-          if(any(input$durotomy_repair_method == "No Repair Performed")){
-            durotomy_repair_statement <- glue("No dural repair was performed.")
-          }else{
-            durotomy_repair_statement <- glue("The dura was repaired using {glue_collapse(input$durotomy_repair_method, sep = ', ', last = ' and ')}.")
-          }
-        }else{
-          durotomy_repair_statement <- " "
-        }
-        complications_list$durotomy <- paste(durotomy_timing_instrument_statement, str_remove_all(string = str_to_sentence(durotomy_repair_statement), pattern = "primarily repaired using ")) 
-      }
-      
-      if(str_detect(complication_text, pattern = "other")){
-        complications_list$other <- glue("During the case, the procedure was complicated by {input$other_intraoperative_complications}.")
-      }
-      
-      other_predefined_complications_vector <- discard(.x = input$intraoperative_complications_vector, .p = ~ str_detect(.x, "Other|Durotomy"))
-      
-      complications_list$other_predifined_complications <- glue("The procedure was complicated by {glue_collapse(other_predefined_complications_vector, sep = ', ', last = ' and ')}")
-    }
-    
-    posterior_op_note_inputs_list_reactive$complications_list <- complications_list
-    
-    
-    #######
-    posterior_op_note_inputs_list_reactive$open_canal <- input$open_canal
-    
-    #######
-    revision_implants_df <- left_revision_implants_reactive_list()$revision_implants_status_df %>%
-      bind_rows(right_revision_implants_reactive_list()$revision_implants_status_df)
-    
-    posterior_op_note_inputs_list_reactive$revision_implants_df <- revision_implants_df
-    
-    # RODS
-    ####### Left
-    posterior_op_note_inputs_list_reactive$left_main_rod_size <- input$left_main_rod_size
-    posterior_op_note_inputs_list_reactive$left_main_rod_material <- input$left_main_rod_material
-    
-
-    ####### Right
-    posterior_op_note_inputs_list_reactive$right_main_rod_material <- input$right_main_rod_material
-    posterior_op_note_inputs_list_reactive$right_main_rod_size <- input$right_main_rod_size
-    
-    #######
-    # posterior_op_note_inputs_list_reactive$added_rods_statement <- added_rods_statement_reactive()
-    
-    #######
-    posterior_op_note_inputs_list_reactive$preop_antibiotics <- jh_replace_checkbox_other_with_text_function(input_vector = input$preop_antibiotics, 
-                                                                                                             replacement_text = input$preop_antibiotics_other)
-    
-    #######
-    
-    if(length(input$additional_procedures_posterior)>0){
-      if("Other" %in% input$additional_procedures_posterior){
-        posterior_op_note_inputs_list_reactive$additional_procedures_vector  <- append(discard(input$additional_procedures_posterior, .p = ~ (.x == "Other")), paste(input$additional_procedures_other_posterior))
-      }else{
-        posterior_op_note_inputs_list_reactive$additional_procedures_vector <- input$additional_procedures_posterior
-      }
-      
-    }else{
-      posterior_op_note_inputs_list_reactive$additional_procedures_vector <-  c()
-    }
-    
-    #######
-    posterior_op_note_inputs_list_reactive$prior_fusion_levels <- input$prior_fusion_levels
-    
-    #######
-    posterior_op_note_inputs_list_reactive$instrumentation_removed_vector <- unique(c(input$left_revision_implants_removed, input$right_revision_implants_removed))
-    
-    ####### BONE GRAFT AND BMP ##########
-    posterior_op_note_inputs_list_reactive$posterior_bmp_dose_reactive <- posterior_bmp_dose_reactive()
-    
-    #######
-    biologics_generate_list_item_function <- function(biologic_volume, biologic_label = "graft"){
-      if(biologic_volume > 0){
-        biologic <- paste0(biologic_volume, "cc of ", biologic_label)
-      }else{
-        biologic<- NULL
-      }
-      biologic
-    } 
-    posterior_biologics_list <- list()
-    posterior_biologics_list$posterior_allograft <- biologics_generate_list_item_function(biologic_volume = input$posterior_allograft_amount, biologic_label = "morselized allograft")
-    posterior_biologics_list$posterior_bone_marrow_aspirate <- biologics_generate_list_item_function(biologic_volume = input$posterior_bone_marrow_aspirate_volume, biologic_label = "bone marrow aspirate")
-    posterior_biologics_list$posterior_cell_based_allograft <- biologics_generate_list_item_function(biologic_volume = input$posterior_cell_based_allograft_volume, biologic_label = "cell-based allograft")
-    posterior_biologics_list$posterior_dbm <- biologics_generate_list_item_function(biologic_volume = input$posterior_dbm_volume, biologic_label = "demineralized bone matrix")
-    posterior_biologics_list$posterior_ifactor <- biologics_generate_list_item_function(biologic_volume = input$posterior_ifactor_volume, biologic_label = "iFactor")
-    if(any(input$posterior_biologics == "Other")){
-      posterior_biologics_list$other <- paste(input$posterior_biologics_other)
-    }
-    
-    if(any(input$posterior_bone_graft == "Local Autograft")){
-      posterior_biologics_list$autograft <- "morselized local autograft"
-    }
-    
-    posterior_op_note_inputs_list_reactive$posterior_biologics_list <- posterior_biologics_list
-    
-    #######
-    if(any(input$posterior_bone_graft == "Morselized Autograft (separate fascial incision)")){
-      posterior_op_note_inputs_list_reactive$morselized_autograft_separate <- TRUE
-    }else{
-      posterior_op_note_inputs_list_reactive$morselized_autograft_separate <- FALSE
-    }
-    
-    ####### MULTIPLE APPROACH
-    if(input$approach_sequence == "anterior" | input$approach_sequence == "posterior"){
-      posterior_op_note_inputs_list_reactive$multiple_approach <- "NA"
-    }
-    if(input$approach_sequence == "posterior-anterior" | input$approach_sequence == "posterior-anterior-posterior"){
-      posterior_op_note_inputs_list_reactive$multiple_approach <- "posterior_first"
-    }
-    if(input$approach_sequence == "anterior-posterior"){
-      posterior_op_note_inputs_list_reactive$multiple_approach <- "anterior_first"
-    }
-    
-    
-    #######
-    posterior_op_note_inputs_list_reactive$sex <- input$sex
-    }
-    posterior_op_note_inputs_list_reactive
-  })
-  
-  ######################################### NOW ALL THE NECESSARY INPUTS FOR THE POSTERIOR OP NOTE ARE GENERATED
-  
-  ###################### NOW GENERATE ALL THE NECESSARY INPUTS FOR THE THE ANTERIOR OP NOTE
-  anterior_op_note_inputs_list_reactive <- reactive({
-    anterior_op_note_inputs_list_reactive <- list()
-    
-    ######
-    if(input$implants_complete > 0){
-    anterior_approach_objects_df <- all_objects_to_add_list$objects_df %>%
-      filter(approach == "anterior")  %>%
-      select(-object_constructed)
-    
-    
-    # screw_size_details_df_reactive()
-    if(any(str_detect(screw_size_details_df_reactive()$object, "anterior"))){
-      
-      # names include: level, screw_implant, screw_side, screw_diameter, screw_length, screw_type, screw_size_type
-      
-      anterior_plate_screws_objects_df <- screw_size_details_df_reactive() %>%
-        filter(approach == "anterior") %>%
-        mutate(approach = "anterior", 
-               category = "anterior_disc", 
-               implant = "yes"
-               # object = "anterior_plate_screw"
-        ) %>%
-        mutate(vertebral_number = jh_get_vertebral_number_function(level_to_get_number = level))  %>%
-        select(level, approach, category, vertebral_number, implant, object, side, screw_size_type)
-      
-      anterior_approach_objects_df <- anterior_approach_objects_df %>%
-        bind_rows(anterior_plate_screws_objects_df) %>%
-        replace_na(list(screw_size_type = " "))
-    }
-    
-    
-    if(nrow(interbody_details_df_reactive())>0){
-      anterior_approach_objects_df <- anterior_approach_objects_df %>%
-        left_join(interbody_details_df_reactive() %>% select(level, approach, object, implant_statement)) %>%
-        replace_na(list(implant_statement = " ")) 
-    }else{
-      anterior_approach_objects_df <- anterior_approach_objects_df %>%
-        mutate(implant_statement = " ")
-    }
-    
-    anterior_op_note_inputs_list_reactive$anterior_approach_objects_df <- anterior_approach_objects_df
-    
-    ##revision implants ##
-    
-    if(nrow(anterior_plate_revision_implants_df_reactive())>0){
-      anterior_op_note_inputs_list_reactive$anterior_plate_revision_df <- anterior_plate_revision_implants_df_reactive() %>% select(level, prior_plate_status) 
-    }else{
-      anterior_op_note_inputs_list_reactive$anterior_plate_revision_df <- tibble(level = character(), prior_plate_status = character())
-    }
-    
-    #######
-    anterior_op_note_inputs_list_reactive$head_positioning_anterior <- input$head_positioning_anterior
-    
-    #######
-    anterior_op_note_inputs_list_reactive$anterior_approach_laterality <- input$approach_specified_anterior
-    
-    #######
-    anterior_op_note_inputs_list_reactive$bmp <- anterior_bmp_dose_reactive()
-    
-    #######
-    anterior_biologics_list <- list()
-
-    number_of_fusion_levels <- nrow(anterior_approach_objects_df %>% filter(fusion == "yes") %>% select(level) %>% distinct())
-    
-    if(any(input$anterior_bone_graft == "Morselized Allograft")){
-      anterior_biologics_list$'Morselized Allograft' <- round(input$anterior_allograft_amount/number_of_fusion_levels, 1)
-    }else{
-      anterior_biologics_list$'Morselized Allograft' <- 0
-    }
-    if(any(input$anterior_biologics == "Bone Marrow Aspirate")){
-      anterior_biologics_list$'Bone Marrow Aspirate' <- round(input$anterior_bone_marrow_aspirate_volume/number_of_fusion_levels, 1) 
-    }else{
-      anterior_biologics_list$'Bone Marrow Aspirate' <- 0
-    }
-    if(any(input$anterior_biologics == "Cell Based Allograft")){
-      anterior_biologics_list$'Cell Based Allograft' <- round(input$anterior_cell_based_allograft_volume/number_of_fusion_levels, 1)
-    }else{
-      anterior_biologics_list$'Cell Based Allograft' <- 0
-    }
-    if(any(input$anterior_biologics == "DBM")){
-      anterior_biologics_list$'DBM' <- round(input$anterior_dbm_volume/number_of_fusion_levels, 1) 
-    }else{
-      anterior_biologics_list$'DBM' <- 0
-    }
-    if(any(input$anterior_biologics == "iFactor")){
-      anterior_biologics_list$'iFactor' <-  round(input$anterior_ifactor_volume/number_of_fusion_levels, 1) 
-    }else{
-      anterior_biologics_list$'iFactor' <- 0
-    }
-    if(any(input$anterior_biologics == "Other")){
-      anterior_biologics_list$'Other' <-  999
-    }else{
-      anterior_biologics_list$'Other' <- 0
-    }
-    
-    anterior_biologics_df_formatted <- enframe(anterior_biologics_list) %>%
-      unnest(value) %>%
-      filter(value != 0) %>%
-      mutate(name = str_replace_all(name, "Other", input$anterior_biologics_other))
-    
-    anterior_op_note_inputs_list_reactive$anterior_biologics_df <- anterior_biologics_df_formatted
-    
-    #######
-    anterior_op_note_inputs_list_reactive$bone_graft_vector <- input$anterior_bone_graft
-    
-    #######
-    anterior_op_note_inputs_list_reactive$morselized_allograft <- input$anterior_allograft_amount
-    
-    #######
-    anterior_op_note_inputs_list_reactive$deep_drains_anterior <- input$deep_drains_anterior
-    
-    #######
-    anterior_op_note_inputs_list_reactive$superficial_drains_anterior <- input$superficial_drains_anterior
-    
-    #######
-    anterior_op_note_inputs_list_reactive$additional_end_procedure_details <- input$additional_end_procedure_details_anterior
-    
-    #######
-    anterior_op_note_inputs_list_reactive$closure_details <- input$closure_details_anterior
-    
-    #######
-    anterior_op_note_inputs_list_reactive$dressing_details <- input$dressing_details_anterior
-    
-    #######
-    ####### MULTIPLE APPROACH
-    if(input$approach_sequence == "anterior" | input$approach_sequence == "posterior"){
-      anterior_op_note_inputs_list_reactive$multiple_approach <- "NA"
-    }
-    if(input$approach_sequence == "posterior-anterior" | input$approach_sequence == "posterior-anterior-posterior"){
-      anterior_op_note_inputs_list_reactive$multiple_approach <- "posterior_first"
-    }
-    if(input$approach_sequence == "anterior-posterior"){
-      anterior_op_note_inputs_list_reactive$multiple_approach <- "anterior_first"
-    }
-    
-    
-    #######
-    anterior_op_note_inputs_list_reactive$sex <- input$sex
-    
-    }
-    anterior_op_note_inputs_list_reactive
-  })
   
   
   ########### NOW ASSEMBLE THE REACTIVE TEXT OF THE ENTIRE OP NOTE ###############
@@ -6456,8 +5584,10 @@ server <- function(input, output, session) {
   })
   
   observe(
-    updateRadioGroupButtons(session = session, inputId = "approach_sequence", 
-                            selected = paste0(approach_sequence_reactive()))
+    updatePickerInput(session = session, 
+                      inputId = "approach_sequence", 
+                      selected = paste0(approach_sequence_reactive())
+                      )
   )%>%
     bindEvent(approach_sequence_reactive(),
               ignoreInit = TRUE,
@@ -6548,14 +5678,41 @@ server <- function(input, output, session) {
                                                                        right_main_rod_size_input = input$right_main_rod_size,
                                                                        left_main_rod_material_input = input$left_main_rod_material,
                                                                        right_main_rod_material_input = input$right_main_rod_material,
+
                                                                        add_left_accessory_rod_input = input$add_left_accessory_rod,
                                                                        add_left_satellite_rod_input = input$add_left_satellite_rod,
                                                                        add_left_intercalary_rod_input = input$add_left_intercalary_rod,
-                                                                       add_left_linked_rods_input = input$add_left_linked_rods,
+                                                                       add_left_linked_rod_input = input$add_left_linked_rod,
+                                                                       add_left_kickstand_rod_input = input$add_left_kickstand_rod,
+
+                                                                       left_accessory_rod_material_input = input$left_accessory_rod_material,
+                                                                       left_accessory_rod_size_input = input$left_accessory_rod_size,
+                                                                       left_satellite_rod_material_input = input$left_satellite_rod_material,
+                                                                       left_satellite_rod_size_input = input$left_satellite_rod_size,
+                                                                       left_intercalary_rod_material_input = input$left_intercalary_rod_material,
+                                                                       left_intercalary_rod_size_input = input$left_intercalary_rod_size,
+                                                                       left_linked_rod_material_input = input$left_linked_rod_material,
+                                                                       left_linked_rod_size_input = input$left_linked_rod_size,
+                                                                       left_kickstand_rod_material_input = input$left_kickstand_rod_material,
+                                                                       left_kickstand_rod_size_input = input$left_kickstand_rod_size,
+
                                                                        add_right_accessory_rod_input = input$add_right_accessory_rod,
                                                                        add_right_satellite_rod_input = input$add_right_satellite_rod,
                                                                        add_right_intercalary_rod_input = input$add_right_intercalary_rod,
-                                                                       add_right_linked_rods_input = input$add_right_linked_rods,
+                                                                       add_right_linked_rod_input = input$add_right_linked_rod,
+                                                                       add_right_kickstand_rod_input = input$add_right_kickstand_rod,
+
+                                                                       right_accessory_rod_material_input = input$right_accessory_rod_material,
+                                                                       right_accessory_rod_size_input = input$right_accessory_rod_size,
+                                                                       right_satellite_rod_material_input = input$right_satellite_rod_material,
+                                                                       right_satellite_rod_size_input = input$right_satellite_rod_size,
+                                                                       right_intercalary_rod_material_input = input$right_intercalary_rod_material,
+                                                                       right_intercalary_rod_size_input = input$right_intercalary_rod_size,
+                                                                       right_linked_rod_material_input = input$right_linked_rod_material,
+                                                                       right_linked_rod_size_input = input$right_linked_rod_size,
+                                                                       right_kickstand_rod_material_input = input$right_kickstand_rod_material,
+                                                                       right_kickstand_rod_size_input = input$right_kickstand_rod_size,
+
                                                                        crosslink_connectors_input = input$crosslink_connectors,
                                                                        anterior_biologics_input = input$anterior_biologics,
                                                                        anterior_bmp_dose_reactive_input = anterior_bmp_dose_reactive(),
@@ -6566,7 +5723,7 @@ server <- function(input, output, session) {
                                                                        anterior_dbm_volume_input = input$anterior_dbm_volume,
                                                                        anterior_ifactor_volume_input = input$anterior_ifactor_volume,
                                                                        anterior_biologics_other_input = input$anterior_biologics_other,
-                                                                       
+
                                                                        posterior_biologics_input = input$posterior_biologics,
                                                                        posterior_bmp_dose_reactive_input = posterior_bmp_dose_reactive(),
                                                                        posterior_bone_graft_input = input$posterior_bone_graft,
@@ -6576,12 +5733,12 @@ server <- function(input, output, session) {
                                                                        posterior_dbm_volume_input = input$posterior_dbm_volume,
                                                                        posterior_ifactor_volume_input = input$posterior_ifactor_volume,
                                                                        posterior_biologics_other_input = input$posterior_biologics_other,
-                                                                       
+
                                                                        intraoperative_complications_vector_input = input$intraoperative_complications_vector,
                                                                        other_intraoperative_complications_input = input$other_intraoperative_complications,
                                                                        implant_manufacturer_input = input$implant_manufacturer
       )
-      
+
       surgery_details_df$surgery_details_df
     }else{
       tibble(name = character(), value = character())
@@ -6597,82 +5754,22 @@ server <- function(input, output, session) {
     if(input$implants_complete > 0){
       intraoperative_details_redcap_df <- redcap_table_intraop_details_df_function(all_objects_df_input = all_objects_to_add_list$objects_df,
                                                                                    date_of_surgery_input = input$date_of_surgery,
-                                                                                   # preop_antibiotics_input = input$preop_antibiotics,
-                                                                                   # neuromonitoring_input = input$neuromonitoring,
-                                                                                   # anti_fibrinolytic_input = input$anti_fibrinolytic,
-                                                                                   # txa_loading_input = input$txa_loading,
-                                                                                   # txa_maintenance_input = input$txa_maintenance,
-                                                                                   # surgical_findings_input = input$surgical_findings,
-                                                                                   # specimens_removed_input = input$specimens_removed,
+                                                                                   primary_surgeon_first_name = input$primary_surgeon_first_name,
+                                                                                   primary_surgeon_last_name = input$primary_surgeon_last_name,
                                                                                    ebl_input = input$ebl,
-                                                                                   # urine_output_input = input$urine_output,
-                                                                                   # crystalloids_administered_input = input$crystalloids_administered,
-                                                                                   # colloids_administered_input = input$colloids_administered,
                                                                                    transfusion_input = input$transfusion,
-                                                                                   # cell_saver_transfused_input = input$cell_saver_transfused,
                                                                                    prbc_transfused_input = input$prbc_transfused,
-                                                                                   # ffp_transfused_input = input$ffp_transfused,
-                                                                                   # cryoprecipitate_transfused_input = input$cryoprecipitate_transfused,
-                                                                                   # platelets_transfused_input = input$platelets_transfused,
                                                                                    intraoperative_complications_vector_input = input$intraoperative_complications_vector,
-                                                                                   other_intraoperative_complications_input = input$other_intraoperative_complications,
-                                                                                   # deep_drains_anterior_input = input$deep_drains_anterior,
-                                                                                   # superficial_drains_anterior_input = input$superficial_drains_anterior,
-                                                                                   # deep_drains_posterior_input = input$deep_drains_posterior,
-                                                                                   # superficial_drains_posterior_input = input$superficial_drains_posterior,
-                                                                                   # additional_end_procedure_details_anterior_input = input$additional_end_procedure_details_anterior,
-                                                                                   # additional_end_procedure_details_posterior_input = input$additional_end_procedure_details_posterior,
-                                                                                   # closure_details_anterior_input = input$closure_details_anterior,
-                                                                                   # dressing_details_anterior_input = input$dressing_details_anterior,
-                                                                                   # closure_details_posterior_input = input$closure_details_posterior,
-                                                                                   # dressing_details_posterior_input = input$dressing_details_posterior
+                                                                                   other_intraoperative_complications_input = input$other_intraoperative_complications
       )
-      
+
       intraoperative_details_redcap_df$intraop_details_df
     }else{
       tibble(name = character(), value = character())
     }
-    
+
   })
-  
-  
-  # intraoperative_details_redcap_df_reactive <- reactive({
-  #   intraop_details_list <- list()
-  #   
-  #   ##########   date_of_surgery #############
-  #   intraop_details_list$dos_intraop_repeating <- as.character(input$date_of_surgery)
-  #   
-  # 
-  #   
-  #   ####### EBL  #####
-  #   intraop_details_list$ebl_ml <- if_else(is.na(input$ebl), "xx", paste(input$ebl))
-  #   
-  #   
-  #   ####### complications  #####
-  #   complication_df <- tibble(complication = append(input$intraoperative_complications_vector, input$other_intraoperative_complications)) %>%
-  #     filter(complication != "") %>%
-  #     filter(complication != " ") %>%
-  #     remove_empty()
-  #   
-  #   if(nrow(complication_df) > 0){
-  #     intraop_details_list$intraoperative_complications <- glue_collapse(complication_df$complication, sep = '; ')
-  #   }else{
-  #     intraop_details_list$intraoperative_complications <- "none"
-  #   }
-  #   
-  #  
-  #   
-  #   ####### GENERATE DATAFRAME #####
-  #   
-  #   intraop_details_df <- enframe(intraop_details_list) %>%
-  #     mutate(across(everything(), ~ as.character(.x))) %>%
-  #     filter(value != "xx")
-  #   
-  #   intraop_details_df
-  #   
-  #   
-  # })
-  
+
   
   ################# MAKE THE procedures by level DATAFRAME ##################
   procedures_by_level_redcap_table_reactive <- reactive({
@@ -6859,7 +5956,7 @@ server <- function(input, output, session) {
     
     if(input$implants_complete > 0){
       
-      labels_df %>%
+      rods_crossing_no_sizes_df <- labels_df %>%
         mutate(vertebral_number = vertebral_number - 0.5) %>%
         select(-level) %>%
         left_join(levels_numbered_df) %>%
@@ -6873,20 +5970,97 @@ server <- function(input, output, session) {
         mutate(left_rods_crossing = str_remove_all(left_rods_crossing, "_sf"),
                right_rods_crossing = str_remove_all(right_rods_crossing, "_sf")) %>%
         mutate(dos_rods_crossing_repeating = as.character(input$date_of_surgery)) %>%
-        select(dos_rods_crossing_repeating, rods_crossing_level = level, left_rod_count, left_rods_crossing, right_rod_count, right_rods_crossing, total_rods_crossing)
-      # select(level, total_rods_crossing)
+        select(dos_rods_crossing_repeating, rods_crossing_level = level, left_rod_count, left_rods_crossing, right_rod_count, right_rods_crossing, total_rods_crossing) 
+        
+      left_accessory_rod_material <- if(input$add_left_accessory_rod){paste(input$left_accessory_rod_material)}else{"xx"}
+      left_accessory_rod_size <- if(input$add_left_accessory_rod){paste(input$left_accessory_rod_size)}else{"xx"}
+      left_satellite_rod_material <- if(input$add_left_satellite_rod){paste(input$left_satellite_rod_material)}else{"xx"}
+      left_satellite_rod_size <- if(input$add_left_satellite_rod){paste(input$left_satellite_rod_size)}else{"xx"}
+      left_intercalary_rod_material <- if(input$add_left_intercalary_rod){paste(input$left_intercalary_rod_material)}else{"xx"}
+      left_intercalary_rod_size <- if(input$add_left_intercalary_rod){paste(input$left_intercalary_rod_size)}else{"xx"}
+      left_linked_rod_material <- if(input$add_left_linked_rod){paste(input$left_linked_rod_material)}else{"xx"}
+      left_linked_rod_size <- if(input$add_left_linked_rod){paste(input$left_linked_rod_size)}else{"xx"}
+      left_kickstand_rod_material <- if(input$add_left_kickstand_rod){paste(input$left_kickstand_rod_material)}else{"xx"}
+      left_kickstand_rod_size <- if(input$add_left_kickstand_rod){paste(input$left_kickstand_rod_size)}else{"xx"}
+      
+      rods_crossing_left_df <- jh_rods_table_add_supplemental_rod_size_material_function(rods_crossing_df_input = rods_crossing_no_sizes_df, 
+                                                                side = "left", 
+                                                                main_rod_size =input$left_main_rod_size,
+                                                                main_rod_material = input$left_main_rod_material,
+                                                                accessory_rod_material = left_accessory_rod_material, 
+                                                                accessory_rod_size = left_accessory_rod_size, 
+                                                                satellite_rod_material = left_satellite_rod_material, 
+                                                                satellite_rod_size = left_satellite_rod_size, 
+                                                                intercalary_rod_material = left_intercalary_rod_material, 
+                                                                intercalary_rod_size = left_intercalary_rod_size, 
+                                                                linked_rod_material = left_linked_rod_material, 
+                                                                linked_rod_size = left_linked_rod_size, 
+                                                                kickstand_rod_material = left_kickstand_rod_material, 
+                                                                kickstand_rod_size = left_kickstand_rod_size
+                                                                )
+      
+      right_accessory_rod_material <- if(input$add_right_accessory_rod){paste(input$right_accessory_rod_material)}else{"xx"}
+      right_accessory_rod_size <- if(input$add_right_accessory_rod){paste(input$right_accessory_rod_size)}else{"xx"}
+      right_satellite_rod_material <- if(input$add_right_satellite_rod){paste(input$right_satellite_rod_material)}else{"xx"}
+      right_satellite_rod_size <- if(input$add_right_satellite_rod){paste(input$right_satellite_rod_size)}else{"xx"}
+      right_intercalary_rod_material <- if(input$add_right_intercalary_rod){paste(input$right_intercalary_rod_material)}else{"xx"}
+      right_intercalary_rod_size <- if(input$add_right_intercalary_rod){paste(input$right_intercalary_rod_size)}else{"xx"}
+      right_linked_rod_material <- if(input$add_right_linked_rod){paste(input$right_linked_rod_material)}else{"xx"}
+      right_linked_rod_size <- if(input$add_right_linked_rod){paste(input$right_linked_rod_size)}else{"xx"}
+      right_kickstand_rod_material <- if(input$add_right_kickstand_rod){paste(input$right_kickstand_rod_material)}else{"xx"}
+      right_kickstand_rod_size <- if(input$add_right_kickstand_rod){paste(input$right_kickstand_rod_size)}else{"xx"}
+      
+      rods_crossing_full_df <- jh_rods_table_add_supplemental_rod_size_material_function(rods_crossing_df_input = rods_crossing_left_df,
+                                                                                         side = "right", 
+                                                                                         main_rod_size =input$right_main_rod_size,
+                                                                                         main_rod_material = input$right_main_rod_material,
+                                                                                         accessory_rod_material = right_accessory_rod_material, 
+                                                                                         accessory_rod_size = right_accessory_rod_size, 
+                                                                                         satellite_rod_material = right_satellite_rod_material, 
+                                                                                         satellite_rod_size = right_satellite_rod_size, 
+                                                                                         intercalary_rod_material = right_intercalary_rod_material, 
+                                                                                         intercalary_rod_size = right_intercalary_rod_size, 
+                                                                                         linked_rod_material = right_linked_rod_material, 
+                                                                                         linked_rod_size = right_linked_rod_size, 
+                                                                                         kickstand_rod_material = right_kickstand_rod_material, 
+                                                                                         kickstand_rod_size = right_kickstand_rod_size
+      )
       
     }else{
-      tibble(dos_rods_crossing_repeating = character(),
-             rods_crossing_level = character(),
-             left_rod_count = double(),
-             left_rods_crossing = character(),
-             right_rod_count = double(),
-             right_rods_crossing = character(),
-             total_rods_crossing = double()
+      rods_crossing_full_df <- tibble(dos_rods_crossing_repeating = character(),
+                                      rods_crossing_level = character(),
+                                      left_rod_count = double(),
+                                      left_rods_crossing = character(),
+                                      right_rod_count = double(),
+                                      right_rods_crossing = character(),
+                                      total_rods_crossing = double(),
+                                      left_main_rod_size = character(),
+                                      left_main_rod_material = character(),
+                                      left_accessory_rod_size = character(),
+                                      left_accessory_rod_material = character(),
+                                      left_satellite_rod_size = character(),
+                                      left_satellite_rod_material = character(),
+                                      left_intercalary_rod_size = character(),
+                                      left_intercalary_rod_material = character(),
+                                      left_linked_rod_size = character(),
+                                      left_linked_rod_material = character(),
+                                      left_kickstand_rod_size = character(),
+                                      left_kickstand_rod_material = character(),
+                                      right_main_rod_size = character(),
+                                      right_main_rod_material = character(),
+                                      right_accessory_rod_size = character(),
+                                      right_accessory_rod_material = character(),
+                                      right_satellite_rod_size = character(),
+                                      right_satellite_rod_material = character(),
+                                      right_intercalary_rod_size = character(),
+                                      right_intercalary_rod_material = character(),
+                                      right_linked_rod_size = character(),
+                                      right_linked_rod_material = character(),
+                                      right_kickstand_rod_size = character(),
+                                      right_kickstand_rod_material = character()
       )
-      # tibble(level = character(), total_rods_crossing = double())
     }
+    rods_crossing_full_df
   })
   
   
@@ -6997,108 +6171,7 @@ server <- function(input, output, session) {
   ############### ############### NOW RENDER EACH OF THE TABLES FOR THE SIDE TABULAR VIEW:    ###############     ############### 
   ############### ############### NOW RENDER EACH OF THE TABLES FOR THE SIDE TABULAR VIEW:    ###############     ############### 
   ############### ############### NOW RENDER EACH OF THE TABLES FOR THE SIDE TABULAR VIEW:    ###############     ############### 
-  
-  ########################
-  # #################  ALL OBJECTS TABLE ##################
-  # output$all_objects_table <- renderTable({
-  #   
-  #   all_objects_to_add_list$objects_df %>%
-  #     select(level, vertebral_number, body_interspace, approach, category, implant, object, side, x, y, fusion, interbody_fusion, fixation_uiv_liv) %>%
-  #     select(everything())
-  #   
-  #   
-  # })
-  
-  
-  ######## Render "Patient Details Table for side tab:"    ######## 
-  # output$patient_details_redcap_df_sidetab <- renderTable({
-  #     row_1 <- patient_details_redcap_df_reactive() %>%
-  #         slice(1) %>%
-  #         as.character()
-  #     
-  #     tibble(Variable = names(patient_details_redcap_df_reactive()), 
-  #            Result = row_1) 
-  #     
-  # })
-  # 
-  # 
-  ####### Render "Procedure Summary Table for side tab:"    ########
-  # output$surgical_details_redcap_df_sidetab <- renderTable({
-  #     surgical_details_redcap_df_reactive()
-  # })
-  # 
-  # 
-  ######## Render "Intraoperative Details Table for side tab:"    ######## 
-  # output$intraoperative_details_redcap_df_sidetab <- renderTable({
-  #     intraoperative_details_redcap_df_reactive() 
-  # })
-  # 
-  # 
-  ####### Render "Procedur Specifics" for side tab:"    ########
-  # output$procedures_by_level_redcap_df_sidetab <- renderTable({
-  #   
-  #   procedures_by_level_redcap_df_reactive()
-  # })
-  # 
-  # 
-  ######## Render "Screw Details Table for side tab:"    ######## 
-  # output$screw_size_details_df_sidetab <- renderTable({
-  #   
-  #   screw_details_redcap_df_reactive()
-  #   
-  # })
-  # 
-  # 
-  ####### Render "Interbody Details Table for side tab:"    ########
-  # output$interbody_details_df_sidetab <- renderTable({
-  #   interbody_details_df_reactive() %>%
-  #     as_tibble()
-  # })
-  # 
-  # 
-  ######## Render "Revision Implants" for side tab:"    ######## 
-  # output$revision_implants_table <- renderTable({
-  #   revision_implants_df <- left_revision_implants_reactive_list()$revision_implants_status_df %>%
-  #     bind_rows(right_revision_implants_reactive_list()$revision_implants_status_df)
-  #   
-  #   revision_implants_df
-  # })
-  # 
-  # output$anterior_revision_implants_table <- renderTable({
-  #   anterior_plate_revision_implants_df_reactive() %>%
-  #     select(level, prior_plate_present_levels, prior_plate_status)
-  #   
-  # })
-  # 
-  ################## GENERATE TABLES AND PRINTOUTS FOR SIDE TAB TO SHOW WHAT IS UPLOADED TO THE OP NOTE GENERATOR
-  # output$posterior_approach_objects_for_op_note_df <- renderTable({
-  #   posterior_op_note_inputs_list_reactive()$posterior_approach_objects_df
-  #   
-  # }
-  # )
-  # 
-  # 
-  # output$full_objects_passed_to_posterior_op_note <- renderPrint({
-  #   posterior_op_note_list <- posterior_op_note_inputs_list_reactive()
-  #   posterior_op_note_list$posterior_approach_objects_df <- "See table"
-  #   
-  #   paste(map2(.x = posterior_op_note_list, .y = names(posterior_op_note_list), .f = ~ paste0(.y, ": ", paste(.x, sep = ", ", collapse = ", ")))
-  #   )
-  # })
-  # 
-  # output$anterior_approach_objects_for_op_note_df <- renderTable({
-  #   anterior_op_note_inputs_list_reactive()$anterior_approach_objects_df
-  # }
-  # )
-  # 
-  # output$full_objects_passed_to_anterior_op_note <- renderPrint({
-  #   anterior_op_note_list <- anterior_op_note_inputs_list_reactive()
-  #   anterior_op_note_list$anterior_approach_objects_df <- "See table"
-  #   paste(map2(.x = anterior_op_note_list, .y = names(anterior_op_note_list), .f = ~ paste0(.y, ": ", paste(.x, sep = ", ", collapse = ", "))))
-  # })
-  # 
-  # 
-  
+ 
   #################  PATIENT DETAILS TABLE ##################
   output$patient_details_redcap_table <- renderTable({
     patient_details_redcap_table_reactive()
@@ -7116,19 +6189,19 @@ server <- function(input, output, session) {
   
   #################  RODS CROSSING BY LEVEL TABLE ##################
   output$rods_crossing_by_level_table <- renderTable({
-    # rods_crossing_by_level_redcap_table_reactive()
+    rods_crossing_by_level_redcap_table_reactive() %>%
+      select(-dos_rods_crossing_repeating) %>%
+      select(rods_crossing_level, total_rods_crossing, everything())
     
-    rods_crossing_by_level_repeating <- rods_crossing_by_level_redcap_table_reactive() %>%
-      mutate(record_id = "rec#") %>%
-      select(record_id, everything()) %>%
-      mutate(redcap_event_name = "surgery_arm_1") %>%
-      mutate(redcap_repeat_instance = paste(row_number(), "->here")) %>%
-      mutate(redcap_repeat_instrument = "rods_crossing_by_level_repeating") %>%
-      mutate(rods_crossing_by_level_repeating_complete = "Complete") %>%
-      mutate(across(everything(), ~ paste0(as.character(.x)))) %>%
-      select(record_id, rods_crossing_level, left_rod_count, left_rods_crossing, right_rod_count, right_rods_crossing, total_rods_crossing)
-    
-      # select(record_id, redcap_event_name, redcap_repeat_instrument, redcap_repeat_instance, dos_rods_crossing_repeating, rods_crossing_level, left_rod_count, left_rods_crossing, right_rod_count, right_rods_crossing, total_rods_crossing, rods_crossing_by_level_repeating_complete)
+    # rods_crossing_by_level_repeating <- rods_crossing_by_level_redcap_table_reactive() %>%
+    #   mutate(record_id = "rec#") %>%
+    #   select(record_id, everything()) %>%
+    #   mutate(redcap_event_name = "surgery_arm_1") %>%
+    #   mutate(redcap_repeat_instance = paste(row_number(), "->here")) %>%
+    #   mutate(redcap_repeat_instrument = "rods_crossing_by_level_repeating") %>%
+    #   mutate(rods_crossing_by_level_repeating_complete = "Complete") %>%
+    #   mutate(across(everything(), ~ paste0(as.character(.x)))) %>%
+    #   select(record_id, redcap_event_name, redcap_repeat_instrument, redcap_repeat_instance, dos_rods_crossing_repeating, rods_crossing_level, left_rod_count, left_rods_crossing, right_rod_count, right_rods_crossing, total_rods_crossing, rods_crossing_by_level_repeating_complete)
   })
   
   #################  PROCEDURES BY LEVEL TABLE ##################
@@ -7262,8 +6335,7 @@ server <- function(input, output, session) {
                                    style = "simple", color = "primary")
                                ),
                         column(4, 
-                               textOutput(outputId = "timer_for_modal")
-                               # h4(paste(logging_timer_reactive_list$elapsed_time, "seconds elapsed"))
+                               
                                )
                       ),
                       br(),
@@ -7570,7 +6642,7 @@ server <- function(input, output, session) {
             mutate(redcap_repeat_instrument = "rods_crossing_by_level_repeating") %>%
             mutate(rods_crossing_by_level_repeating_complete = "Complete") %>%
             mutate(across(everything(), ~ paste0(as.character(.x)))) %>%
-            select(record_id, redcap_event_name, redcap_repeat_instrument,redcap_repeat_instance, dos_rods_crossing_repeating, rods_crossing_level, left_rod_count, left_rods_crossing, right_rod_count, right_rods_crossing, total_rods_crossing, rods_crossing_by_level_repeating_complete)
+            select(record_id, redcap_event_name, redcap_repeat_instrument,redcap_repeat_instance, dos_rods_crossing_repeating, rods_crossing_level, left_rod_count, left_rods_crossing, right_rod_count, right_rods_crossing, total_rods_crossing, contains("left"), contains("right"), rods_crossing_by_level_repeating_complete)
           
           if(all(names(rods_crossing_by_level_repeating %>% select(-contains("redcap"))) %in% redcap_names_df$redcap_field_names)){
             importRecords(rcon = rcon_reactive$rcon, data = rods_crossing_by_level_repeating, returnContent = "count")
@@ -8003,8 +7075,8 @@ server <- function(input, output, session) {
   #       intercalary_vector <- c("a")
   #       junction <- NULL
   #     }
-  #     if(input$add_left_linked_rods == TRUE && input$left_linked_rods[1] %in% all_screw_coordinates_df$level && length(unique(input$left_linked_rods)) == 2){
-  #       linked_vector <- input$left_linked_rods
+  #     if(input$add_left_linked_rod == TRUE && input$left_linked_rod[1] %in% all_screw_coordinates_df$level && length(unique(input$left_linked_rod)) == 2){
+  #       linked_vector <- input$left_linked_rod
   #     }else{
   #       linked_vector <- c("a")
   #     }
@@ -8061,8 +7133,8 @@ server <- function(input, output, session) {
   #                                                                         add_intercalary_rod = input$add_left_intercalary_rod, 
   #                                                                         intercalary_rods_vector = intercalary_vector, 
   #                                                                         intercalary_rod_junction = junction, 
-  #                                                                         add_linked_rods = input$add_left_linked_rods,
-  #                                                                         linked_rods_vector = linked_vector,
+  #                                                                         add_linked_rod = input$add_left_linked_rod,
+  #                                                                         linked_rod_vector = linked_vector,
   #                                                                         add_kickstand_rod = input$add_left_kickstand_rod,
   #                                                                         kickstand_rod_vector = left_kickstand_rod_vector,
   #                                                                         add_custom_rods = input$add_left_custom_rods,
@@ -8130,8 +7202,8 @@ server <- function(input, output, session) {
   #     intercalary_vector <- c("a")
   #     junction <- NULL
   #   }
-  #   if(input$add_right_linked_rods == TRUE && input$right_linked_rods[1] %in% all_screw_coordinates_df$level && length(unique(input$right_linked_rods)) == 2){
-  #     linked_vector <- input$right_linked_rods
+  #   if(input$add_right_linked_rod == TRUE && input$right_linked_rod[1] %in% all_screw_coordinates_df$level && length(unique(input$right_linked_rod)) == 2){
+  #     linked_vector <- input$right_linked_rod
   #   }else{
   #     linked_vector <- c("a")
   #   }
@@ -8188,8 +7260,8 @@ server <- function(input, output, session) {
   #                                                                      add_intercalary_rod = input$add_right_intercalary_rod, 
   #                                                                      intercalary_rods_vector = intercalary_vector, 
   #                                                                      intercalary_rod_junction = junction, 
-  #                                                                      add_linked_rods = input$add_right_linked_rods,
-  #                                                                      linked_rods_vector = linked_vector,
+  #                                                                      add_linked_rod = input$add_right_linked_rod,
+  #                                                                      linked_rod_vector = linked_vector,
   #                                                                      add_kickstand_rod = input$add_right_kickstand_rod,
   #                                                                      kickstand_rod_vector = right_kickstand_rod_vector,
   #                                                                      add_custom_rods = input$add_right_custom_rods,
