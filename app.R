@@ -19,6 +19,7 @@ library(nngeo)
 library(shinydashboard)
 library(data.table)
 
+
 # library(profvis)
 
 # packageList <- c("shiny", "shinyWidgets", "sf", "tidyverse", "shinyBS", "cowplot", "magick", "ggpattern", "glue", "rlist",
@@ -2514,7 +2515,6 @@ server <- function(input, output, session) {
   
   observeEvent(list(input$plot_click,
                     input$plot_double_click,
-                    input$reset_all,
                     all_objects_to_add_list$objects_df) , {
                       if(input$spine_approach == "Anterior"){
                         anterior_df <- all_objects_to_add_list$objects_df %>%
@@ -2529,16 +2529,18 @@ server <- function(input, output, session) {
                       }else{
                         # all_posterior_df <- all_objects_to_add_list$objects_df %>%
                         #   filter(approach == "posterior")
-                        if(nrow(all_objects_to_add_list$objects_df %>%
-                                filter(approach == "posterior", str_detect(object, "screw")))>0){
+                        if(str_detect(input$object_to_add, "screw")){
+                        # if(nrow(all_objects_to_add_list$objects_df %>%
+                        #         filter(approach == "posterior", str_detect(object, "screw")))>0){
                           geoms_list_posterior$screws <- jh_make_posterior_screws_geoms_function(all_posterior_objects_df = all_objects_to_add_list$objects_df %>%
                                                                                                    filter(approach == "posterior", str_detect(object, "screw")), plot_with_patterns = input$plot_with_patterns_true)
-                          geoms_list_posterior$geoms <- jh_make_posterior_geoms_function(all_posterior_objects_df = all_objects_to_add_list$objects_df %>%
-                                                                                           filter(approach == "posterior", str_detect(object, "screw", negate = TRUE)),
-                                                                                         plot_with_patterns = input$plot_with_patterns_true)
+                          # geoms_list_posterior$geoms <- jh_make_posterior_geoms_function(all_posterior_objects_df = all_objects_to_add_list$objects_df %>%
+                          #                                                                  filter(approach == "posterior", str_detect(object, "screw", negate = TRUE)),
+                          #                                                                plot_with_patterns = input$plot_with_patterns_true)
                         }else{
                           geoms_list_posterior$geoms <- jh_make_posterior_geoms_function(all_posterior_objects_df = all_objects_to_add_list$objects_df %>%
-                                                                                           filter(approach == "posterior"),
+                                                                                           # filter(approach == "posterior"),
+                                                                                           filter(approach == "posterior", str_detect(object, "screw", negate = TRUE)),
                                                                                          plot_with_patterns = input$plot_with_patterns_true)
                         }
                         
@@ -7349,4 +7351,7 @@ server <- function(input, output, session) {
 }
 
 # Run the application 
-shinyApp(ui = ui, server = server)
+# profvis({
+#   shinyApp(ui = ui, server = server)  
+# })
+shinyApp(ui = ui, server = server)  
