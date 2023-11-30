@@ -1184,34 +1184,34 @@ server <- function(input, output, session) {
                                                body_interspace = character(),
                                                fixation_uiv_liv = character(),
                                                object_constructed = list())
-  all_objects_to_add_list$left_rod_implants_df <- tibble(level = character(),
-                                                         approach = character(),
-                                                         category = character(),
-                                                         vertebral_number = double(),
-                                                         implant = character(),
-                                                         object = character(),
-                                                         side = character(),
-                                                         x = double(),
-                                                         y = double(),
-                                                         fusion = character(),
-                                                         interbody_fusion = character(),
-                                                         body_interspace = character(),
-                                                         fixation_uiv_liv = character(),
-                                                         object_constructed = list())
-  all_objects_to_add_list$right_rod_implants_df <- tibble(level = character(),
-                                                          approach = character(),
-                                                          category = character(),
-                                                          vertebral_number = double(),
-                                                          implant = character(),
-                                                          object = character(),
-                                                          side = character(),
-                                                          x = double(),
-                                                          y = double(),
-                                                          fusion = character(),
-                                                          interbody_fusion = character(),
-                                                          body_interspace = character(),
-                                                          fixation_uiv_liv = character(),
-                                                          object_constructed = list())
+  # jh_filter_posterior_implants_by_side_function(all_objects_to_add_list$objects_df, side_to_filter = "left") <- tibble(level = character(),
+  #                                                        approach = character(),
+  #                                                        category = character(),
+  #                                                        vertebral_number = double(),
+  #                                                        implant = character(),
+  #                                                        object = character(),
+  #                                                        side = character(),
+  #                                                        x = double(),
+  #                                                        y = double(),
+  #                                                        fusion = character(),
+  #                                                        interbody_fusion = character(),
+  #                                                        body_interspace = character(),
+  #                                                        fixation_uiv_liv = character(),
+  #                                                        object_constructed = list())
+  # jh_filter_posterior_implants_by_side_function(all_objects_to_add_list$objects_df, side_to_filter = "right") <- tibble(level = character(),
+  #                                                         approach = character(),
+  #                                                         category = character(),
+  #                                                         vertebral_number = double(),
+  #                                                         implant = character(),
+  #                                                         object = character(),
+  #                                                         side = character(),
+  #                                                         x = double(),
+  #                                                         y = double(),
+  #                                                         fusion = character(),
+  #                                                         interbody_fusion = character(),
+  #                                                         body_interspace = character(),
+  #                                                         fixation_uiv_liv = character(),
+  #                                                         object_constructed = list())
   
   ###~~~~~~~~~~~~~~~ #########    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!   #########   Startup  #########    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!   ######### ~~~~~~~~~~~~~~~###
   ###~~~~~~~~~~~~~~~ #########    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!   #########   Startup  #########    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!   ######### ~~~~~~~~~~~~~~~###
@@ -2449,6 +2449,8 @@ server <- function(input, output, session) {
   geoms_list_revision_posterior <- reactiveValues()
   rods_list <- reactiveValues()
   
+# object_added_list <- reactiveValues()
+# object_added_list$object <- list()
   
   #### OBSERVE THE PLOT CLICK AND ADD APPROPRIATE object ####
   object_added_reactive_df <- reactive({
@@ -2485,6 +2487,7 @@ server <- function(input, output, session) {
     
   })
   
+
   #### OBSERVE THE PLOT CLICK AND ADD APPROPRIATE object ####
   
   observeEvent(input$plot_click, {
@@ -2498,15 +2501,15 @@ server <- function(input, output, session) {
       }
     }
     
-    all_objects_to_add_list$left_rod_implants_df <- all_objects_to_add_list$objects_df %>%
-      filter(approach == "posterior", side == "left", str_detect(object, "screw|hook|wire"))%>%
-      select(level, vertebral_number, x, y, side, object) %>%
-      arrange(y) 
-    
-    all_objects_to_add_list$right_rod_implants_df <- all_objects_to_add_list$objects_df %>%
-      filter(approach == "posterior", side == "right", str_detect(object, "screw|hook|wire"))%>%
-      select(level, vertebral_number, x, y, side, object) %>%
-      arrange(y) 
+    # all_objects_to_add_list$left_rod_implants_df <- all_objects_to_add_list$objects_df %>%
+    #   filter(approach == "posterior", side == "left", str_detect(object, "screw|hook|wire"))%>%
+    #   select(level, vertebral_number, x, y, side, object) %>%
+    #   arrange(y) 
+    # 
+    # all_objects_to_add_list$right_rod_implants_df <- all_objects_to_add_list$objects_df %>%
+    #   filter(approach == "posterior", side == "right", str_detect(object, "screw|hook|wire"))%>%
+    #   select(level, vertebral_number, x, y, side, object) %>%
+    #   arrange(y) 
     
   })
   
@@ -2515,7 +2518,8 @@ server <- function(input, output, session) {
   
   observeEvent(list(input$plot_click,
                     input$plot_double_click,
-                    all_objects_to_add_list$objects_df) , {
+                    all_objects_to_add_list$objects_df
+                    ),ignoreInit = TRUE,ignoreNULL = TRUE, {
                       if(input$spine_approach == "Anterior"){
                         anterior_df <- all_objects_to_add_list$objects_df %>%
                           filter(approach == "anterior")
@@ -2527,16 +2531,26 @@ server <- function(input, output, session) {
                         geoms_list_anterior_instrumentation$geoms <- anterior_geoms_list$geoms_list_anterior_instrumentation
                         
                       }else{
-                        # all_posterior_df <- all_objects_to_add_list$objects_df %>%
-                        #   filter(approach == "posterior")
                         if(str_detect(input$object_to_add, "screw")){
-                        # if(nrow(all_objects_to_add_list$objects_df %>%
-                        #         filter(approach == "posterior", str_detect(object, "screw")))>0){
-                          geoms_list_posterior$screws <- jh_make_posterior_screws_geoms_function(all_posterior_objects_df = all_objects_to_add_list$objects_df %>%
-                                                                                                   filter(approach == "posterior", str_detect(object, "screw")), plot_with_patterns = input$plot_with_patterns_true)
-                          # geoms_list_posterior$geoms <- jh_make_posterior_geoms_function(all_posterior_objects_df = all_objects_to_add_list$objects_df %>%
-                          #                                                                  filter(approach == "posterior", str_detect(object, "screw", negate = TRUE)),
-                          #                                                                plot_with_patterns = input$plot_with_patterns_true)
+                          # object_added_reactive_df()$object_constructed
+                          
+                          geoms_list_posterior$screws <- map(.x = (all_objects_to_add_list$objects_df %>%
+                                                               filter(approach == "posterior", str_detect(object, "screw")))$object_constructed,
+                                                             .f = ~ geom_sf(data = .x, fill = "blue"))
+                          # if(length(geoms_list_posterior$screws) == 0){
+                          #   geoms_list_posterior$screws <- jh_make_posterior_screws_geoms_function(all_posterior_objects_df = all_objects_to_add_list$objects_df %>%
+                          #                                                                            filter(approach == "posterior", str_detect(object, "screw")), plot_with_patterns = input$plot_with_patterns_true)
+                          # }else{
+                          # 
+                          #   geoms_list_posterior$screws <- append(geoms_list_posterior$screws,
+                          #                                         geom_sf(data = all_objects_to_add_list$objects_df %>%
+                          #                                                   filter(approach == "posterior", str_detect(object, "screw")) %>%
+                          #                                                   filter(row_number() == max(row_number())), aes(geometry = st_geometry(object_constructed[[1]])), fill = "blue")
+                          #                                         )
+                          # }
+                          # geoms_list_posterior$screws <- jh_make_posterior_screws_geoms_function(all_posterior_objects_df = all_objects_to_add_list$objects_df %>%
+                          #                                                                          filter(approach == "posterior", str_detect(object, "screw")), plot_with_patterns = input$plot_with_patterns_true)
+  
                         }else{
                           geoms_list_posterior$geoms <- jh_make_posterior_geoms_function(all_posterior_objects_df = all_objects_to_add_list$objects_df %>%
                                                                                            # filter(approach == "posterior"),
@@ -3008,7 +3022,7 @@ server <- function(input, output, session) {
   })
   
   observeEvent(input$plot_click, ignoreNULL = TRUE, ignoreInit = TRUE, {
-    if(input$left_supplemental_rods_eligible == FALSE && nrow(all_objects_to_add_list$left_rod_implants_df) > 2){
+    if(input$left_supplemental_rods_eligible == FALSE && nrow(jh_filter_posterior_implants_by_side_function(all_objects_to_add_list$objects_df, side_to_filter = "left")) > 2){
       updateSwitchInput(session = session, inputId = "left_supplemental_rods_eligible", value = TRUE)
     }
     
@@ -3016,7 +3030,7 @@ server <- function(input, output, session) {
   
   observeEvent(input$add_left_accessory_rod,  ignoreInit = TRUE, {
     if(input$add_left_accessory_rod == TRUE){
-      start_list <- jh_supplementary_rods_choices_function(all_objects_df = all_objects_to_add_list$left_rod_implants_df,
+      start_list <- jh_supplementary_rods_choices_function(all_objects_df = jh_filter_posterior_implants_by_side_function(all_objects_to_add_list$objects_df, side_to_filter = "left"),
                                                            revision_objects_retained_df = left_revision_implants_reactive_list()$retained_df,
                                                            rod_type = "accessory_rod")
       updateSliderTextInput(session = session,
@@ -3036,7 +3050,7 @@ server <- function(input, output, session) {
   
   observeEvent(input$add_left_satellite_rod,  ignoreInit = TRUE, {
     if(input$add_left_satellite_rod == TRUE){
-      start_list <- jh_supplementary_rods_choices_function(all_objects_df = all_objects_to_add_list$left_rod_implants_df,
+      start_list <- jh_supplementary_rods_choices_function(all_objects_df = jh_filter_posterior_implants_by_side_function(all_objects_to_add_list$objects_df, side_to_filter = "left"),
                                                            revision_objects_retained_df = left_revision_implants_reactive_list()$retained_df,
                                                            osteotomy_site = osteotomy_level_reactive(),
                                                            rod_type = "satellite_rod")
@@ -3060,11 +3074,11 @@ server <- function(input, output, session) {
     if(input$add_left_intercalary_rod == TRUE){
       
       if(nrow(left_revision_implants_reactive_list()$retained_df)>0){
-        left_implants_df <- all_objects_to_add_list$left_rod_implants_df %>%
+        left_implants_df <- jh_filter_posterior_implants_by_side_function(all_objects_to_add_list$objects_df, side_to_filter = "left") %>%
           bind_rows(left_revision_implants_reactive_list()$retained_df) %>%
           arrange(vertebral_number)
       }else{
-        left_implants_df <- all_objects_to_add_list$left_rod_implants_df %>%
+        left_implants_df <- jh_filter_posterior_implants_by_side_function(all_objects_to_add_list$objects_df, side_to_filter = "left") %>%
           arrange(vertebral_number) 
       }
       
@@ -3078,22 +3092,22 @@ server <- function(input, output, session) {
         starting_junction <- osteotomy_level_reactive()[1]
       }else if(nrow(left_revision_implants_reactive_list()$retained_df)>0){
         
-        if(min(left_revision_implants_reactive_list()$retained_df$vertebral_number) < min(all_objects_to_add_list$left_rod_implants_df$vertebral_number)){
+        if(min(left_revision_implants_reactive_list()$retained_df$vertebral_number) < min(jh_filter_posterior_implants_by_side_function(all_objects_to_add_list$objects_df, side_to_filter = "left")$vertebral_number)){
           ## revising distally
           # starting_junction <-
           distal_proximal_rods_df <- left_revision_implants_reactive_list()$retained_df %>%
-            bind_rows(all_objects_to_add_list$left_rod_implants_df) %>%
+            bind_rows(jh_filter_posterior_implants_by_side_function(all_objects_to_add_list$objects_df, side_to_filter = "left")) %>%
             filter(vertebral_number >= max(left_revision_implants_reactive_list()$retained_df$vertebral_number)) %>%
-            filter(vertebral_number <= min(all_objects_to_add_list$left_rod_implants_df$vertebral_number))
+            filter(vertebral_number <= min(jh_filter_posterior_implants_by_side_function(all_objects_to_add_list$objects_df, side_to_filter = "left")$vertebral_number))
           
           starting_junction <- jh_get_vertebral_level_function(number = mean(distal_proximal_rods_df$vertebral_number))
         }else{
           ## extending proximally
           
           distal_proximal_rods_df <- left_revision_implants_reactive_list()$retained_df %>%
-            bind_rows(all_objects_to_add_list$left_rod_implants_df) %>%
+            bind_rows(jh_filter_posterior_implants_by_side_function(all_objects_to_add_list$objects_df, side_to_filter = "left")) %>%
             filter(vertebral_number <= min(left_revision_implants_reactive_list()$retained_df$vertebral_number)) %>%
-            filter(vertebral_number >= max(all_objects_to_add_list$left_rod_implants_df$vertebral_number))
+            filter(vertebral_number >= max(jh_filter_posterior_implants_by_side_function(all_objects_to_add_list$objects_df, side_to_filter = "left")$vertebral_number))
           
           starting_junction <- jh_get_vertebral_level_function(number = mean(distal_proximal_rods_df$vertebral_number))
         }
@@ -3125,17 +3139,17 @@ server <- function(input, output, session) {
     if(input$add_left_intercalary_rod == TRUE && input$left_intercalary_rod_junction %in% implant_levels_numbered_df$level){
       
       if(nrow(left_revision_implants_reactive_list()$retained_df)>0){
-        left_implant_df <- all_objects_to_add_list$left_rod_implants_df %>%
+        left_implant_df <- jh_filter_posterior_implants_by_side_function(all_objects_to_add_list$objects_df, side_to_filter = "left") %>%
           bind_rows(left_revision_implants_reactive_list()$retained_df) %>%
           arrange(vertebral_number)%>%
           filter(str_detect(level, "Iliac") == FALSE)
       }else{
-        left_implant_df <- all_objects_to_add_list$left_rod_implants_df %>%
+        left_implant_df <- jh_filter_posterior_implants_by_side_function(all_objects_to_add_list$objects_df, side_to_filter = "left") %>%
           arrange(vertebral_number) %>%
           filter(str_detect(level, "Iliac") == FALSE)
       }
       
-      # left_implant_df <- all_objects_to_add_list$left_rod_implants_df %>%
+      # left_implant_df <- jh_filter_posterior_implants_by_side_function(all_objects_to_add_list$objects_df, side_to_filter = "left") %>%
       #   filter(str_detect(level, "Iliac") == FALSE)
       
       proximal_options <- (implant_levels_numbered_df %>%
@@ -3183,16 +3197,16 @@ server <- function(input, output, session) {
                  jh_get_vertebral_number_function(input$left_intercalary_rod[1]),
                  jh_get_vertebral_number_function(input$left_intercalary_rod[2 ])) == FALSE){
         
-        # left_implant_df <- all_objects_to_add_list$left_rod_implants_df %>%
+        # left_implant_df <- jh_filter_posterior_implants_by_side_function(all_objects_to_add_list$objects_df, side_to_filter = "left") %>%
         #   filter(str_detect(level, "Iliac") == FALSE)
         
         if(nrow(left_revision_implants_reactive_list()$retained_df)>0){
-          left_implant_df <- all_objects_to_add_list$left_rod_implants_df %>%
+          left_implant_df <- jh_filter_posterior_implants_by_side_function(all_objects_to_add_list$objects_df, side_to_filter = "left") %>%
             bind_rows(left_revision_implants_reactive_list()$retained_df) %>%
             arrange(vertebral_number)%>%
             filter(str_detect(level, "Iliac") == FALSE)
         }else{
-          left_implant_df <- all_objects_to_add_list$left_rod_implants_df %>%
+          left_implant_df <- jh_filter_posterior_implants_by_side_function(all_objects_to_add_list$objects_df, side_to_filter = "left") %>%
             arrange(vertebral_number) %>%
             filter(str_detect(level, "Iliac") == FALSE)
         }
@@ -3235,7 +3249,7 @@ server <- function(input, output, session) {
                ignoreInit = TRUE, {
                  
                  if(input$add_left_linked_rod == TRUE){
-                   start_list <- jh_supplementary_rods_choices_function(all_objects_df = all_objects_to_add_list$left_rod_implants_df,
+                   start_list <- jh_supplementary_rods_choices_function(all_objects_df = jh_filter_posterior_implants_by_side_function(all_objects_to_add_list$objects_df, side_to_filter = "left"),
                                                                         revision_objects_retained_df = left_revision_implants_reactive_list()$retained_df,
                                                                         rod_type = "linked_rod")
                    
@@ -3260,8 +3274,8 @@ server <- function(input, output, session) {
                ignoreInit = TRUE, {
                  if(input$add_left_kickstand_rod == TRUE){
                    
-                   if(any(str_detect(str_to_lower(all_objects_to_add_list$left_rod_implants_df$level), "iliac"))){
-                     start_list <- jh_supplementary_rods_choices_function(all_objects_df = all_objects_to_add_list$left_rod_implants_df,
+                   if(any(str_detect(str_to_lower(jh_filter_posterior_implants_by_side_function(all_objects_to_add_list$objects_df, side_to_filter = "left")$level), "iliac"))){
+                     start_list <- jh_supplementary_rods_choices_function(all_objects_df = jh_filter_posterior_implants_by_side_function(all_objects_to_add_list$objects_df, side_to_filter = "left"),
                                                                           revision_objects_retained_df = left_revision_implants_reactive_list()$retained_df,
                                                                           rod_type = "kickstand_rod")
                      
@@ -3321,9 +3335,9 @@ server <- function(input, output, session) {
   ##### UPDATE SUPPLEMENT ROD CHOICES END -----
   
   ######### ######### ROD SIZE AND ROD MATERIAL ######### #########
-  observeEvent(all_objects_to_add_list$left_rod_implants_df, ignoreNULL = TRUE, ignoreInit = TRUE, {
-    if(nrow(all_objects_to_add_list$left_rod_implants_df) > 1){
-      if(max(all_objects_to_add_list$left_rod_implants_df$vertebral_number) < 11){
+  observeEvent(jh_filter_posterior_implants_by_side_function(all_objects_to_add_list$objects_df, side_to_filter = "left"), ignoreNULL = TRUE, ignoreInit = TRUE, {
+    if(nrow(jh_filter_posterior_implants_by_side_function(all_objects_to_add_list$objects_df, side_to_filter = "left")) > 1){
+      if(max(jh_filter_posterior_implants_by_side_function(all_objects_to_add_list$objects_df, side_to_filter = "left")$vertebral_number) < 11){
         rod_size <- "4.0mm"  
       }else{
         rod_size <- "6.0mm"  
@@ -3382,7 +3396,7 @@ server <- function(input, output, session) {
   ###### LEFT SUPPLEMENTAL ROD GEOM 
   # observeEvent(list(
   #   input$reset_all,
-  #   # all_objects_to_add_list$left_rod_implants_df,
+  #   # jh_filter_posterior_implants_by_side_function(all_objects_to_add_list$objects_df, side_to_filter = "left"),
   #   input$plot_click,
   #   input$add_left_accessory_rod,
   #   input$left_accessory_rod,
@@ -3475,7 +3489,7 @@ server <- function(input, output, session) {
         }
       }
       
-      left_implants_df <- all_objects_to_add_list$left_rod_implants_df %>%
+      left_implants_df <- jh_filter_posterior_implants_by_side_function(all_objects_to_add_list$objects_df, side_to_filter = "left") %>%
         select(level, vertebral_number, x, y, side, object) %>%
         arrange(y) %>%
         mutate(implant_label = glue("{level} {str_to_title(str_replace_all(object, '_', ' '))}"))
@@ -3514,7 +3528,7 @@ server <- function(input, output, session) {
                          str_detect(string = object, pattern = "screw|hook|wire"))) >1){
       
       
-      rods_list$left_rod_list_sf_geom <- geom_sf(data = st_buffer(st_linestring(as.matrix(all_objects_to_add_list$left_rod_implants_df %>%
+      rods_list$left_rod_list_sf_geom <- geom_sf(data = st_buffer(st_linestring(as.matrix(jh_filter_posterior_implants_by_side_function(all_objects_to_add_list$objects_df, side_to_filter = "left") %>%
                                                                                             select(x, y) %>%
                                                                                             mutate(y = if_else(y == max(y), y + 0.005, y)) %>%
                                                                                             mutate(y = if_else(y == min(y), y - 0.005, y)) %>%
@@ -3747,7 +3761,7 @@ server <- function(input, output, session) {
   
   
   observeEvent(input$plot_click, ignoreNULL = TRUE, ignoreInit = TRUE,{
-    if(input$right_supplemental_rods_eligible == FALSE && nrow(all_objects_to_add_list$right_rod_implants_df) > 2){
+    if(input$right_supplemental_rods_eligible == FALSE && nrow(jh_filter_posterior_implants_by_side_function(all_objects_to_add_list$objects_df, side_to_filter = "right")) > 2){
       updateSwitchInput(session = session, inputId = "right_supplemental_rods_eligible", value = TRUE)
     }
     
@@ -3755,7 +3769,7 @@ server <- function(input, output, session) {
   
   observeEvent(input$add_right_accessory_rod, ignoreInit = TRUE, {
     if(input$add_right_accessory_rod == TRUE){
-      start_list <- jh_supplementary_rods_choices_function(all_objects_df = all_objects_to_add_list$right_rod_implants_df,
+      start_list <- jh_supplementary_rods_choices_function(all_objects_df = jh_filter_posterior_implants_by_side_function(all_objects_to_add_list$objects_df, side_to_filter = "right"),
                                                            revision_objects_retained_df = right_revision_implants_reactive_list()$retained_df,
                                                            rod_type = "accessory_rod")
       updateSliderTextInput(session = session,
@@ -3775,7 +3789,7 @@ server <- function(input, output, session) {
   
   observeEvent(input$add_right_satellite_rod, ignoreInit = TRUE,{
     if(input$add_right_satellite_rod == TRUE){
-      start_list <- jh_supplementary_rods_choices_function(all_objects_df = all_objects_to_add_list$right_rod_implants_df, 
+      start_list <- jh_supplementary_rods_choices_function(all_objects_df = jh_filter_posterior_implants_by_side_function(all_objects_to_add_list$objects_df, side_to_filter = "right"), 
                                                            revision_objects_retained_df = right_revision_implants_reactive_list()$retained_df,
                                                            osteotomy_site = osteotomy_level_reactive(),
                                                            rod_type = "satellite_rod")
@@ -3798,11 +3812,11 @@ server <- function(input, output, session) {
     if(input$add_right_intercalary_rod == TRUE){
       
       if(nrow(right_revision_implants_reactive_list()$retained_df)>0){
-        right_implants_df <- all_objects_to_add_list$right_rod_implants_df %>%
+        right_implants_df <- jh_filter_posterior_implants_by_side_function(all_objects_to_add_list$objects_df, side_to_filter = "right") %>%
           bind_rows(right_revision_implants_reactive_list()$retained_df) %>%
           arrange(vertebral_number)
       }else{
-        right_implants_df <- all_objects_to_add_list$right_rod_implants_df %>%
+        right_implants_df <- jh_filter_posterior_implants_by_side_function(all_objects_to_add_list$objects_df, side_to_filter = "right") %>%
           arrange(vertebral_number) 
       }
       
@@ -3816,22 +3830,22 @@ server <- function(input, output, session) {
         starting_junction <- osteotomy_level_reactive()[1]
       }else if(nrow(right_revision_implants_reactive_list()$retained_df)>0){
         
-        if(min(right_revision_implants_reactive_list()$retained_df$vertebral_number) < min(all_objects_to_add_list$right_rod_implants_df$vertebral_number)){
+        if(min(right_revision_implants_reactive_list()$retained_df$vertebral_number) < min(jh_filter_posterior_implants_by_side_function(all_objects_to_add_list$objects_df, side_to_filter = "right")$vertebral_number)){
           ## revising distally
           # starting_junction <-
           distal_proximal_rods_df <- right_revision_implants_reactive_list()$retained_df %>%
-            bind_rows(all_objects_to_add_list$right_rod_implants_df) %>%
+            bind_rows(jh_filter_posterior_implants_by_side_function(all_objects_to_add_list$objects_df, side_to_filter = "right")) %>%
             filter(vertebral_number >= max(right_revision_implants_reactive_list()$retained_df$vertebral_number)) %>%
-            filter(vertebral_number <= min(all_objects_to_add_list$right_rod_implants_df$vertebral_number))
+            filter(vertebral_number <= min(jh_filter_posterior_implants_by_side_function(all_objects_to_add_list$objects_df, side_to_filter = "right")$vertebral_number))
           
           starting_junction <- jh_get_vertebral_level_function(number = mean(distal_proximal_rods_df$vertebral_number))
         }else{
           ## extending proximally
           
           distal_proximal_rods_df <- right_revision_implants_reactive_list()$retained_df %>%
-            bind_rows(all_objects_to_add_list$right_rod_implants_df) %>%
+            bind_rows(jh_filter_posterior_implants_by_side_function(all_objects_to_add_list$objects_df, side_to_filter = "right")) %>%
             filter(vertebral_number <= min(right_revision_implants_reactive_list()$retained_df$vertebral_number)) %>%
-            filter(vertebral_number >= max(all_objects_to_add_list$right_rod_implants_df$vertebral_number))
+            filter(vertebral_number >= max(jh_filter_posterior_implants_by_side_function(all_objects_to_add_list$objects_df, side_to_filter = "right")$vertebral_number))
           
           starting_junction <- jh_get_vertebral_level_function(number = mean(distal_proximal_rods_df$vertebral_number))
         }
@@ -3863,17 +3877,17 @@ server <- function(input, output, session) {
     if(input$add_right_intercalary_rod == TRUE && input$right_intercalary_rod_junction %in% implant_levels_numbered_df$level){
       
       if(nrow(right_revision_implants_reactive_list()$retained_df)>0){
-        right_implant_df <- all_objects_to_add_list$right_rod_implants_df %>%
+        right_implant_df <- jh_filter_posterior_implants_by_side_function(all_objects_to_add_list$objects_df, side_to_filter = "right") %>%
           bind_rows(right_revision_implants_reactive_list()$retained_df) %>%
           arrange(vertebral_number)%>%
           filter(str_detect(level, "Iliac") == FALSE)
       }else{
-        right_implant_df <- all_objects_to_add_list$right_rod_implants_df %>%
+        right_implant_df <- jh_filter_posterior_implants_by_side_function(all_objects_to_add_list$objects_df, side_to_filter = "right") %>%
           arrange(vertebral_number) %>%
           filter(str_detect(level, "Iliac") == FALSE)
       }
       
-      # right_implant_df <- all_objects_to_add_list$right_rod_implants_df %>%
+      # right_implant_df <- jh_filter_posterior_implants_by_side_function(all_objects_to_add_list$objects_df, side_to_filter = "right") %>%
       #   filter(str_detect(level, "Iliac") == FALSE)
       
       proximal_options <- (implant_levels_numbered_df %>%
@@ -3921,16 +3935,16 @@ server <- function(input, output, session) {
                  jh_get_vertebral_number_function(input$right_intercalary_rod[1]),
                  jh_get_vertebral_number_function(input$right_intercalary_rod[2 ])) == FALSE){
         
-        # right_implant_df <- all_objects_to_add_list$right_rod_implants_df %>%
+        # right_implant_df <- jh_filter_posterior_implants_by_side_function(all_objects_to_add_list$objects_df, side_to_filter = "right") %>%
         #   filter(str_detect(level, "Iliac") == FALSE)
         
         if(nrow(right_revision_implants_reactive_list()$retained_df)>0){
-          right_implant_df <- all_objects_to_add_list$right_rod_implants_df %>%
+          right_implant_df <- jh_filter_posterior_implants_by_side_function(all_objects_to_add_list$objects_df, side_to_filter = "right") %>%
             bind_rows(right_revision_implants_reactive_list()$retained_df) %>%
             arrange(vertebral_number)%>%
             filter(str_detect(level, "Iliac") == FALSE)
         }else{
-          right_implant_df <- all_objects_to_add_list$right_rod_implants_df %>%
+          right_implant_df <- jh_filter_posterior_implants_by_side_function(all_objects_to_add_list$objects_df, side_to_filter = "right") %>%
             arrange(vertebral_number) %>%
             filter(str_detect(level, "Iliac") == FALSE)
         }
@@ -3975,7 +3989,7 @@ server <- function(input, output, session) {
                ignoreInit = TRUE, {
                  
                  if(input$add_right_linked_rod == TRUE){
-                   start_list <- jh_supplementary_rods_choices_function(all_objects_df = all_objects_to_add_list$right_rod_implants_df,
+                   start_list <- jh_supplementary_rods_choices_function(all_objects_df = jh_filter_posterior_implants_by_side_function(all_objects_to_add_list$objects_df, side_to_filter = "right"),
                                                                         revision_objects_retained_df = right_revision_implants_reactive_list()$retained_df,
                                                                         rod_type = "linked_rod")
                    
@@ -4000,8 +4014,8 @@ server <- function(input, output, session) {
                ignoreInit = TRUE, {
                  if(input$add_right_kickstand_rod == TRUE){
                    
-                   if(any(str_detect(str_to_lower(all_objects_to_add_list$right_rod_implants_df$level), "iliac"))){
-                     start_list <- jh_supplementary_rods_choices_function(all_objects_df = all_objects_to_add_list$right_rod_implants_df,
+                   if(any(str_detect(str_to_lower(jh_filter_posterior_implants_by_side_function(all_objects_to_add_list$objects_df, side_to_filter = "right")$level), "iliac"))){
+                     start_list <- jh_supplementary_rods_choices_function(all_objects_df = jh_filter_posterior_implants_by_side_function(all_objects_to_add_list$objects_df, side_to_filter = "right"),
                                                                           revision_objects_retained_df = right_revision_implants_reactive_list()$retained_df,
                                                                           rod_type = "kickstand_rod")
                      
@@ -4063,10 +4077,10 @@ server <- function(input, output, session) {
   ##### UPDATE SUPPLEMENT ROD CHOICES END -----
   
   ######### ######### ROD SIZE AND ROD MATERIAL ######### #########
-  observeEvent(all_objects_to_add_list$right_rod_implants_df,ignoreNULL = TRUE, ignoreInit = TRUE, {
+  observeEvent(jh_filter_posterior_implants_by_side_function(all_objects_to_add_list$objects_df, side_to_filter = "right"),ignoreNULL = TRUE, ignoreInit = TRUE, {
     
-    if(nrow(all_objects_to_add_list$right_rod_implants_df) > 1){
-      if(max(all_objects_to_add_list$right_rod_implants_df$vertebral_number) < 11){
+    if(nrow(jh_filter_posterior_implants_by_side_function(all_objects_to_add_list$objects_df, side_to_filter = "right")) > 1){
+      if(max(jh_filter_posterior_implants_by_side_function(all_objects_to_add_list$objects_df, side_to_filter = "right")$vertebral_number) < 11){
         rod_size <- "4.0mm"  
       }else{
         rod_size <- "6.0mm"  
@@ -4125,7 +4139,7 @@ server <- function(input, output, session) {
   
   # observeEvent(list(
   #   input$reset_all,
-  #   # all_objects_to_add_list$right_rod_implants_df,
+  #   # jh_filter_posterior_implants_by_side_function(all_objects_to_add_list$objects_df, side_to_filter = "right"),
   #   input$plot_click,
   #   input$add_right_accessory_rod,
   #   input$right_accessory_rod,
@@ -4217,7 +4231,7 @@ server <- function(input, output, session) {
         }
       }
       
-      right_implants_df <- all_objects_to_add_list$right_rod_implants_df %>%
+      right_implants_df <- jh_filter_posterior_implants_by_side_function(all_objects_to_add_list$objects_df, side_to_filter = "right") %>%
         select(level, vertebral_number, x, y, side, object) %>%
         arrange(y) %>%
         mutate(implant_label = glue("{level} {str_to_title(str_replace_all(object, '_', ' '))}"))
@@ -4250,9 +4264,9 @@ server <- function(input, output, session) {
           rods_list$right_connector_list_sf_geom <- geom_sf(data = st_multipolygon(right_rods_connectors_list$connector_list), fill = "lightblue", alpha = 0.95)
         }
       }
-    }else if(nrow(all_objects_to_add_list$right_rod_implants_df) >1){
+    }else if(nrow(jh_filter_posterior_implants_by_side_function(all_objects_to_add_list$objects_df, side_to_filter = "right")) >1){
       
-      rods_list$right_rod_list_sf_geom <- geom_sf(data = st_buffer(st_linestring(as.matrix(all_objects_to_add_list$right_rod_implants_df %>%
+      rods_list$right_rod_list_sf_geom <- geom_sf(data = st_buffer(st_linestring(as.matrix(jh_filter_posterior_implants_by_side_function(all_objects_to_add_list$objects_df, side_to_filter = "right") %>%
                                                                                              select(x, y) %>%
                                                                                              mutate(y = if_else(y == max(y), y + 0.005, y)) %>%
                                                                                              mutate(y = if_else(y == min(y), y - 0.005, y)) %>%
@@ -5402,7 +5416,7 @@ server <- function(input, output, session) {
         }
       }
       
-      left_implants_df <- all_objects_to_add_list$left_rod_implants_df %>%
+      left_implants_df <- jh_filter_posterior_implants_by_side_function(all_objects_to_add_list$objects_df, side_to_filter = "left") %>%
         select(level, vertebral_number, x, y, side, object) %>%
         arrange(y) %>%
         mutate(implant_label = glue("{level} {str_to_title(str_replace_all(object, '_', ' '))}"))
@@ -5501,7 +5515,7 @@ server <- function(input, output, session) {
         }
       }
       
-      right_implants_df <- all_objects_to_add_list$right_rod_implants_df %>%
+      right_implants_df <- jh_filter_posterior_implants_by_side_function(all_objects_to_add_list$objects_df, side_to_filter = "right") %>%
         select(level, vertebral_number, x, y, side, object) %>%
         arrange(y) %>%
         mutate(implant_label = glue("{level} {str_to_title(str_replace_all(object, '_', ' '))}"))
@@ -6771,582 +6785,8 @@ server <- function(input, output, session) {
   })
   
   
-  
-  # observeEvent(input$confirm_upload_final, {
-  #   
-  #   if(str_length(input$redcap_token) < 5){
-  #     
-  #     final_upload_reactive_count$count <- 0
-  #     showModal(modalDialog(title = "Please enter a valid Redcap Token and click the button below and then attempt to upload again", 
-  #                           easyClose = TRUE, 
-  #                           box(width = 12,
-  #                               h3("PLEASE GO BACK AND ENTER A VALID REDCAP TOKEN ON FIRST PAGE, Edit Patient") 
-  #                           )
-  #     )
-  #     )
-  #   }else if(final_upload_reactive_count$count == 1){
-  #     
-  #     
-  #     if(redcapAPI::exportNextRecordName(rcon = rcon_reactive$rcon)>1){
-  #       all_patient_ids_df <- exportRecords(rcon = rcon_reactive$rcon, fields = c("record_id", "last_name", "first_name", "date_of_birth"), events = "enrollment_arm_1") %>%
-  #         type.convert() %>%
-  #         select(record_id, last_name, first_name, date_of_birth) %>%
-  #         mutate(last_name = str_to_lower(last_name),
-  #                first_name = str_to_lower(first_name))   
-  #     }else{
-  #       all_patient_ids_df <- tibble()
-  #     }
-  #     
-  #     if(nrow(all_patient_ids_df)>0){
-  #       joined_df <- patient_details_redcap_df_reactive() %>%
-  #         select(last_name, first_name, date_of_birth) %>%
-  #         mutate(last_name = str_to_lower(last_name),
-  #                first_name = str_to_lower(first_name)) %>%
-  #         left_join(all_patient_ids_df)
-  #       
-  #       match_found <- if_else(!is.na(joined_df$record_id[[1]]), TRUE, FALSE)
-  #       
-  #       if(match_found == TRUE){
-  #         record_number <- joined_df$record_id[[1]]
-  #         
-  #         max_repeat_instances_df <- exportRecords(rcon = rcon_reactive$rcon, records = record_number) %>%
-  #           as_tibble() %>%
-  #           select(redcap_repeat_instrument, redcap_repeat_instance) %>%
-  #           remove_missing() %>%
-  #           group_by(redcap_repeat_instrument) %>%
-  #           filter(redcap_repeat_instance == max(redcap_repeat_instance)) %>%
-  #           ungroup()
-  #         
-  #         repeat_list <- as.list(deframe(max_repeat_instances_df))
-  #         
-  #         if("surgical_details" %in% max_repeat_instances_df$redcap_repeat_instrument){
-  #           surgical_details_instance_add <- repeat_list$surgical_details
-  #         }else{
-  #           surgical_details_instance_add <- 0
-  #         }
-  #         if("procedures_by_level_repeating" %in% max_repeat_instances_df$redcap_repeat_instrument){
-  #           procedures_by_level_repeating_instance_add <- repeat_list$procedures_by_level_repeating
-  #         }else{
-  #           procedures_by_level_repeating_instance_add <- 0
-  #         }
-  #         if("screw_details_repeating" %in% max_repeat_instances_df$redcap_repeat_instrument){
-  #           screw_details_repeating_instance_add <- repeat_list$screw_details_repeating
-  #         }else{
-  #           screw_details_repeating_instance_add <- 0
-  #         }
-  #         if("interbody_implant_repeating" %in% max_repeat_instances_df$redcap_repeat_instrument){
-  #           interbody_implant_repeating_instance_add <- repeat_list$interbody_implant_repeating
-  #         }else{
-  #           interbody_implant_repeating_instance_add <- 0
-  #         }
-  #         
-  #         if("all_inputs_repeating" %in% max_repeat_instances_df$redcap_repeat_instrument){
-  #           all_inputs_repeating_instance_add <- repeat_list$all_inputs_repeating
-  #         }else{
-  #           all_inputs_repeating_instance_add <- 0
-  #         }
-  #         
-  #         if("implant_removal_repeating" %in% max_repeat_instances_df$redcap_repeat_instrument){
-  #           implant_removal_repeating_instance_add <- repeat_list$implant_removal_repeating
-  #         }else{
-  #           implant_removal_repeating_instance_add <- 0
-  #         }
-  #         
-  #         
-  #         
-  #         surgical_details_instance_start <- repeat_list$surgical_details + 1
-  #         max_procedures_by_level_repeating <- repeat_list$procedures_by_level_repeating
-  #         max_screw_details_repeating <- repeat_list$screw_details_repeating
-  #         
-  #       }else{
-  #         record_number <- exportNextRecordName(rcon = rcon_reactive$rcon)
-  #         surgical_details_instance_add <- 0
-  #         procedures_by_level_repeating_instance_add <- 0
-  #         screw_details_repeating_instance_add <- 0
-  #         interbody_implant_repeating_instance_add <- 0
-  #         all_inputs_repeating_instance_add <- 0
-  #         # posterior_implant_removal_instance_add <- 0
-  #         implant_removal_repeating_instance_add <- 0
-  #       }
-  #     }else{
-  #       record_number <- exportNextRecordName(rcon = rcon_reactive$rcon)
-  #       surgical_details_instance_add <- 0
-  #       procedures_by_level_repeating_instance_add <- 0
-  #       screw_details_repeating_instance_add <- 0
-  #       interbody_implant_repeating_instance_add <- 0
-  #       all_inputs_repeating_instance_add <- 0
-  #       # posterior_implant_removal_instance_add <- 0
-  #       implant_removal_repeating_instance_add <- 0
-  #     }
-  #     
-  #     ##### uploaded patient details #######
-  #     
-  #     withProgress(message = 'Uploading Data', value = 0, {
-  #       number_of_steps <- 9
-  #       
-  #       incProgress(1/number_of_steps, detail = paste("Uploading Patient Details"))
-  #       
-  #       ##### uploaded patient details #######
-  #       patient_df_for_upload <- patient_details_redcap_df_reactive() %>%
-  #         mutate(record_id = record_number) %>%
-  #         mutate(patient_details_complete = "Complete") %>%
-  #         select(record_id, everything())
-  #       
-  #       importRecords(rcon = rcon_reactive$rcon, data = patient_df_for_upload, returnContent = "count")
-  #       
-  #       incProgress(1/number_of_steps, detail = paste("Uploading Surgical Details"))
-  #       
-  #       ##### uploaded surgical details #######
-  #       surgical_details_instrument <- surgical_details_redcap_df_reactive() %>%
-  #         pivot_wider(names_from = name, values_from = value) %>%
-  #         mutate(record_id = record_number) %>%
-  #         mutate(redcap_event_name = "surgery_arm_1") %>%
-  #         mutate(redcap_repeat_instance = row_number() + surgical_details_instance_add) %>%
-  #         mutate(redcap_repeat_instrument = "surgical_details") %>%
-  #         mutate(surgical_details_complete = "Complete") %>%
-  #         select(record_id, redcap_event_name, everything())
-  #       
-  #       importRecords(rcon = rcon_reactive$rcon, data = surgical_details_instrument, returnContent = "count")
-  #       
-  #       incProgress(1/number_of_steps, detail = paste("Uploading Intraoperative Details"))
-  #       
-  #       ###### Upload Intraoperative Details ####
-  #       intraoperative_details_redcap_upload_df <- intraoperative_details_redcap_df_reactive() %>%
-  #         pivot_wider(names_from = name, values_from = value) %>%
-  #         mutate(record_id = record_number) %>%
-  #         mutate(redcap_event_name = "surgery_arm_1") %>%
-  #         mutate(redcap_repeat_instance = row_number() + surgical_details_instance_add) %>%
-  #         mutate(redcap_repeat_instrument = "intraoperative_details") %>%
-  #         mutate(intraoperative_details_complete = "Complete") %>%
-  #         select(record_id, redcap_event_name, everything())
-  #       
-  #       importRecords(rcon = rcon_reactive$rcon, data = intraoperative_details_redcap_upload_df, returnContent = "count")
-  #       
-  #       incProgress(1/number_of_steps, detail = paste("Uploading Data per Level"))
-  #       
-  #       ###### Upload repeating objects for all levels ####
-  #       if(nrow(procedures_by_level_redcap_df_reactive())>0){
-  #         procedures_by_level_repeating_instrument <- procedures_by_level_redcap_df_reactive() %>%
-  #           mutate(record_id = record_number) %>% 
-  #           mutate(redcap_event_name = "surgery_arm_1") %>%
-  #           arrange(category) %>%
-  #           mutate(redcap_repeat_instance = row_number() + procedures_by_level_repeating_instance_add) %>%
-  #           mutate(redcap_repeat_instrument = "procedures_by_level_repeating") %>%
-  #           mutate(procedures_by_level_repeating_complete = "Complete") %>%
-  #           select(record_id, redcap_event_name, everything())
-  #         
-  #         importRecords(rcon = rcon_reactive$rcon, data = procedures_by_level_repeating_instrument, returnContent = "count")
-  #       }
-  #       
-  #       incProgress(1/number_of_steps, detail = paste("Uploading Implant Data"))
-  #       
-  #       ##### uploaded screw details #######
-  #       if(nrow(screw_details_redcap_df_reactive())>0){
-  #         screw_details_repeating <- screw_details_redcap_df_reactive() %>%
-  #           mutate(record_id = record_number) %>%
-  #           mutate(redcap_event_name = "surgery_arm_1") %>%
-  #           mutate(redcap_repeat_instance = row_number() + screw_details_repeating_instance_add) %>%
-  #           mutate(redcap_repeat_instrument = "screw_details_repeating") %>%
-  #           mutate(screw_details_repeating_complete = "Complete") %>%
-  #           select(record_id, redcap_event_name, everything())
-  #         
-  #         importRecords(rcon = rcon_reactive$rcon, data = screw_details_repeating, returnContent = "count")
-  #       }
-  #       
-  #       incProgress(1/number_of_steps, detail = paste("Uploading Interbody Implant Data"))
-  #       
-  #       ##### uploaded interbody details #######
-  #       if(nrow(interbody_details_redcap_df_reactive())>0){
-  #         interbody_implant_repeating <- interbody_details_redcap_df_reactive() %>%
-  #           mutate(record_id = record_number) %>%
-  #           select(record_id, everything()) %>%
-  #           mutate(redcap_event_name = "surgery_arm_1") %>%
-  #           mutate(redcap_repeat_instance = row_number() + interbody_implant_repeating_instance_add) %>%
-  #           mutate(redcap_repeat_instrument = "interbody_implant_repeating") %>%
-  #           mutate(interbody_implant_repeating_complete = "Complete") %>%
-  #           mutate(across(everything(), ~ paste0(as.character(.x)))) %>%
-  #           select(record_id, redcap_event_name, everything())
-  #         
-  #         importRecords(rcon = rcon_reactive$rcon, data = interbody_implant_repeating, returnContent = "count")
-  #       }
-  #       
-  #       incProgress(1/number_of_steps, detail = paste("Uploading All Data Inputs"))
-  #       
-  #       ##### upload ALL INPUTS details #######
-  #       if(nrow(all_inputs_trimmed_reactive_df())>0){
-  #         
-  #         all_inputs_repeating_df <- all_inputs_trimmed_reactive_df() %>%
-  #           mutate(record_id = record_number) %>%
-  #           select(record_id, everything()) %>%
-  #           rename(variable_input_name = name, variable_input_result = result) %>%
-  #           mutate(redcap_event_name = "surgery_arm_1") %>%
-  #           mutate(redcap_repeat_instance = row_number() + all_inputs_repeating_instance_add) %>%
-  #           mutate(dos_all_inputs_repeating = as.character(input$date_of_surgery)) %>%
-  #           mutate(redcap_repeat_instrument = "all_inputs_repeating") %>%
-  #           mutate(all_inputs_repeating_complete = "Complete") %>%
-  #           mutate(across(everything(), ~ paste0(as.character(.x)))) %>%
-  #           select(record_id, redcap_event_name, everything())
-  #         
-  #         importRecords(rcon = rcon_reactive$rcon, data = all_inputs_repeating_df, returnContent = "count")
-  #       }
-  #       
-  #       
-  #       if(nrow(left_revision_implants_reactive_list()$revision_implants_status_df %>%
-  #               bind_rows(right_revision_implants_reactive_list()$revision_implants_status_df))>0){
-  #         
-  #         incProgress(1/number_of_steps, detail = paste("Complete"))
-  #         
-  #         
-  #         implant_removal_repeating_df <-  left_revision_implants_reactive_list()$revision_implants_status_df %>%
-  #           bind_rows(right_revision_implants_reactive_list()$revision_implants_status_df) %>%
-  #           select(level, side, object, remove_retain) %>%
-  #           filter(remove_retain == "remove") %>%
-  #           select(level, side, remove_retain, object) %>%
-  #           clean_names() %>%
-  #           mutate(dos_implant_removal_repeating = as.character(input$date_of_surgery)) %>%
-  #           mutate(record_id = record_number) %>%
-  #           mutate(redcap_repeat_instance = row_number() + implant_removal_repeating_instance_add) %>%
-  #           mutate(redcap_event_name = "surgery_arm_1") %>%
-  #           mutate(redcap_repeat_instrument = "implant_removal_repeating")%>%
-  #           mutate(implant_removal_repeating_complete = "Complete") %>% 
-  #           rename(level_implant_removal_repeating = level, 
-  #                  side_implant_removal_repeating = side,
-  #                  removed_implant_removal_repeating = object) %>%
-  #           select(
-  #             record_id,
-  #             redcap_repeat_instance,
-  #             redcap_event_name,
-  #             redcap_repeat_instrument,
-  #             dos_implant_removal_repeating,
-  #             level_implant_removal_repeating,
-  #             side_implant_removal_repeating,
-  #             removed_implant_removal_repeating,
-  #             implant_removal_repeating_complete)
-  #         
-  #         
-  #         importRecords(rcon = rcon_reactive$rcon, data = implant_removal_repeating_df, returnContent = "count") 
-  #         
-  #         incProgress(1/number_of_steps, detail = paste("Complete"))
-  #         
-  #       }else{
-  #         
-  #         incProgress(1/number_of_steps, detail = paste("Complete"))
-  #         
-  #       }
-  #       
-  #     })
-  #     
-  #     sendSweetAlert(
-  #       session = session,
-  #       title = "Success !!",
-  #       text = "All in order",
-  #       type = "success"
-  #     )
-  #   }else{
-  #     sendSweetAlert(
-  #       session = session,
-  #       title = "Upload Already Attempted",
-  #       text = "You have already attempted to upload. Please check your redcap to confirm the data was uploaded. You will not be able to upload again during this session.",
-  #       type = "info"
-  #     )
-  #   }
-  # })
-  
-  
-  
-  
   ############################################    ##    ############################################    ############################################    ############################################    ############################################
   
-  # left_rod_crossing_table_reactive <- reactive({
-  #   left_rods_connectors_list <- list()
-  #   if(input$implants_complete > 0){
-  #     if(input$add_left_accessory_rod == TRUE && input$left_accessory_rod[1] %in% all_screw_coordinates_df$level && length(unique(input$left_accessory_rod)) == 2){
-  #       accessory_vector <- input$left_accessory_rod
-  #     }else{
-  #       accessory_vector <- c("a")
-  #     }
-  #     if(input$add_left_satellite_rod == TRUE && input$left_satellite_rod[1] %in% all_screw_coordinates_df$level && length(unique(input$left_satellite_rod)) == 2){
-  #       satellite_vector <- input$left_satellite_rod
-  #     }else{
-  #       satellite_vector <- c("a", "b")
-  #     }
-  #     if(input$add_left_intercalary_rod == TRUE && input$left_intercalary_rod[1] %in% all_screw_coordinates_df$level && length(unique(input$left_intercalary_rod)) == 2){
-  #       intercalary_vector <- input$left_intercalary_rod
-  #       junction <- input$left_intercalary_rod_junction
-  #     }else{
-  #       intercalary_vector <- c("a")
-  #       junction <- NULL
-  #     }
-  #     if(input$add_left_linked_rod == TRUE && input$left_linked_rod[1] %in% all_screw_coordinates_df$level && length(unique(input$left_linked_rod)) == 2){
-  #       linked_vector <- input$left_linked_rod
-  #     }else{
-  #       linked_vector <- c("a")
-  #     }
-  #     
-  #     if(input$add_left_kickstand_rod == TRUE && input$left_kickstand_rod[1] %in% all_screw_coordinates_df$level && length(unique(input$left_kickstand_rod)) == 2){
-  #       left_kickstand_rod_vector <- input$left_kickstand_rod
-  #     }else{
-  #       left_kickstand_rod_vector <- c("a")
-  #     }
-  #     
-  #     custom_rods_vector_list <- list()
-  #     if(input$add_left_custom_rods == TRUE){
-  #       if(input$left_custom_rods_number > 1 & length(input$left_custom_rod_1) > 1){
-  #         custom_rods_vector_list$custom_rod_1 <- input$left_custom_rod_1
-  #       }else{
-  #         custom_rods_vector_list$custom_rod_1 <- c("")
-  #       }
-  #       if(input$left_custom_rods_number > 1 & length(input$left_custom_rod_2) > 1){
-  #         custom_rods_vector_list$custom_rod_2 <- input$left_custom_rod_2
-  #       }else{
-  #         custom_rods_vector_list$custom_rod_2 <- c("")
-  #       }
-  #       if(input$left_custom_rods_number > 2 & length(input$left_custom_rod_3) > 1){
-  #         custom_rods_vector_list$custom_rod_3 <- input$left_custom_rod_3
-  #       }else{
-  #         custom_rods_vector_list$custom_rod_3 <- c("")
-  #       }
-  #       if(input$left_custom_rods_number > 3 & length(input$left_custom_rod_4) > 1){
-  #         custom_rods_vector_list$custom_rod_4 <- input$left_custom_rod_4
-  #       }else{
-  #         custom_rods_vector_list$custom_rod_4 <- c("")
-  #       }
-  #       if(input$left_custom_rods_number > 4 & length(input$left_custom_rod_5) > 1){
-  #         custom_rods_vector_list$custom_rod_5 <- input$left_custom_rod_5
-  #       }else{
-  #         custom_rods_vector_list$custom_rod_5 <- c("")
-  #       }
-  #     }
-  #     
-  #     left_implants_df <- all_objects_to_add_list$left_rod_implants_df %>%
-  #       select(level, vertebral_number, x, y, side, object) %>%
-  #       arrange(y) %>%
-  #       mutate(implant_label = glue("{level} {str_to_title(str_replace_all(object, '_', ' '))}"))
-  #     
-  #     if(length(left_implants_df$level) > 0){
-  #       
-  #       ############# MAKE THE RODS #############
-  #       left_rods_connectors_list <- build_unilateral_rods_list_function(unilateral_full_implant_df = left_implants_df,
-  #                                                                         rod_side = "left",
-  #                                                                         add_accessory_rod = input$add_left_accessory_rod,
-  #                                                                         accessory_rod_vector = accessory_vector, 
-  #                                                                         add_satellite_rod = input$add_left_satellite_rod,
-  #                                                                         satellite_rods_vector = satellite_vector,
-  #                                                                         add_intercalary_rod = input$add_left_intercalary_rod, 
-  #                                                                         intercalary_rods_vector = intercalary_vector, 
-  #                                                                         intercalary_rod_junction = junction, 
-  #                                                                         add_linked_rod = input$add_left_linked_rod,
-  #                                                                         linked_rod_vector = linked_vector,
-  #                                                                         add_kickstand_rod = input$add_left_kickstand_rod,
-  #                                                                         kickstand_rod_vector = left_kickstand_rod_vector,
-  #                                                                         add_custom_rods = input$add_left_custom_rods,
-  #                                                                         custom_rods_vector_list = custom_rods_vector_list,
-  #                                                                         revision_rods_retained_df = left_revision_implants_reactive_list()$retained_df,
-  #                                                                         prior_rod_overlap_connectors = input$left_revision_implants_rod_connectors
-  #       )
-  #     }
-  #   
-  #   if(length(names(left_rods_connectors_list$rod_list))>0){
-  #     
-  #     # rods_crossing_by_level_df <- tibble(level = names(lines_list))
-  #     
-  #     for (name in names(left_rods_connectors_list$rod_list)) {
-  #       rods_crossing_by_level_df[[name]] <- name
-  #     } 
-  #     
-  #     rods_crossing_by_level_df %>%
-  #       pivot_longer(cols = -level, names_to = "rod_type", values_to = "value") %>%
-  #       select(level, rod_type) %>%
-  #       mutate(rod_crosses_lower = pmap(.l = list(..1 = level, ..2 = rod_type), .f = ~ st_intersects(x = lower_lines_list[[..1]], y = left_rods_connectors_list$rod_list[[..2]], sparse = FALSE)[1])) %>%
-  #       unnest(rod_crosses_lower)  %>%
-  #       mutate(rod_crosses_upper = pmap(.l = list(..1 = level, ..2 = rod_type), .f = ~ st_intersects(x = upper_lines_list[[..1]], y = left_rods_connectors_list$rod_list[[..2]], sparse = FALSE)[1])) %>%
-  #       unnest(rod_crosses_upper) %>%
-  #       mutate(rod_crosses = if_else(rod_crosses_lower == TRUE & rod_crosses_upper == TRUE, TRUE, FALSE)) %>%
-  #       select(level, rod_type, rod_crosses) %>%
-  #       filter(rod_crosses == TRUE) %>%
-  #       pivot_wider(names_from = rod_type, values_from = rod_crosses) %>%
-  #       mutate(across(-level, ~if_else(is.na(.), FALSE, .))) %>%
-  #       mutate(left_rod_count = rowSums(select(., -level))) %>%
-  #       pivot_longer(cols = c(-level, -left_rod_count), names_to = "rod_type", values_to = "crosses") %>%
-  #       filter(crosses == TRUE) %>%
-  #       mutate(crosses = "rods_crossing") %>%
-  #       pivot_wider(names_from = crosses, values_from = rod_type) %>%
-  #       mutate(rods_crossing = map(.x = rods_crossing, .f = ~ glue_collapse(.x, sep = " + "))) %>%
-  #       unnest(rods_crossing) %>%
-  #       select(level, left_rod_count, left_rods_crossing = rods_crossing)
-  #     
-  #   }else{
-  #     tibble(level = labels_df$level, left_rod_count = 0, left_rods_crossing = "")
-  #   }
-  #   }else{
-  #     tibble(level = labels_df$level, left_rod_count = 0, left_rods_crossing = "")
-  #   }
-  #   
-  # })
-  # 
-  # right_rod_crossing_table_reactive <- reactive({
-  #   right_rods_connectors_list <- list()
-  #   if(input$implants_complete > 0){
-  #   if(input$add_right_accessory_rod == TRUE && input$right_accessory_rod[1] %in% all_screw_coordinates_df$level && length(unique(input$right_accessory_rod)) == 2){
-  #     accessory_vector <- input$right_accessory_rod
-  #   }else{
-  #     accessory_vector <- c("a")
-  #   }
-  #   if(input$add_right_satellite_rod == TRUE && input$right_satellite_rod[1] %in% all_screw_coordinates_df$level && length(unique(input$right_satellite_rod)) == 2){
-  #     satellite_vector <- input$right_satellite_rod
-  #   }else{
-  #     satellite_vector <- c("a", "b")
-  #   }
-  #   if(input$add_right_intercalary_rod == TRUE && input$right_intercalary_rod[1] %in% all_screw_coordinates_df$level && length(unique(input$right_intercalary_rod)) == 2){
-  #     intercalary_vector <- input$right_intercalary_rod
-  #     junction <- input$right_intercalary_rod_junction
-  #   }else{
-  #     intercalary_vector <- c("a")
-  #     junction <- NULL
-  #   }
-  #   if(input$add_right_linked_rod == TRUE && input$right_linked_rod[1] %in% all_screw_coordinates_df$level && length(unique(input$right_linked_rod)) == 2){
-  #     linked_vector <- input$right_linked_rod
-  #   }else{
-  #     linked_vector <- c("a")
-  #   }
-  #   
-  #   if(input$add_right_kickstand_rod == TRUE && input$right_kickstand_rod[1] %in% all_screw_coordinates_df$level && length(unique(input$right_kickstand_rod)) == 2){
-  #     right_kickstand_rod_vector <- input$right_kickstand_rod
-  #   }else{
-  #     right_kickstand_rod_vector <- c("a")
-  #   }
-  #   
-  #   custom_rods_vector_list <- list()
-  #   if(input$add_right_custom_rods == TRUE){
-  #     if(input$right_custom_rods_number > 1 & length(input$right_custom_rod_1) > 1){
-  #       custom_rods_vector_list$custom_rod_1 <- input$right_custom_rod_1
-  #     }else{
-  #       custom_rods_vector_list$custom_rod_1 <- c("")
-  #     }
-  #     if(input$right_custom_rods_number > 1 & length(input$right_custom_rod_2) > 1){
-  #       custom_rods_vector_list$custom_rod_2 <- input$right_custom_rod_2
-  #     }else{
-  #       custom_rods_vector_list$custom_rod_2 <- c("")
-  #     }
-  #     if(input$right_custom_rods_number > 2 & length(input$right_custom_rod_3) > 1){
-  #       custom_rods_vector_list$custom_rod_3 <- input$right_custom_rod_3
-  #     }else{
-  #       custom_rods_vector_list$custom_rod_3 <- c("")
-  #     }
-  #     if(input$right_custom_rods_number > 3 & length(input$right_custom_rod_4) > 1){
-  #       custom_rods_vector_list$custom_rod_4 <- input$right_custom_rod_4
-  #     }else{
-  #       custom_rods_vector_list$custom_rod_4 <- c("")
-  #     }
-  #     if(input$right_custom_rods_number > 4 & length(input$right_custom_rod_5) > 1){
-  #       custom_rods_vector_list$custom_rod_5 <- input$right_custom_rod_5
-  #     }else{
-  #       custom_rods_vector_list$custom_rod_5 <- c("")
-  #     }
-  #   }
-  #   
-  #   right_implants_df <- all_objects_to_add_list$right_rod_implants_df %>%
-  #     select(level, vertebral_number, x, y, side, object) %>%
-  #     arrange(y) %>%
-  #     mutate(implant_label = glue("{level} {str_to_title(str_replace_all(object, '_', ' '))}"))
-  #   
-  #   if(length(right_implants_df$level) > 0){
-  #     
-  #     ############# MAKE THE RODS #############
-  #     right_rods_connectors_list <- build_unilateral_rods_list_function(unilateral_full_implant_df = right_implants_df,
-  #                                                                      rod_side = "right",
-  #                                                                      add_accessory_rod = input$add_right_accessory_rod,
-  #                                                                      accessory_rod_vector = accessory_vector, 
-  #                                                                      add_satellite_rod = input$add_right_satellite_rod,
-  #                                                                      satellite_rods_vector = satellite_vector,
-  #                                                                      add_intercalary_rod = input$add_right_intercalary_rod, 
-  #                                                                      intercalary_rods_vector = intercalary_vector, 
-  #                                                                      intercalary_rod_junction = junction, 
-  #                                                                      add_linked_rod = input$add_right_linked_rod,
-  #                                                                      linked_rod_vector = linked_vector,
-  #                                                                      add_kickstand_rod = input$add_right_kickstand_rod,
-  #                                                                      kickstand_rod_vector = right_kickstand_rod_vector,
-  #                                                                      add_custom_rods = input$add_right_custom_rods,
-  #                                                                      custom_rods_vector_list = custom_rods_vector_list,
-  #                                                                      revision_rods_retained_df = right_revision_implants_reactive_list()$retained_df,
-  #                                                                      prior_rod_overlap_connectors = input$right_revision_implants_rod_connectors
-  #     )
-  #   }
-  #   
-  #   if(length(names(right_rods_connectors_list$rod_list))>0){
-  # 
-  #     
-  #     for (name in names(right_rods_connectors_list$rod_list)) {
-  #       rods_crossing_by_level_df[[name]] <- name
-  #     } 
-  #     
-  #     rods_crossing_by_level_df %>%
-  #       pivot_longer(cols = -level, names_to = "rod_type", values_to = "value") %>%
-  #       select(level, rod_type) %>%
-  #       mutate(rod_crosses_lower = pmap(.l = list(..1 = level, ..2 = rod_type), .f = ~ st_intersects(x = lower_lines_list[[..1]], y = right_rods_connectors_list$rod_list[[..2]], sparse = FALSE)[1])) %>%
-  #       unnest(rod_crosses_lower)  %>%
-  #       mutate(rod_crosses_upper = pmap(.l = list(..1 = level, ..2 = rod_type), .f = ~ st_intersects(x = upper_lines_list[[..1]], y = right_rods_connectors_list$rod_list[[..2]], sparse = FALSE)[1])) %>%
-  #       unnest(rod_crosses_upper) %>%
-  #       mutate(rod_crosses = if_else(rod_crosses_lower == TRUE & rod_crosses_upper == TRUE, TRUE, FALSE)) %>%
-  #       select(level, rod_type, rod_crosses) %>%
-  #       filter(rod_crosses == TRUE) %>%
-  #       pivot_wider(names_from = rod_type, values_from = rod_crosses) %>%
-  #       mutate(across(-level, ~if_else(is.na(.), FALSE, .))) %>%
-  #       mutate(right_rod_count = rowSums(select(., -level))) %>%
-  #       pivot_longer(cols = c(-level, -right_rod_count), names_to = "rod_type", values_to = "crosses") %>%
-  #       filter(crosses == TRUE) %>%
-  #       mutate(crosses = "rods_crossing") %>%
-  #       pivot_wider(names_from = crosses, values_from = rod_type) %>%
-  #       mutate(rods_crossing = map(.x = rods_crossing, .f = ~ glue_collapse(.x, sep = " + "))) %>%
-  #       unnest(rods_crossing) %>%
-  #       select(level, right_rod_count, right_rods_crossing = rods_crossing)
-  #     
-  #   }else{
-  #     tibble(level = labels_df$level, right_rod_count = 0, right_rods_crossing = "")
-  #   }
-  #   }else{
-  #     tibble(level = labels_df$level, right_rod_count = 0, right_rods_crossing = "")
-  #   }
-  #   
-  # })
-  # 
-  # output$rods_crossing_by_level_table <- renderTable({
-  # 
-  #   if(input$implants_complete > 0){
-  #     
-  #     bilateral_rods_crossing_df <-  labels_df %>%
-  #       mutate(vertebral_number = vertebral_number - 0.5) %>%
-  #       select(-level) %>%
-  #       left_join(levels_numbered_df) %>%
-  #       filter(!is.na(level)) %>%
-  #       select(level) %>%
-  #       left_join(left_rod_crossing_table_reactive()) %>%
-  #       left_join(right_rod_crossing_table_reactive()) %>%
-  #       replace_na(list(left_rod_count = 0, right_rod_count = 0, left_rods_crossing = "", right_rods_crossing = "")) %>%
-  #       mutate(total_rods_crossing = left_rod_count + right_rod_count) %>%
-  #       filter(total_rods_crossing >0) %>%
-  #       select(level, total_rods_crossing)
-  #     
-  #   bilateral_rods_crossing_df
-  #   }
-  # })
-  
- 
-  # task_items_reactive_list <- reactiveValues()
-  # 
-  # task_items_reactive_list$upload_to_redcap <- 0
-  # 
-  # observeEvent(input$confirm_upload_final, {
-  #   task_items_reactive_list$upload_to_redcap <- 100
-  # })
-  
-  
-  #   output$upload_to_redcap_task <- renderMenu({
-  #     dropdownMenu(type = "tasks", 
-  #                  badgeStatus = if_else(task_items_reactive_list$upload_to_redcap == 100, "success", "warning"), 
-  #                  taskItem(text = "Upload Data to Redcap", 
-  #                           value = task_items_reactive_list$upload_to_redcap))
-  #   })
   
 }
 

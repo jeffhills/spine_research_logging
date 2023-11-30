@@ -98,6 +98,13 @@ jh_make_op_note_test_df_function <- function(posterior_or_anterior = "posterior"
 #   mutate(screw_length_label = paste(screw_label, "length", sep = "_"))
 
 
+jh_filter_posterior_implants_by_side_function <- function(all_objects_df, side_to_filter){
+  all_objects_df %>%
+    filter(approach == "posterior", side == side_to_filter, str_detect(object, "screw|hook|wire"))%>%
+    select(level, vertebral_number, x, y, side, object) %>%
+    arrange(y) 
+}
+
 jh_reorder_levels_function <- function(level_vector){
   levels <- tibble(level = as.character(level_vector)) %>%
     mutate(vertebral_number = jh_get_vertebral_number_function(level_to_get_number = level)) %>%
