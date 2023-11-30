@@ -1272,7 +1272,7 @@ server <- function(input, output, session) {
   observeEvent(input$search_for_prior_patient, ignoreInit = TRUE, {
     
     all_patient_ids_df <- exportRecords(rcon = rcon_reactive$rcon, fields = c("record_id", "last_name", "first_name", "date_of_birth"), events = "enrollment_arm_1") %>%
-      type.convert() %>%
+      type.convert(as.is = TRUE) %>%
       select(record_id, last_name, first_name, date_of_birth) %>%
       mutate(last_name = str_to_lower(last_name),
              first_name = str_to_lower(first_name))
@@ -1294,6 +1294,7 @@ server <- function(input, output, session) {
         
         existing_patient_data$patient_df_full <- exportRecords(rcon = rcon_reactive$rcon, records = record_number, fields = append(c("record_id", "dos_surg_repeating", "approach_repeating", "side", "object"), str_to_lower(str_replace_all(levels_vector, pattern = "-", replacement = "_")))) %>%                    as_tibble()  %>%
           as_tibble() %>%
+          type.convert(as.is = TRUE)
           filter(redcap_repeat_instrument == "procedures_by_level_repeating")  %>%
           mutate(across(.cols = everything(), .fns = ~ as.character(.x))) %>%
           select(-redcap_event_name,
@@ -1322,7 +1323,7 @@ server <- function(input, output, session) {
         
         existing_patient_data$surgical_dates_df <- exportRecords(rcon = rcon_reactive$rcon, 
                                                                  records = existing_patient_data$record_id) %>%
-          type.convert() %>%
+          type.convert(as.is = TRUE) %>%
           mutate(last_name = str_to_lower(last_name),
                  first_name = str_to_lower(first_name)) %>%
           select(record_id, date_of_surgery, stage_number) %>%
@@ -1342,6 +1343,7 @@ server <- function(input, output, session) {
                                                                                  "liv", "lower_treated_vertebrae",
                                                                                  "pelvic_fixation")) %>%      
           as_tibble() %>%
+          type.convert(as.is = TRUE) %>%
           filter(redcap_repeat_instrument == "surgical_details") %>%
           remove_empty() %>%
           mutate(date_of_surgery = ymd(date_of_surgery))
@@ -1513,7 +1515,7 @@ server <- function(input, output, session) {
     
     complication_count_df <- exportRecords(rcon = rcon_reactive$rcon, 
                                            records = existing_patient_data$record_id) %>%
-      type.convert() %>%
+      type.convert(as.is = TRUE) %>%
       filter(redcap_event_name == "complication_arm_1")
     if(nrow(complication_count_df)>0){
       complication_repeat_instance <- max(complication_count_df$redcap_repeat_instance) + 1
@@ -2534,9 +2536,9 @@ server <- function(input, output, session) {
                         if(str_detect(input$object_to_add, "screw")){
                           # object_added_reactive_df()$object_constructed
                           
-                          geoms_list_posterior$screws <- map(.x = (all_objects_to_add_list$objects_df %>%
-                                                               filter(approach == "posterior", str_detect(object, "screw")))$object_constructed,
-                                                             .f = ~ geom_sf(data = .x, fill = "blue"))
+                          # geoms_list_posterior$screws <- map(.x = (all_objects_to_add_list$objects_df %>%
+                          #                                      filter(approach == "posterior", str_detect(object, "screw")))$object_constructed,
+                          #                                    .f = ~ geom_sf(data = .x, fill = "blue"))
                           # if(length(geoms_list_posterior$screws) == 0){
                           #   geoms_list_posterior$screws <- jh_make_posterior_screws_geoms_function(all_posterior_objects_df = all_objects_to_add_list$objects_df %>%
                           #                                                                            filter(approach == "posterior", str_detect(object, "screw")), plot_with_patterns = input$plot_with_patterns_true)
@@ -2548,8 +2550,8 @@ server <- function(input, output, session) {
                           #                                                   filter(row_number() == max(row_number())), aes(geometry = st_geometry(object_constructed[[1]])), fill = "blue")
                           #                                         )
                           # }
-                          # geoms_list_posterior$screws <- jh_make_posterior_screws_geoms_function(all_posterior_objects_df = all_objects_to_add_list$objects_df %>%
-                          #                                                                          filter(approach == "posterior", str_detect(object, "screw")), plot_with_patterns = input$plot_with_patterns_true)
+                          geoms_list_posterior$screws <- jh_make_posterior_screws_geoms_function(all_posterior_objects_df = all_objects_to_add_list$objects_df %>%
+                                                                                                   filter(approach == "posterior", str_detect(object, "screw")), plot_with_patterns = input$plot_with_patterns_true)
   
                         }else{
                           geoms_list_posterior$geoms <- jh_make_posterior_geoms_function(all_posterior_objects_df = all_objects_to_add_list$objects_df %>%
@@ -6418,7 +6420,7 @@ server <- function(input, output, session) {
       
       if(redcapAPI::exportNextRecordName(rcon = rcon_reactive$rcon)>1){
         all_patient_ids_df <- exportRecords(rcon = rcon_reactive$rcon, fields = c("record_id", "last_name", "first_name", "date_of_birth"), events = "enrollment_arm_1") %>%
-          type.convert() %>%
+          type.convert(as.is = TRUE) %>%
           select(record_id, last_name, first_name, date_of_birth) %>%
           mutate(last_name = str_to_lower(last_name),
                  first_name = str_to_lower(first_name))   
@@ -6440,6 +6442,7 @@ server <- function(input, output, session) {
           
           max_repeat_instances_df <- exportRecords(rcon = rcon_reactive$rcon, records = record_number) %>%
             as_tibble() %>%
+            type.convert(as.is = TRUE) %>%
             select(redcap_repeat_instrument, redcap_repeat_instance) %>%
             remove_missing() %>%
             group_by(redcap_repeat_instrument) %>%
@@ -6750,7 +6753,14 @@ server <- function(input, output, session) {
           mutate(across(everything(), ~ paste0(as.character(.x)))) %>%
           mutate(dos_logging_data_time_repeating = as.character(input$date_of_surgery), 
                  data_logging_time_seconds = as.character(logging_timer_reactive_list$elapsed_time)) %>%
-          select(record_id, redcap_event_name, everything())
+          # select(record_id, redcap_event_name, everything())
+          select(record_id, 
+                 redcap_repeat_instance,
+                 redcap_event_name,
+                 redcap_repeat_instrument,
+                 dos_logging_data_time_repeating,
+                 data_logging_time_seconds,
+                 logging_data_time_repeating_complete)
         
         if(all(names(time_spent_logging_df %>% select(-contains("redcap"))) %in% redcap_names_df$redcap_field_names)){
           importRecords(rcon = rcon_reactive$rcon, data = time_spent_logging_df, returnContent = "count") 
