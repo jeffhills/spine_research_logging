@@ -332,9 +332,9 @@ startup_modal_box_diagnosis_symptoms <-
            left_prior_implants_removed = "",
            right_prior_implants = "",
            right_prior_implants_removed = "",
-           left_rod_status = "retained_connected",
+           left_rod_status = "retained",
            left_implants_still_connected = "",
-           right_rod_status = "retained_connected",
+           right_rod_status = "retained",
            right_implants_still_connected = "", 
            revision_indication = ""
   ) {
