@@ -4871,8 +4871,8 @@ server <- function(input, output, session) {
   #####################   #####################   #########   RUN CONFIRM FUSION LEVELS and TECHNIQUE DETAILS MODAL FUNCTION ##################### #####################
   #####################   #####################   #########   RUN CONFIRM FUSION LEVELS and TECHNIQUE DETAILS MODAL FUNCTION ##################### #####################
   
-  # observeEvent(input$implants_complete, ignoreNULL = TRUE, ignoreInit = TRUE, once = TRUE, {
-    observeEvent(input$tabs, ignoreNULL = TRUE, ignoreInit = TRUE, once = TRUE, {
+  observeEvent(input$implants_complete, ignoreNULL = TRUE, ignoreInit = TRUE, once = TRUE, {
+    # observeEvent(input$tabs, ignoreNULL = TRUE, ignoreInit = TRUE, once = TRUE, {
     if(nrow(all_objects_to_add_list$objects_df %>% 
             filter(str_detect(object, "screw") | str_detect(object, "anterior_plate")))>0){
       implants_placed_yes_no <- "yes" 
@@ -4892,7 +4892,8 @@ server <- function(input, output, session) {
       posterior_approach_yes_no <- "no" 
     }
     
-    if(input$tabs == "implant_details"){
+    # if(input$tabs == "implant_details"){
+      if((input$fusion_procedure_performed == TRUE && input$add_rods == 0 && nrow(all_objects_to_add_list$objects_df %>% filter(str_detect(object, "screw|hook|wire")))>0) == FALSE){
       showModal(
         confirm_fusion_levels_and_technique_details_modal_box_function(implants_placed = implants_placed_yes_no, 
                                                                        procedure_approach = procedure_approach_reactive(),
