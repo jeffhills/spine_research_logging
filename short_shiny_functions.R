@@ -1575,6 +1575,7 @@ jh_make_supplemental_rod_ui_function <- function(rod_type, input_label){
                                )
                         )
                       ) 
+                      # hr()
                     }else{
                       fixedRow(
                         column(6, 
@@ -1595,7 +1596,8 @@ jh_make_supplemental_rod_ui_function <- function(rod_type, input_label){
                                                                 width = "90%")
                                )
                         )
-                      ) 
+                      )
+                      # hr()
                     }
   ) 
   

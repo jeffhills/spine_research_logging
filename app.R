@@ -608,11 +608,17 @@ ui <- dashboardPage(skin = "black",
                                                                                                 choices_vector = c("Cut to length and contoured", "Pre-contoured"),
                                                                                                 initial_value_selected = "Cut to length and contoured",
                                                                                                 picker_choose_multiple = FALSE),
+                                                            hr(),
                                                             jh_make_supplemental_rod_ui_function(rod_type = "accessory_rod", input_label = "Accessory Rod"),
+                                                            # hr(),
                                                             jh_make_supplemental_rod_ui_function(rod_type = "satellite_rod", input_label = "Satellite Rod"),
+                                                            # hr(),
                                                             jh_make_supplemental_rod_ui_function(rod_type = "intercalary_rod", input_label = "Intercalary Rod"),
+                                                            # hr(),
                                                             jh_make_supplemental_rod_ui_function(rod_type = "linked_rod", input_label = "Linked Rods"),
+                                                            # hr(),
                                                             jh_make_supplemental_rod_ui_function(rod_type = "kickstand_rod", input_label = "Kickstand Rod"),
+                                                            # hr(),
                                                             jh_make_shiny_table_column_function(input_type = "awesomeCheckbox", 
                                                                                                 left_input_id = "add_left_custom_rods", 
                                                                                                 left_label = "Customize Left Rod Construct:",
@@ -1116,6 +1122,7 @@ ui <- dashboardPage(skin = "black",
 ###### ###### ###### ###### ~~~~~~~~~~~~~~~~~~~~~ ###### ###### ###### ########## SERVER STARTS ###### ###### ###### ###### ~~~~~~~~~~~~~~~~~~~~~ ###### ###### ###### ########## 
 
 server <- function(input, output, session) {
+  # options(shiny.trace = TRUE, shiny.error = browser, shiny.fullstacktrace = TRUE)
   
   logging_timer_reactive_list <- reactiveValues()
   logging_timer_reactive_list$elapsed_time <- 0
@@ -1999,7 +2006,19 @@ server <- function(input, output, session) {
   
   ################################
   observeEvent(input$implants_complete,ignoreNULL = TRUE, ignoreInit = TRUE, {
-    updateTabItems(session = session, inputId = "tabs", selected = "implant_details")
+    
+    if(input$fusion_procedure_performed == TRUE && input$add_rods == 0 && nrow(all_objects_to_add_list$objects_df %>% filter(str_detect(object, "screw|hook|wire")))>0){
+      sendSweetAlert(
+        session = session,
+        title = "Please click 'Add Rods' Prior to Proceeding",
+        text = NULL,
+        type = "warning"
+      )
+    }else{
+      updateTabItems(session = session, inputId = "tabs", selected = "implant_details")
+    }
+    
+    
   })
   
   ############### generate modal to confirm the fusion levels #######
@@ -3374,7 +3393,8 @@ server <- function(input, output, session) {
   ##### UPDATE SUPPLEMENT ROD CHOICES END -----
   
   ######### ######### ROD SIZE AND ROD MATERIAL ######### #########
-  observeEvent(jh_filter_posterior_implants_by_side_function(all_objects_to_add_list$objects_df, side_to_filter = "left"), ignoreNULL = TRUE, ignoreInit = TRUE, {
+  # observeEvent(jh_filter_posterior_implants_by_side_function(all_objects_to_add_list$objects_df, side_to_filter = "left"), ignoreNULL = TRUE, ignoreInit = TRUE, {
+  observeEvent(input$add_rods, ignoreNULL = TRUE, ignoreInit = TRUE, {
     if(nrow(jh_filter_posterior_implants_by_side_function(all_objects_to_add_list$objects_df, side_to_filter = "left")) > 1){
       if(max(jh_filter_posterior_implants_by_side_function(all_objects_to_add_list$objects_df, side_to_filter = "left")$vertebral_number) < 11){
         rod_size <- "4.0mm"  
@@ -4158,8 +4178,8 @@ server <- function(input, output, session) {
   ##### UPDATE SUPPLEMENT ROD CHOICES END -----
   
   ######### ######### ROD SIZE AND ROD MATERIAL ######### #########
-  observeEvent(jh_filter_posterior_implants_by_side_function(all_objects_to_add_list$objects_df, side_to_filter = "right"),ignoreNULL = TRUE, ignoreInit = TRUE, {
-    
+  # observeEvent(jh_filter_posterior_implants_by_side_function(all_objects_to_add_list$objects_df, side_to_filter = "right"),ignoreNULL = TRUE, ignoreInit = TRUE, {
+  observeEvent(input$add_rods, ignoreNULL = TRUE, ignoreInit = TRUE, {
     if(nrow(jh_filter_posterior_implants_by_side_function(all_objects_to_add_list$objects_df, side_to_filter = "right")) > 1){
       if(max(jh_filter_posterior_implants_by_side_function(all_objects_to_add_list$objects_df, side_to_filter = "right")$vertebral_number) < 11){
         rod_size <- "4.0mm"  
@@ -4558,6 +4578,11 @@ server <- function(input, output, session) {
         distinct()
       
       rods_list$crosslinks <- geom_sf(data = st_multipolygon((all_objects_to_add_list$objects_df %>% filter(object == "crosslink"))$object_constructed), alpha = 0.9, fill = "gold") 
+    }else{
+      all_objects_to_add_list$objects_df <- all_objects_to_add_list$objects_df %>%
+        filter(object != "crosslink")
+      
+      rods_list$crosslinks <- NULL
       }
     
     # if(length(input$crosslink_connectors) == 0){
@@ -4846,8 +4871,8 @@ server <- function(input, output, session) {
   #####################   #####################   #########   RUN CONFIRM FUSION LEVELS and TECHNIQUE DETAILS MODAL FUNCTION ##################### #####################
   #####################   #####################   #########   RUN CONFIRM FUSION LEVELS and TECHNIQUE DETAILS MODAL FUNCTION ##################### #####################
   
-  observeEvent(input$implants_complete, ignoreNULL = TRUE, ignoreInit = TRUE, once = TRUE, {
-    
+  # observeEvent(input$implants_complete, ignoreNULL = TRUE, ignoreInit = TRUE, once = TRUE, {
+    observeEvent(input$tabs, ignoreNULL = TRUE, ignoreInit = TRUE, once = TRUE, {
     if(nrow(all_objects_to_add_list$objects_df %>% 
             filter(str_detect(object, "screw") | str_detect(object, "anterior_plate")))>0){
       implants_placed_yes_no <- "yes" 
@@ -4867,15 +4892,24 @@ server <- function(input, output, session) {
       posterior_approach_yes_no <- "no" 
     }
     
- 
-    showModal(
-      confirm_fusion_levels_and_technique_details_modal_box_function(implants_placed = implants_placed_yes_no, 
-                                                                     procedure_approach = procedure_approach_reactive(),
-                                                                     # fusion_levels_confirmed = fusion_levels_computed_reactive_input, 
-                                                                     anterior_approach = anterior_approach_yes_no,
-                                                                     posterior_approach = posterior_approach_yes_no
+    if(input$tabs == "implant_details"){
+      showModal(
+        confirm_fusion_levels_and_technique_details_modal_box_function(implants_placed = implants_placed_yes_no, 
+                                                                       procedure_approach = procedure_approach_reactive(),
+                                                                       # fusion_levels_confirmed = fusion_levels_computed_reactive_input, 
+                                                                       anterior_approach = anterior_approach_yes_no,
+                                                                       posterior_approach = posterior_approach_yes_no
+        )
       )
-    )
+    }
+    # showModal(
+    #   confirm_fusion_levels_and_technique_details_modal_box_function(implants_placed = implants_placed_yes_no, 
+    #                                                                  procedure_approach = procedure_approach_reactive(),
+    #                                                                  # fusion_levels_confirmed = fusion_levels_computed_reactive_input, 
+    #                                                                  anterior_approach = anterior_approach_yes_no,
+    #                                                                  posterior_approach = posterior_approach_yes_no
+    #   )
+    # )
   })
   
   
@@ -5690,14 +5724,21 @@ server <- function(input, output, session) {
       approach_sequence <- " "
     }
     approach_sequence
-    
-  })
+  }) %>%
+    bindEvent(input$spine_approach,
+              input$add_rods,
+              input$implants_complete,
+              # ignoreInit = TRUE,
+              ignoreNULL = TRUE
+    )
   
   observe(
-    updatePickerInput(session = session, 
-                      inputId = "approach_sequence", 
-                      selected = paste0(approach_sequence_reactive())
-                      )
+    if(approach_sequence_reactive() != input$approach_sequence){
+      updatePickerInput(session = session, 
+                        inputId = "approach_sequence", 
+                        selected = paste0(approach_sequence_reactive())
+      )
+    }
   )%>%
     bindEvent(approach_sequence_reactive(),
               ignoreInit = TRUE,
