@@ -332,10 +332,16 @@ startup_modal_box_diagnosis_symptoms <-
            left_prior_implants_removed = "",
            right_prior_implants = "",
            right_prior_implants_removed = "",
-           left_rod_status = "retained",
-           left_implants_still_connected = "",
-           right_rod_status = "retained",
-           right_implants_still_connected = "", 
+           left_rod_status = "removed",
+           left_revision_rod_cut_level = "",
+           left_revision_rod_cut_level_choices = "",
+           left_revision_implants_connected_to_prior_rod = "",
+           left_revision_implants_connected_to_prior_rod_choices = "",
+           right_rod_status = "removed",
+           right_revision_rod_cut_level = "",
+           right_revision_rod_cut_level_choices = "",
+           right_revision_implants_connected_to_prior_rod = "", 
+           right_revision_implants_connected_to_prior_rod_choices = "", 
            revision_indication = ""
   ) {
     
@@ -383,9 +389,10 @@ startup_modal_box_diagnosis_symptoms <-
                                           lib = "glyphicon"))
             )
           ),
-          hr(),
+          hr(), 
           conditionalPanel(
-            condition = "input.spinal_regions.length > 0",
+            # condition = "input.spinal_regions.length > 0",
+            condition = "typeof input.spinal_regions !== 'undefined' && input.spinal_regions.length > 0",
             tags$div(style = "font-size:20px; font-weight:bold", "Select Diagnostic Categories:"),
             tags$div(style = "font-size:14px; font-weight:bold", "(Select all that apply)"),
             fluidRow(
@@ -729,20 +736,20 @@ startup_modal_box_diagnosis_symptoms <-
                                        conditionalPanel(
                                          condition = "input.left_revision_rod_status.indexOf('retained_cut') > -1",
                                          pickerInput(
-                                           inputId = "left_revision_implants_connected_to_prior_rod",
-                                           label = "Select screws connected to the old rod:",
-                                           choices = c(""),
-                                           selected = left_implants_still_connected,
-                                           multiple = TRUE
+                                           inputId = "left_revision_rod_cut_level",
+                                           label = "Select the level where the rod was cut:",
+                                           choices = left_revision_rod_cut_level_choices,
+                                           selected = left_revision_rod_cut_level,
+                                           multiple = FALSE
                                          )
                                        ),
                                        conditionalPanel(
-                                         condition = "input.left_revision_rod_status.indexOf('retained_cut') > -1 || input.left_revision_rod_status.indexOf('retained') > -1",
+                                         condition = "input.left_revision_rod_status.indexOf('retained_cut') > -1",
                                          pickerInput(
-                                           inputId = "left_revision_implants_rod_connectors",
-                                           label = "Select the levels where rod connectors were placed below (if any)",
-                                           choices = c(""),
-                                           selected = c(""),
+                                           inputId = "left_revision_implants_connected_to_prior_rod",
+                                           label = "Select screws connected to the old rod:",
+                                           choices = left_revision_implants_connected_to_prior_rod_choices,
+                                           selected = left_revision_implants_connected_to_prior_rod,
                                            multiple = TRUE
                                          )
                                        )
@@ -770,23 +777,24 @@ startup_modal_box_diagnosis_symptoms <-
                                        conditionalPanel(
                                          condition = "input.right_revision_rod_status.indexOf('retained_cut') > -1",
                                          pickerInput(
-                                           inputId = "right_revision_implants_connected_to_prior_rod",
-                                           label = "Select screws connected to the old rod:",
-                                           choices = c(""),
-                                           selected = right_implants_still_connected,
-                                           multiple = TRUE
+                                           inputId = "right_revision_rod_cut_level",
+                                           label = "Select the level where the rod was cut:",
+                                           choices = right_revision_rod_cut_level_choices,
+                                           selected = right_revision_rod_cut_level,
+                                           multiple = FALSE
                                          )
                                        ),
                                        conditionalPanel(
-                                         condition = "input.right_revision_rod_status.indexOf('retained_cut') > -1 || input.right_revision_rod_status.indexOf('retained') > -1",
+                                         condition = "input.right_revision_rod_status.indexOf('retained_cut') > -1",
                                          pickerInput(
-                                           inputId = "right_revision_implants_rod_connectors",
-                                           label = "Select the levels where rod connectors were placed below (if any)",
-                                           choices = c(""),
-                                           selected = c(""),
+                                           inputId = "right_revision_implants_connected_to_prior_rod",
+                                           label = "Select screws connected to the old rod:",
+                                           choices = right_revision_implants_connected_to_prior_rod_choices,
+                                           selected = right_revision_implants_connected_to_prior_rod,
                                            multiple = TRUE
                                          )
-                                       )
+                                       ),
+                                       
                                      )
                                    )
                                  )
@@ -798,6 +806,498 @@ startup_modal_box_diagnosis_symptoms <-
       )
     )
   }
+
+# startup_modal_box_diagnosis_symptoms <-
+#   function(diagnosis_category_value = NULL,
+#            primary_diagnosis_value = NULL,
+#            other_diagnosis = NULL,
+#            symptoms_initial_value = "",
+#            symptoms_other = "",
+#            stage_number_value = 1,
+#            staged_procedure_initial_value = FALSE,
+#            multiple_approach_initial_value = FALSE,
+#            multi_approach_starting_position = "Posterior",
+#            spinal_regions_selected = c("Lumbar"),
+#            primary_or_revision = "Primary",
+#            levels_with_prior_decompression = "",
+#            prior_fusion_levels = "",
+#            prior_instrumentation = FALSE,
+#            revision_approach = "none",
+#            prior_anterior_plate_levels = c(),
+#            prior_anterior_plate_removed_levels = c(),
+#            left_prior_implants = "",
+#            left_prior_implants_removed = "",
+#            right_prior_implants = "",
+#            right_prior_implants_removed = "",
+#            left_rod_status = "removed",
+#            left_implants_still_connected = "",
+#            right_rod_status = "removed",
+#            right_implants_still_connected = "", 
+#            revision_indication = ""
+#   ) {
+#     
+#     diagnosis_section_category <- case_when(
+#       diagnosis_category_value == "Degen/Inflammatory" ~ "msk",
+#       diagnosis_category_value == "Deformity" ~ "deformity",
+#       diagnosis_category_value == "Trauma" ~ "trauma",
+#       diagnosis_category_value == "Tumor" ~ "tumor",
+#       diagnosis_category_value == "Infection" ~ "infection",
+#       diagnosis_category_value == "Congenital" ~ "congenital",
+#       diagnosis_category_value == "Other Neurological Diseases" ~ "other_neuro_conditions" 
+#       
+#     )
+#     
+#     
+#     modalDialog(
+#       size = "l", 
+#       easyClose = FALSE,
+#       # footer = modalButton("Proceed"),
+#       footer = actionBttn(
+#         inputId = "close_startup_modal_2",
+#         label = "Proceed",
+#         style = "simple",
+#         color = "primary",
+#         icon = icon("arrow-right")
+#       ),
+#       box(
+#         width = 12,
+#         title = "Diagnosis & Symptoms:",
+#         solidHeader = TRUE,
+#         status = "info",
+#         column(
+#           12,
+#           tags$div(style = "font-size:20px; font-weight:bold", "Select All Relevant Spinal Regions:"),
+#           fluidRow(
+#             checkboxGroupButtons(
+#               inputId = "spinal_regions",
+#               label = NULL,
+#               choices = spine_region_labels,
+#               individual = TRUE,
+#               size = "normal",
+#               justified = FALSE,
+#               selected = spinal_regions_selected,
+#               checkIcon = list(yes = icon("ok",
+#                                           lib = "glyphicon"))
+#             )
+#           ),
+#           hr(),
+#           conditionalPanel(
+#             condition = "input.spinal_regions.length > 0",
+#             tags$div(style = "font-size:20px; font-weight:bold", "Select Diagnostic Categories:"),
+#             tags$div(style = "font-size:14px; font-weight:bold", "(Select all that apply)"),
+#             fluidRow(
+#               checkboxGroupButtons(
+#                 inputId = "diagnosis_category",
+#                 label = NULL,
+#                 choices = spine_category_labels,
+#                 selected = diagnosis_category_value,
+#                 checkIcon = list(yes = icon("ok",
+#                                             lib = "glyphicon"))
+#               )
+#             )
+#           ),
+#           br(),
+#           conditionalPanel(
+#             condition = "input.diagnosis_category.length > 0",
+#             fluidRow(
+#               column(
+#                 width = 5,
+#                 tags$div(style = "font-size:18px; font-weight:bold", "Diagnosis:"),
+#                 tags$div(style = "font-size:14px; font-weight:bold", "(Select all that apply)")
+#               ),
+#               column(
+#                 width = 7,
+#                 pickerInput(
+#                   inputId = "primary_diagnosis",
+#                   label = "Diagnosis Search:",
+#                   choices = jh_filter_icd_codes_generate_vector_function(section_input = diagnosis_section_category, spine_region_input = spinal_regions_selected), 
+#                   options = pickerOptions(
+#                     liveSearch = TRUE,
+#                     virtualScroll = 50,
+#                     liveSearchNormalize = TRUE
+#                   ),
+#                   multiple = TRUE,
+#                   selected = primary_diagnosis_value
+#                 )
+#               ),
+#             ),
+#             hr(),
+#             fluidRow(
+#               column(
+#                 width = 5,
+#                 tags$div(style = "font-size:18px; font-weight:bold", "Symptoms:")
+#               ),
+#               column(
+#                 width = 7,
+#                 pickerInput(
+#                   inputId = "symptoms",
+#                   label = NULL,
+#                   choices = list(
+#                     "Low Back & Legs:" = c("Low Back Pain", "Left Leg Pain", "Right Leg Pain")
+#                   ),
+#                   multiple = TRUE,
+#                   selected = symptoms_initial_value,
+#                   width = "100%"
+#                 ),
+#                 conditionalPanel(
+#                   condition = "input.symptoms.indexOf('Other') > -1",
+#                   textInput(inputId = "symptoms_other", label = "Other:", value = symptoms_other)
+#                 )
+#               )
+#             ),
+#             fluidRow(
+#               textInput(inputId = "relevant_history", label = "Other Comments/History:")
+#             )
+#           )
+#         )
+#       ),
+#       box(
+#         width = 12,
+#         title = "General Procedure Details:",
+#         solidHeader = TRUE,
+#         status = "info",
+#         column(
+#           12,
+#           tags$div(style = "font-size:20px; font-weight:bold", "Procedure: Stage & Approach:"),
+#           jh_make_shiny_table_row_function(
+#             left_column_label = "Staged Procedure?",
+#             input_type = "switch",
+#             input_id = "staged_procedure",
+#             left_column_percent_width = 50,
+#             font_size = 16,
+#             switch_input_on_label = "Yes",
+#             switch_input_off_label = "No",
+#             initial_value_selected = staged_procedure_initial_value,
+#           ),
+#           conditionalPanel(
+#             condition = "input.staged_procedure == true",
+#             jh_make_shiny_table_row_function(
+#               left_column_label = "Stage Number:",
+#               input_type = "awesomeRadio",
+#               input_id = "stage_number",
+#               left_column_percent_width = 50,
+#               font_size = 14,
+#               choices_vector = c(1, 2, 3, 4, 5),
+#               checkboxes_inline = TRUE,
+#               initial_value_selected = stage_number_value
+#             )
+#           ),
+#           jh_make_shiny_table_row_function(
+#             left_column_label = "Multiple Approach, single stage?",
+#             input_type = "switch",
+#             input_id = "multiple_approach",
+#             left_column_percent_width = 50,
+#             font_size = 16,
+#             switch_input_on_label = "Yes",
+#             switch_input_off_label = "No",
+#             initial_value_selected = multiple_approach_initial_value
+#           ),
+#           conditionalPanel(condition = "input.multiple_approach == true",
+#                            jh_make_shiny_table_row_function(
+#                              left_column_label = "Starting Position:",
+#                              input_type = "awesomeRadio",
+#                              input_id = "multi_approach_starting_position",
+#                              left_column_percent_width = 50,
+#                              font_size = 14,
+#                              choices_vector = c("Posterior", "Anterior", "Lateral"),
+#                              checkboxes_inline = TRUE,
+#                              initial_value_selected = multi_approach_starting_position
+#                            )
+#           ),
+#           fluidRow(
+#             column(
+#               12,
+#               jh_make_shiny_table_row_function(
+#                 left_column_label = "Primary or Revision:",
+#                 input_type = "radioGroupButtons",
+#                 input_id = "primary_revision",
+#                 left_column_percent_width = 50,
+#                 font_size = 16,
+#                 choices_vector = c("Primary", "Revision"),
+#                 initial_value_selected = primary_or_revision,
+#                 checkboxes_inline = TRUE,
+#                 individual_buttons = TRUE
+#               ), 
+#               conditionalPanel(condition = "input.primary_revision.indexOf('Revision') > -1",
+#                                fluidRow(column(
+#                                  width = 12,
+#                                  jh_make_shiny_table_row_function(
+#                                    left_column_label = "Anterior or Posterior Revision?",
+#                                    input_type = "awesomeRadio",
+#                                    input_id = "revision_approach",
+#                                    left_column_percent_width = 50,
+#                                    font_size = 16,
+#                                    choices =  c("Anterior" = "anterior", "Posterior" = "posterior", "NA" = "none"), 
+#                                    initial_value_selected = revision_approach,
+#                                    checkboxes_inline = TRUE,
+#                                    individual_buttons = TRUE
+#                                  )
+#                                )
+#                                )
+#               ),
+#               conditionalPanel(
+#                 "input.revision_approach.indexOf('anterior') > -1 || input.revision_approach.indexOf('posterior') > -1 ",
+#                 # "input.primary_revision.indexOf('Revision') > -1",
+#                 jh_make_shiny_table_row_function(
+#                   left_column_label = "Revision for (select all that apply):",
+#                   input_type = "picker",
+#                   input_id = "revision_indication",
+#                   initial_value_selected = revision_indication,
+#                   left_column_percent_width = 60,
+#                   font_size = 14,
+#                   choices_vector = c("acute infection", 
+#                                      "wound complication", 
+#                                      "chronic infection", 
+#                                      "early radiculopathy",
+#                                      "malpositioned implant",
+#                                      "painful implant",
+#                                      "pseudarthrosis", 
+#                                      "rod fracture", 
+#                                      "proximal junction failure", 
+#                                      "distal junctional failure",
+#                                      "adjacent segment disease",
+#                                      "recurrent symptoms", 
+#                                      "sagittal imbalance", 
+#                                      "coronal imbalance",
+#                                      "other implant-related complication",
+#                                      "other")
+#                 ),
+#                 jh_make_shiny_table_row_function(
+#                   left_column_label = "Select Levels with Prior Decompression:",
+#                   input_type = "picker",
+#                   input_id = "open_canal",
+#                   initial_value_selected = levels_with_prior_decompression,
+#                   left_column_percent_width = 60,
+#                   font_size = 14,
+#                   choices_vector = (levels_numbered_df %>%
+#                                       filter(between(vertebral_number, 0.1, 25.1)) %>%
+#                                       filter(str_detect(level, "-", negate = TRUE)))$level
+#                   # open_canal_df$level
+#                 ),
+#                 jh_make_shiny_table_row_function(
+#                   left_column_label = "Select Prior Fusion Levels:",
+#                   input_type = "picker",
+#                   input_id = "prior_fusion_levels",
+#                   initial_value_selected = prior_fusion_levels,
+#                   left_column_percent_width = 60,
+#                   font_size = 14,
+#                   choices_vector = unique(interbody_levels_df$level)
+#                 ),
+#                 fluidRow(
+#                   jh_make_shiny_table_row_function(
+#                     left_column_label = "Prior Instrumentation?",
+#                     left_column_percent_width = 60,
+#                     font_size = 14,
+#                     input_type = "switch",
+#                     input_id = "prior_instrumentation",
+#                     initial_value_selected = prior_instrumentation
+#                   )
+#                 ),
+#                 conditionalPanel(condition = "input.prior_instrumentation == true", 
+#                                  conditionalPanel(
+#                                    condition = "input.revision_approach.indexOf('anterior') > -1",
+#                                    box(
+#                                      title = tags$div(style = "font-size:22px; font-weight:bold; text-align:center", "Prior Anterior Instrumentation"),
+#                                      width = 12,
+#                                      collapsible = TRUE,
+#                                      fluidRow(
+#                                        column(
+#                                          6,
+#                                          tags$div(style = "font-size:18px; font-weight:bold; text-align:center", "Plate Present:"),
+#                                          awesomeCheckboxGroup(
+#                                            inputId = "prior_anterior_plate_levels",
+#                                            label = "Prior Anterior Plate Levels:",
+#                                            selected = prior_anterior_plate_levels,
+#                                            choices = anterior_plate_vector
+#                                          )
+#                                        ),
+#                                        column(
+#                                          6,
+#                                          tags$div(style = "font-size:18px; font-weight:bold; text-align:center", "Plate Removed"),
+#                                          awesomeCheckboxGroup(
+#                                            inputId = "prior_anterior_plate_removed_levels",
+#                                            label = "Prior Anterior Plate Removed:",
+#                                            selected = prior_anterior_plate_removed_levels,
+#                                            choices = anterior_plate_vector
+#                                          )
+#                                        )
+#                                      )
+#                                    )
+#                                  ),
+#                                  conditionalPanel(
+#                                    condition = "input.revision_approach.indexOf('posterior') > -1",
+#                                    box(
+#                                      title = tags$div(style = "font-size:22px; font-weight:bold; text-align:center", "Prior Posterior Instrumentation"),
+#                                      width = 12,
+#                                      collapsible = TRUE,
+#                                      fluidRow(column(
+#                                        6,
+#                                        tags$div(style = "font-size:18px; font-weight:bold; text-align:center", "LEFT Implants")
+#                                      ),
+#                                      column(
+#                                        6,
+#                                        tags$div(style = "font-size:18px; font-weight:bold; text-align:center", "RIGHT Implants")
+#                                      )),
+#                                      fluidRow(
+#                                        column(
+#                                          5,
+#                                          column(
+#                                            6,
+#                                            awesomeCheckboxGroup(
+#                                              inputId = "left_revision_implants",
+#                                              label = "Present:",
+#                                              selected = left_prior_implants,
+#                                              choices = unique((all_object_ids_df %>%
+#                                                                  filter(object == "pedicle_screw" | str_detect(object, "pelvic_screw") | object == "occipital_screw" | object == "lateral_mass_screw") %>%
+#                                                                  filter((str_detect(string = level, pattern = "C1|C3|C4|C5|C6") & object == "pedicle_screw") == FALSE) %>%
+#                                                                  arrange(vertebral_number) %>%
+#                                                                  filter(x < 0.5))$level)
+#                                            )
+#                                          ),
+#                                          column(
+#                                            6,
+#                                            awesomeCheckboxGroup(
+#                                              inputId = "left_revision_implants_removed",
+#                                              label = "Removed:",
+#                                              status = "danger",
+#                                              selected = left_prior_implants_removed,
+#                                              choices = unique((all_object_ids_df %>%
+#                                                                  filter(object == "pedicle_screw" | str_detect(object, "pelvic_screw") | object == "occipital_screw" | object == "lateral_mass_screw") %>%
+#                                                                  filter((str_detect(string = level, pattern = "C1|C3|C4|C5|C6") & object == "pedicle_screw") == FALSE) %>%
+#                                                                  arrange(vertebral_number) %>%
+#                                                                  filter(x > 0.5))$level)
+#                                            )
+#                                          )
+#                                        ),
+#                                        column(1,),
+#                                        column(
+#                                          5,
+#                                          column(
+#                                            6,
+#                                            awesomeCheckboxGroup(
+#                                              inputId = "right_revision_implants",
+#                                              label = "Present:",
+#                                              selected = right_prior_implants,
+#                                              choices = unique((all_object_ids_df %>%
+#                                                                  filter(object == "pedicle_screw" | str_detect(object, "pelvic_screw") | object == "occipital_screw" | object == "lateral_mass_screw") %>%
+#                                                                  filter((str_detect(string = level, pattern = "C1|C3|C4|C5|C6") & object == "pedicle_screw") == FALSE) %>%
+#                                                                  arrange(vertebral_number) %>%
+#                                                                  filter(x < 0.5))$level)
+#                                            )
+#                                          ),
+#                                          column(
+#                                            6,
+#                                            awesomeCheckboxGroup(
+#                                              inputId = "right_revision_implants_removed",
+#                                              label = "Removed:",
+#                                              status = "danger",
+#                                              selected = right_prior_implants_removed,
+#                                              choices = unique((all_object_ids_df %>%
+#                                                                  filter(object == "pedicle_screw" | str_detect(object, "pelvic_screw") | object == "occipital_screw" | object == "lateral_mass_screw") %>%
+#                                                                  filter((str_detect(string = level, pattern = "C1|C3|C4|C5|C6") & object == "pedicle_screw") == FALSE) %>%
+#                                                                  arrange(vertebral_number) %>%
+#                                                                  filter(x > 0.5))$level)
+#                                            )
+#                                          )
+#                                        )
+#                                      )
+#                                    ),
+#                                    fluidRow(
+#                                      column(
+#                                        4,
+#                                        conditionalPanel(
+#                                          condition = "input.left_revision_implants.length > 1",
+#                                          awesomeRadio(
+#                                            inputId = "left_revision_rod_status",
+#                                            label = "Prior Left Rod was:",
+#                                            choices = c(
+#                                              "Removed" = "removed",
+#                                              "Retained" = "retained",
+#                                              "Cut and Partially Retained" = "retained_cut"
+#                                            ),
+#                                            selected = left_rod_status,
+#                                            inline = FALSE,
+#                                            status = "success"
+#                                          )
+#                                        )
+#                                      ),
+#                                      column(
+#                                        2,
+#                                        conditionalPanel(
+#                                          condition = "input.left_revision_rod_status.indexOf('retained_cut') > -1",
+#                                          pickerInput(
+#                                            inputId = "left_revision_implants_connected_to_prior_rod",
+#                                            label = "Select screws connected to the old rod:",
+#                                            choices = c(""),
+#                                            selected = left_revision_implants_connected_to_prior_rod,
+#                                            multiple = TRUE
+#                                          )
+#                                        ),
+#                                        conditionalPanel(
+#                                          condition = "input.left_revision_rod_status.indexOf('retained_cut') > -1",
+#                                          pickerInput(
+#                                            inputId = "left_revision_rod_cut_level",
+#                                            label = "Select the level where the rod was cut:",
+#                                            choices = c(""),
+#                                            selected = left_revision_rod_cut_level,
+#                                            multiple = FALSE
+#                                          )
+#                                        )
+#                                      ),
+#                                      column(
+#                                        4,
+#                                        conditionalPanel(
+#                                          condition = "input.right_revision_implants.length > 1",
+#                                          awesomeRadio(
+#                                            inputId = "right_revision_rod_status",
+#                                            label = "Prior Right Rod was:",
+#                                            choices = c(
+#                                              "Removed" = "removed",
+#                                              "Retained" = "retained",
+#                                              "Cut and Partially Retained" = "retained_cut"
+#                                            ),
+#                                            selected = right_rod_status,
+#                                            inline = FALSE,
+#                                            status = "success"
+#                                          )
+#                                        )
+#                                      ),
+#                                      column(
+#                                        2,
+#                                        conditionalPanel(
+#                                          condition = "input.right_revision_rod_status.indexOf('retained_cut') > -1",
+#                                          pickerInput(
+#                                            inputId = "right_revision_implants_connected_to_prior_rod",
+#                                            label = "Select screws connected to the old rod:",
+#                                            choices = c(""),
+#                                            selected = right_revision_implants_connected_to_prior_rod,
+#                                            multiple = TRUE
+#                                          )
+#                                        ),
+#                                        conditionalPanel(
+#                                          condition = "input.right_revision_rod_status.indexOf('retained_cut') > -1",
+#                                          pickerInput(
+#                                            inputId = "right_revision_rod_cut_level",
+#                                            label = "Select the level where the rod was cut:",
+#                                            choices = c(""),
+#                                            selected = right_revision_rod_cut_level,
+#                                            multiple = FALSE
+#                                          )
+#                                        )
+#                                      )
+#                                    )
+#                                  )
+#                 )
+#               )
+#             )
+#           )
+#         )
+#       )
+#     )
+#   }
+
+
+
 
 ################################################    FUSION AND TECHNIQUE DETAILS MODAL  ######################################
 ################################################    FUSION AND TECHNIQUE DETAILS MODAL  ######################################

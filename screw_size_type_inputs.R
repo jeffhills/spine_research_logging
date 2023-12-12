@@ -67,10 +67,11 @@ jh_make_screw_details_inputs_df_function <- function(all_objects = tibble(), ret
                                        .f = ~radioGroupButtons( #"option2",
                                          inputId = paste0(.x, "_type"),
                                          label = NULL,
-                                         choices = c("Anterior"),
+                                         choices = c("Anterior", "Fixed Angle", "Variable Angle"),
                                          selected = "Anterior",
                                          checkIcon = list(yes = icon("wrench")),
-                                         size = "xs", direction = "horizontal",
+                                         size = "xs",
+                                         direction = "horizontal",
                                          justified = TRUE,
                                          width = "95%"
                                        ))) %>%
@@ -78,10 +79,11 @@ jh_make_screw_details_inputs_df_function <- function(all_objects = tibble(), ret
                                         .f = ~radioGroupButtons( #"option2",
                                           inputId = paste0(.x, "_type"),
                                           label = NULL,
-                                          choices = c("Anterior"),
+                                          choices = c("Anterior", "Fixed Angle", "Variable Angle"),
                                           selected = "Anterior",
                                           checkIcon = list(yes = icon("wrench")),
-                                          size = "xs", direction = "horizontal",
+                                          size = "xs", 
+                                          direction = "horizontal",
                                           justified = TRUE,
                                           width = "95%"
                                         ))) 

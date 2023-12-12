@@ -990,7 +990,6 @@ jh_make_shiny_table_column_function <- function(input_type,
 
 
 ##########################################  DETERMINE ANTERIOR FUSION LEVELS ##################### #####################
-
 fusion_levels_df_function <- function(all_objects_to_add_df){
   if(any(all_objects_to_add_df$fusion == "yes")){
     fusion_range_df <- all_objects_to_add_df %>%
@@ -1000,40 +999,36 @@ fusion_levels_df_function <- function(all_objects_to_add_df){
       mutate(vertebral_number = jh_get_vertebral_number_function(level_to_get_number = level)) %>%
       arrange(vertebral_number) 
     
-    if(any(fusion_range_df$body_interspace == "body")){
-      # fusion_bodies_df <- fusion_range_df %>%
-      #   filter(body_interspace == "body") %>%
-      #   filter(vertebral_number == min(vertebral_number) | vertebral_number == max(vertebral_number)) %>%
-      #   select(vertebral_number) %>%
-      #   distinct() 
-      # mutate(vertebral_number = if_else(vertebral_number == min(vertebral_number), vertebral_number + 0.5, vertebral_number - 0.5))
-      
-      interspaces <- seq(from = min(fusion_range_df$vertebral_number) + 0.5, to = max(fusion_range_df$vertebral_number) - 0.5, by = 1)
-      
-      # interspaces <- fusion_vertebral_numbers_df$vertebral_number - 0.5
-      # interspaces <- append(interspaces, fusion_vertebral_numbers_df$vertebral_number + 0.5) 
-      
-      fusions_levels_df <- tibble(vertebral_number = interspaces) %>%
-        # fusions_levels_df <- tibble(vertebral_number = seq(from = min(fusion_bodies_df$vertebral_number), to = max(fusion_bodies_df$vertebral_number), by = 1)) %>%
-        mutate(level = jh_get_vertebral_level_function(number = vertebral_number))  %>%
-        bind_rows(fusion_range_df %>%
-                    filter(body_interspace == "interspace") %>%
-                    select(level, vertebral_number) %>%
-                    distinct()) %>%
-        arrange(vertebral_number) %>%
-        distinct()
+    if(jh_check_body_or_interspace_function(level = jh_get_vertebral_level_function(min(fusion_range_df$vertebral_number))) == "body"){
+      top_level <- min(fusion_range_df$vertebral_number) + 0.5
     }else{
-      fusions_levels_df <- tibble(vertebral_number = seq(from = min(fusion_range_df$vertebral_number), to = max(fusion_range_df$vertebral_number), by = 1)) %>%
-        mutate(level = jh_get_vertebral_level_function(number = vertebral_number))  %>%
+      top_level <- min(fusion_range_df$vertebral_number)
+    }
+    
+    if(jh_check_body_or_interspace_function(level = jh_get_vertebral_level_function(max(fusion_range_df$vertebral_number))) == "body"){
+      bottom_level <- max(fusion_range_df$vertebral_number) - 0.5
+    }else{
+      bottom_level <- max(fusion_range_df$vertebral_number)
+    }
+    
+    if(top_level < bottom_level){
+      fusion_interspaces_vertebral_numbers_vector <- seq(from = top_level, to = bottom_level, by = 1)
+      fusion_interspaces_levels_vector <- jh_get_vertebral_level_function(fusion_interspaces_vertebral_numbers_vector)
+      
+      fusions_levels_df <- tibble(level = fusion_interspaces_levels_vector,vertebral_number = fusion_interspaces_vertebral_numbers_vector) %>%
         arrange(vertebral_number) %>%
-        distinct()
+        distinct() 
+    }else if(top_level == bottom_level){
+      fusions_levels_df <- tibble(level = jh_get_vertebral_level_function(top_level),
+                                  vertebral_number = top_level) %>%
+        distinct() 
+    }else{
+      fusions_levels_df <- tibble(level = character(), vertebral_number = double(), category = character())
     }
     
   }else{
     fusions_levels_df <- tibble(level = character(), vertebral_number = double(), category = character())
   }
-  
-  
   
   return(fusions_levels_df)
 }
@@ -1612,8 +1607,9 @@ jh_connected_rod_all_implants_range_function <- function(all_objects_df, cranial
       filter(level %in% cranial_caudal_vector) 
     
     full_range_df <- all_objects_df %>%
-      filter(vertebral_number >= min(cranial_caudal_points_df$vertebral_number))%>%
-      filter(vertebral_number <= max(cranial_caudal_points_df$vertebral_number)) 
+      filter(between(vertebral_number, jh_get_vertebral_number_function(cranial_caudal_vector[1]), jh_get_vertebral_number_function(cranial_caudal_vector[2]))) 
+      # filter(vertebral_number >= min(cranial_caudal_points_df$vertebral_number))%>%
+      # filter(vertebral_number <= max(cranial_caudal_points_df$vertebral_number)) 
     
     implant_range <- full_range_df$level
   }else{
@@ -1637,7 +1633,7 @@ jh_update_supplemental_rod_material_size_selected_function <- function(session_i
     
     updatePickerInput(session = session_input, 
                       inputId = glue("{side_supplemental_rod}_size"), 
-                      selected = "5.5mm")
+                      selected = "6.0mm")
   }else{
     updatePrettyRadioButtons(session = session_input,
                              inputId = glue("{side_supplemental_rod}_material"), 
@@ -1651,27 +1647,27 @@ jh_update_supplemental_rod_material_size_selected_function <- function(session_i
 }
 
 jh_supplementary_rods_choices_function <- function(all_objects_df, 
-                                                   revision_objects_retained_df = tibble(level = character(), side = character(), vertebral_number = double(), object = character()),
+                                                   revision_objects_retained_df = tibble(level = character(), vertebral_number = double(), side = character(), remove_retain = character(), prior_rod_connected = character(), object = character(), x = double(), y = double()),
                                                    osteotomy_site = NULL, 
                                                    rod_type = "accessory_rod"){ 
   
-  if(nrow(revision_objects_retained_df)>0){
-    implant_df <- all_objects_df %>%
-      filter(str_detect(string = object, pattern = "screw|hook|wire")) %>%
-      bind_rows(revision_objects_retained_df) %>%
-      arrange(vertebral_number)
-  }else{
-    implant_df <-  all_objects_df %>%
-      filter(str_detect(string = object, pattern = "screw|hook|wire")) %>%
-      arrange(vertebral_number)
-  }
-  
+  implant_df <-  all_objects_df %>%
+    filter(str_detect(string = object, pattern = "screw|hook|wire")) %>%
+    arrange(vertebral_number)
   
   supplemental_starts_vector <- c("a", "b")
   supplemental_choices_vector <- c("a", "b")
   
   ############## ACCESSORY ROD ###################
   if(str_detect(rod_type, "access")){
+    if(nrow(revision_objects_retained_df)>0){
+      implant_df <- implant_df %>%
+        bind_rows(revision_objects_retained_df %>% filter(remove_retain == "retain")) %>%
+        arrange(vertebral_number) %>%
+        select(level, vertebral_number) %>%
+        distinct()
+    }
+    
     if(nrow(implant_df)> 2){}
     cranial_point_accessory <- implant_df$level[2] 
     caudal_point_accessory <- tail(implant_df$level, n = 2)[1]
@@ -1687,35 +1683,56 @@ jh_supplementary_rods_choices_function <- function(all_objects_df,
   
   ############## Satellite ROD ###################
   if(str_detect(rod_type, "satell")){
-    if(nrow(implant_df) > 3 & !is.null(osteotomy_site)){
-      
-      implants_proximal_to_osteotomy_df <- implant_df %>%
-        filter(vertebral_number < jh_get_vertebral_number_function(osteotomy_site[1]))
-      
-      implants_distal_to_osteotomy_df <- implant_df %>%
-        filter(vertebral_number > jh_get_vertebral_number_function(osteotomy_site[1]))
-      
-      if(length(implants_proximal_to_osteotomy_df$level) > 1 & length(implants_distal_to_osteotomy_df$level) > 1){
-        proximal_screw <- tail(implants_proximal_to_osteotomy_df$level, 1)
+    
+    if(nrow(revision_objects_retained_df)>0){
+      implant_df <- implant_df %>%
+        bind_rows(revision_objects_retained_df %>% filter(remove_retain == "retain", prior_rod_connected == "no")) %>%
+        arrange(vertebral_number) %>%
+        select(level, vertebral_number) %>%
+        distinct()
+    }
+    if(nrow(implant_df) >3){
+      supplemental_choices_vector <- implant_df$level[-1][-length(implant_df$level[-1])] # this returns a vector without the first or last item
+      # print(supplemental_choices_vector)
+      if(!is.null(osteotomy_site)){
+        implants_proximal_to_osteotomy_df <- implant_df %>%
+          filter(vertebral_number < jh_get_vertebral_number_function(osteotomy_site[1]))
         
-        distal_screw <- implants_distal_to_osteotomy_df$level[1]
+        implants_distal_to_osteotomy_df <- implant_df %>%
+          filter(vertebral_number > jh_get_vertebral_number_function(osteotomy_site[1]))
         
-        supplemental_starts_vector <- c(proximal_screw, distal_screw)
+        if(length(implants_proximal_to_osteotomy_df$level) > 1 & length(implants_distal_to_osteotomy_df$level) > 1){
+          proximal_screw <- tail(implants_proximal_to_osteotomy_df$level, 1)
+          
+          distal_screw <- implants_distal_to_osteotomy_df$level[1]
+          
+          supplemental_starts_vector <- c(proximal_screw, distal_screw)
+        }else{
+          supplemental_starts_vector <- c("a", "b")
+        }
+        
       }else{
-        supplemental_starts_vector <- c("a", "b")
+        # supplemental_starts_vector <- tail(unique(implant_df$level), n=3)[c(1,2)]
+        supplemental_starts_vector <- tail(supplemental_choices_vector, n=3)[c(1,2)]
       }
-      
-    }else if(nrow(implant_df) > 3){
-      supplemental_starts_vector <- tail(unique(implant_df$level), n=3)[c(1,2)]
-      
     }else{
+      supplemental_choices_vector <- c("a", "b")
       supplemental_starts_vector <- c("a", "b")
     }
+    ####
   }
   
   ############## Intercalary ROD ###################
   if(str_detect(rod_type, "interc")){
-    # if(nrow(implant_df) > 3 & !is.null(osteotomy_site)){
+    
+    if(nrow(revision_objects_retained_df)>0){
+      implant_df <- implant_df %>%
+        bind_rows(revision_objects_retained_df %>% filter(remove_retain == "retain", prior_rod_connected == "no")) %>%
+        arrange(vertebral_number) %>%
+        select(level, vertebral_number) %>%
+        distinct()
+    }
+    
     if(nrow(implant_df) > 3){
       
       if(any(tail(implant_df$level, 2) == "S1")){
@@ -1756,36 +1773,30 @@ jh_supplementary_rods_choices_function <- function(all_objects_df,
   ### LINKED ROD
   if(str_detect(rod_type, "linked")){
     
-    # if(nrow(revision_objects_retained_df %>% filter(prior_rod_connected == "yes"))>0){
-    #   implant_df <- all_objects_df %>%
-    #     filter(str_detect(string = object, pattern = "screw|hook|wire")) %>%
-    #     bind_rows(revision_objects_retained_df) %>%
-    #     arrange(vertebral_number)
-    # }else{
-    #   implant_df <-  all_objects_df %>%
-    #     filter(str_detect(string = object, pattern = "screw|hook|wire")) %>%
-    #     arrange(vertebral_number)
-    # }
+    if(nrow(revision_objects_retained_df)>0){
+      implant_df <- implant_df %>%
+        bind_rows(revision_objects_retained_df %>% filter(remove_retain == "retain", prior_rod_connected == "no")) %>%
+        arrange(vertebral_number) %>%
+        select(level, vertebral_number) %>%
+        distinct()
+    }
     
     if(nrow(implant_df) > 3){
-      if(nrow(revision_objects_retained_df)>0){
-        # implant_df <- all_objects_df %>%
-        #   filter(str_detect(string = object, pattern = "screw|hook|wire")) %>%
-        #   # bind_rows(revision_objects_retained_df) %>%
-        #   arrange(vertebral_number)
-        
-        if(max(revision_objects_retained_df$vertebral_number) < min(all_objects_df$vertebral_number)){ ## this would mean the proximal rod is the old rod
-          proximal_rod <- revision_objects_retained_df$level
-          distal_rod <- tail(implant_df$level, n = round(length(implant_df$level)/1.25, 0))
-        }else{  ## this means the distal rod is the old rod. IE extending up
-          proximal_rod <- head(implant_df$level, n = round(length(implant_df$level)/1.25, 0))
-          distal_rod <- revision_objects_retained_df$level
-        } 
-        
-      }else{
-        proximal_rod <- head(implant_df$level, n = round(length(implant_df$level)/1.25, 0))
-        distal_rod <- tail(implant_df$level, n = round(length(implant_df$level)/1.25, 0)) 
-      }
+      # if(nrow(revision_objects_retained_df)>0){
+      #   if(max(revision_objects_retained_df$vertebral_number) < min(all_objects_df$vertebral_number)){ ## this would mean the proximal rod is the old rod
+      #     proximal_rod <- revision_objects_retained_df$level
+      #     distal_rod <- tail(implant_df$level, n = round(length(implant_df$level)/1.25, 0))
+      #   }else{  ## this means the distal rod is the old rod. IE extending up
+      #     proximal_rod <- head(implant_df$level, n = round(length(implant_df$level)/1.25, 0))
+      #     distal_rod <- revision_objects_retained_df$level
+      #   } 
+      #   
+      # }else{
+      #   proximal_rod <- head(implant_df$level, n = round(length(implant_df$level)/1.25, 0))
+      #   distal_rod <- tail(implant_df$level, n = round(length(implant_df$level)/1.25, 0)) 
+      # }
+      proximal_rod <- head(implant_df$level, n = round(length(implant_df$level)/1.25, 0))
+      distal_rod <- tail(implant_df$level, n = round(length(implant_df$level)/1.25, 0)) 
       
       overlapping_region <- keep(.x = proximal_rod, .p = ~ .x %in% distal_rod)
       
@@ -1800,6 +1811,15 @@ jh_supplementary_rods_choices_function <- function(all_objects_df,
   
   ### KICKSTAND ROD
   if(str_detect(rod_type, "kick")){
+    
+    if(nrow(revision_objects_retained_df)>0){
+      implant_df <- implant_df %>%
+        bind_rows(revision_objects_retained_df %>% filter(remove_retain == "retain")) %>%
+        arrange(vertebral_number) %>%
+        select(level, vertebral_number) %>%
+        distinct()
+    }
+    
     if(nrow(implant_df) > 3 & any(str_detect(str_to_lower(implant_df$level), "iliac"))){
       
       proximal_point <- implant_df$level[which.min(abs(implant_df$vertebral_number - 20.25))]
@@ -1816,6 +1836,14 @@ jh_supplementary_rods_choices_function <- function(all_objects_df,
   }
   
   ### LEVEL RANGE ###
+  if(nrow(revision_objects_retained_df)>0){
+    implant_df <- implant_df %>%
+      bind_rows(revision_objects_retained_df %>% filter(remove_retain == "retain")) %>%
+      arrange(vertebral_number) %>%
+      select(level, vertebral_number) %>%
+      distinct()
+  }
+  
   if(length(implant_df$level) > 1){
     full_level_range <- all_screw_coordinates_df %>%
       filter(vertebral_number >= min(implant_df$vertebral_number), 
@@ -1987,7 +2015,6 @@ jh_build_custom_rods_function <- function(cranial_caudal_points_vector, full_obj
   
 }
 
-
 jh_rod_construct_connector_matrices_function <- function(full_rod_matrix, x_nudge = 0){
   
   matrix_list <- list()    
@@ -2002,8 +2029,6 @@ jh_rod_construct_connector_matrices_function <- function(full_rod_matrix, x_nudg
                        x - 0.01 + x_nudge, 
                        x + 0.01 + x_nudge)) %>%
     union_all(proximal_connector_point_df) %>%
-    # mutate(y = y - 0.005) %>%
-    # remove_missing() %>%
     select(x, y) %>%
     as.matrix()
   
@@ -2014,52 +2039,40 @@ jh_rod_construct_connector_matrices_function <- function(full_rod_matrix, x_nudg
   matrix_list$bottom_connector_matrix <- distal_connector_point_df %>%
     mutate(x = if_else(x < 0.5, x - 0.01 + x_nudge, x + 0.01 + x_nudge)) %>%
     union_all(distal_connector_point_df) %>%
-    # mutate(y = y + 0.005) %>%
-    # remove_missing() %>%
     select(x, y) %>%
     as.matrix()
-  
-  
   return(matrix_list)
 }
 
 jh_sf_rod_object_from_matrix_function <- function(matrix_input = as.matrix(tibble(x = 1, y = 2)), buffer_distance = 0.003){
   
-  # if(!is.null(matrix_input) && is.matrix(matrix_input) && nrow(as_tibble(matrix_input)) > 1){
-  #   rod_object_sf <-  st_buffer(st_linestring(matrix_input), dist = buffer_distance, endCapStyle = "ROUND")
-  # }else if(is.matrix(matrix_input)){
-  #   rod_matrix <- as_tibble(matrix_input) %>%
-  #     union_all(as_tibble(matrix_input)) %>%
-  #     as.matrix()
-  # 
-  #   rod_object_sf <-  st_buffer(st_linestring(rod_matrix), dist = buffer_distance, endCapStyle = "ROUND")
-  # 
-  # }else{
-  #   rod_object_sf <- NULL
-  # }
-  
-  if(!is.null(as.matrix(matrix_input))){
+  if(!is.null(as.matrix(matrix_input)) & is.matrix(matrix_input) & is.numeric(matrix_input) & nrow(matrix_input)>1){
     if(nrow(as_tibble(matrix_input))>1){
       rod_matrix <- as_tibble(matrix_input) %>%
         mutate(y = if_else(y == max(y), y + 0.0065, y)) %>%
         mutate(y = if_else(y == min(y), y - 0.0065, y)) %>%
         as.matrix()
-      rod_object_sf <-  st_buffer(st_linestring(rod_matrix), dist = buffer_distance, endCapStyle = "ROUND")
+      
     }else{
       rod_matrix <- as_tibble(matrix_input) %>%
         union_all(as_tibble(matrix_input)) %>%
         mutate(y = if_else(y == max(y), y + 0.0065, y)) %>%
         mutate(y = if_else(y == min(y), y - 0.0065, y)) %>%
         as.matrix()
-      rod_object_sf <-  st_buffer(st_linestring(rod_matrix), dist = buffer_distance, endCapStyle = "ROUND")
-      
     }
+  }else{
+    rod_matrix <- matrix()
+  }
+  
+  if(is.numeric(rod_matrix)){
+    rod_object_sf <-  st_buffer(st_linestring(rod_matrix), dist = buffer_distance, endCapStyle = "ROUND")
   }else{
     rod_object_sf <- NULL
   }
   
   return(rod_object_sf)
 }
+
 
 build_unilateral_rods_list_function <- function(unilateral_full_implant_df,
                                                 rod_side = "left", 
@@ -2076,110 +2089,71 @@ build_unilateral_rods_list_function <- function(unilateral_full_implant_df,
                                                 kickstand_rod_vector = c("a"),
                                                 add_custom_rods = FALSE, 
                                                 custom_rods_vector_list = list(),
-                                                revision_rods_retained_df = tibble(level = character(), vertebral_number = double(), x = double(), y = double(), prior_rod_connected = character()),
-                                                prior_rod_overlap_connectors = c(""),
+                                                revision_rod_matrix = as.matrix(tibble(x = double(), y = double())),
+                                                link_revision_rods_true_false = FALSE,
+                                                # prior_rod_overlap_connectors = c(""),
                                                 include_revision_rods_in_list = FALSE
 ){
   
-  # full_implant_range <- all_screw_coordinates_df %>%
-  #   filter()
   rods_list <- list()
   connector_list <- list()
   
   if(!is.null(unilateral_full_implant_df) && nrow(unilateral_full_implant_df)>0){
-    rods_list <- list()
-    connector_list <- list()
-    
-    if(nrow(revision_rods_retained_df) > 0){
-      unilateral_full_implant_df <- revision_rods_retained_df %>% 
-        filter(prior_rod_connected == "no") %>%
-        select(level, vertebral_number, x, y) %>%
-        bind_rows(unilateral_full_implant_df)%>%
-        arrange(y)
-      
-      revision_implants_retained_df <- revision_rods_retained_df %>% 
-        filter(prior_rod_connected == "yes")  
-      
-      if(include_revision_rods_in_list == TRUE){
-        revision_rod_matrix <- revision_implants_retained_df %>%
-          select(x, y) %>%
-          # filter(!is.na(y)) %>%
-          mutate(y = if_else(y == max(y), y + 0.005, y)) %>%
-          mutate(y = if_else(y == min(y), y - 0.005, y)) %>%
-          mutate(x = if_else(x < 0.5, x + 0.003, x - 0.003)) %>%
-          arrange(y) %>%
-          distinct() %>%
-          as.matrix()
-        
-        rods_list$revision_rod_sf <-  jh_sf_rod_object_from_matrix_function(revision_rod_matrix) 
-      }
-      
-      if(length(prior_rod_overlap_connectors)>0){
-        revision_rod_overlap <- all_implants_constructed_df %>%
-          filter(level %in% prior_rod_overlap_connectors, 
-                 object == "pedicle_screw", 
-                 side == rod_side) %>%
-          mutate(connector_count = row_number()) %>%
-          select(connector_count, x, y) %>%
-          mutate(x = if_else(x < 0.5, x - 0.01, x + 0.01)) %>% ## start left closer to the new rod
-          mutate(y = y - 0.01)
-        
-        prior_rod_connector_matrix_list <-  map(.x = revision_rod_overlap$connector_count, .f =  ~ revision_rod_overlap %>%
-                                                  filter(connector_count == .x) %>%
-                                                  bind_rows(revision_rod_overlap %>%
-                                                              filter(connector_count == .x) %>%
-                                                              mutate(x = if_else(x < 0.5, x + 0.02, x - 0.02))) %>%
-                                                  select(x, y) %>%
-                                                  remove_missing() %>%
-                                                  as.matrix())
-        
-        if(length(prior_rod_connector_matrix_list) == 1){
-          connector_list$connector_1 <-  st_buffer(st_linestring(prior_rod_connector_matrix_list[[1]]), dist = 0.0045, endCapStyle = "FLAT")
-        } 
-        if(length(prior_rod_connector_matrix_list) == 2){
-          connector_list$connector_1 <-  st_buffer(st_linestring(prior_rod_connector_matrix_list[[1]]), dist = 0.0045, endCapStyle = "FLAT")
-          connector_list$connector_2 <-  st_buffer(st_linestring(prior_rod_connector_matrix_list[[2]]), dist = 0.0045, endCapStyle = "FLAT")
-        }
-        if(length(prior_rod_connector_matrix_list) == 3){
-          connector_list$connector_1 <-  st_buffer(st_linestring(prior_rod_connector_matrix_list[[1]]), dist = 0.0045, endCapStyle = "FLAT")
-          connector_list$connector_2 <-  st_buffer(st_linestring(prior_rod_connector_matrix_list[[2]]), dist = 0.0045, endCapStyle = "FLAT")
-          connector_list$connector_3 <-  st_buffer(st_linestring(prior_rod_connector_matrix_list[[3]]), dist = 0.0045, endCapStyle = "FLAT")
-        }
-        if(length(prior_rod_connector_matrix_list) == 4){
-          connector_list$connector_1 <-  st_buffer(st_linestring(prior_rod_connector_matrix_list[[1]]), dist = 0.0045, endCapStyle = "FLAT")
-          connector_list$connector_2 <-  st_buffer(st_linestring(prior_rod_connector_matrix_list[[2]]), dist = 0.0045, endCapStyle = "FLAT")
-          connector_list$connector_3 <-  st_buffer(st_linestring(prior_rod_connector_matrix_list[[3]]), dist = 0.0045, endCapStyle = "FLAT")
-          connector_list$connector_4 <-  st_buffer(st_linestring(prior_rod_connector_matrix_list[[4]]), dist = 0.0045, endCapStyle = "FLAT")
-        }
-      }
-      
-    }
     
     implant_levels_vector <- unilateral_full_implant_df$level
     
-    if(length(prior_rod_overlap_connectors)>0){
-      revision_rod_overlap <- all_implants_constructed_df %>%
-        filter(level %in% prior_rod_overlap_connectors, 
-               object == "pedicle_screw", 
-               side == rod_side) %>%
-        select(x, y) %>%
-        mutate(x = if_else(x < 0.5, x-0.01, x + 0.01)) %>%
-        arrange(y) %>%
-        mutate(y = y - 0.015)
-      
-    }else{
-      revision_rod_overlap <- tibble(x = double(), 
-                                     y = double())
+    if(include_revision_rods_in_list == TRUE){
+      rods_list$revision_rod_sf <-  jh_sf_rod_object_from_matrix_function(revision_rod_matrix) 
     }
     
+    if(link_revision_rods_true_false && nrow(as_tibble(revision_rod_matrix))>1){
+      if(median(as_tibble(revision_rod_matrix)$y) > median(unilateral_full_implant_df$y)){ 
+        #this would indicate that the proximal revision rod was kept
+        
+        revision_y_for_overlap_vector <- (head(as_tibble(revision_rod_matrix) %>%
+                                                 arrange(y), 2))$y
+        
+        if(min(as_tibble(revision_rod_matrix)$y) > max(unilateral_full_implant_df$y)){
+          # this would indicate that there is no overlap currently
+          unilateral_full_implant_df <- unilateral_full_implant_df %>%
+            bind_rows(all_screw_coordinates_df %>%
+                        filter(side == rod_side) %>%
+                        filter(between(y, min(revision_y_for_overlap_vector), max(revision_y_for_overlap_vector)))) %>%
+            arrange(rev(y))
+        }
+      }else{
+        #this would indicate that the distal revision rod was kept
+        revision_y_for_overlap_vector <- (tail(as_tibble(revision_rod_matrix) %>%
+                                                 arrange(y), 2))$y
+        
+        if(max(as_tibble(revision_rod_matrix)$y) < min(unilateral_full_implant_df$y)){
+          # this would indicate that there is no overlap currently
+          unilateral_full_implant_df <- unilateral_full_implant_df %>%
+            bind_rows(all_screw_coordinates_df %>%
+                        filter(side == rod_side) %>%
+                        filter(between(y, min(revision_y_for_overlap_vector), max(revision_y_for_overlap_vector)))) %>%
+            arrange(rev(y))
+        }
+      }
+      revision_rod_overlap_matrix <-  all_screw_coordinates_df %>%
+        filter(side == rod_side) %>%
+        filter(between(y, min(revision_y_for_overlap_vector), max(revision_y_for_overlap_vector))) %>%
+        mutate(x = if_else(x < 0.5, x + 0.008, x - 0.008)) %>%
+        select(x, y) %>%
+        arrange(y) %>%
+        distinct() %>%
+        as.matrix()
+      
+      revision_rod_overlap_matrix_list <- jh_rod_construct_connector_matrices_function(revision_rod_overlap_matrix)
+      
+      connector_list$revision_link_top_connector <- jh_sf_rod_object_from_matrix_function(revision_rod_overlap_matrix_list$top_connector_matrix)
+      connector_list$revision_link_bottom_connector <- jh_sf_rod_object_from_matrix_function(revision_rod_overlap_matrix_list$bottom_connector_matrix)
+    }
     
     
     #################### KICKSTAND ROD ###################
     
     if(add_kickstand_rod == TRUE && kickstand_rod_vector[1] %in% all_screw_coordinates_df$level && (kickstand_rod_vector[1] != kickstand_rod_vector[2])){
-      
-      # kickstand_rod_matrix <- tibble(level = kickstand_rod_vector) %>%
-      # left_join(all_screw_coordinates_df %>% filter(side == rod_side)) %>%
       
       x_modifier <- if_else(rod_side == "left", -0.01, 0.01)
       
@@ -2223,21 +2197,8 @@ build_unilateral_rods_list_function <- function(unilateral_full_implant_df,
     
     #################### MAIN ROD ###################
     if(nrow(main_rod_df) >1){
-      
       main_rod_matrix <- main_rod_df %>%
         select(x, y) %>%
-        bind_rows(revision_rod_overlap) %>%
-        distinct() %>%
-        remove_missing() %>%
-        select(x, y) %>%
-        arrange(y) %>%
-        as.matrix()
-      
-      rods_list$main_rod_sf <- jh_sf_rod_object_from_matrix_function(main_rod_matrix) 
-    }else if(nrow(main_rod_df) == 1 && nrow(revision_rod_overlap)>0){
-      main_rod_matrix <- main_rod_df %>%
-        select(x, y) %>%
-        bind_rows(revision_rod_overlap) %>%
         distinct() %>%
         remove_missing() %>%
         select(x, y) %>%
@@ -2251,24 +2212,25 @@ build_unilateral_rods_list_function <- function(unilateral_full_implant_df,
     if(add_satellite_rod == TRUE && satellite_rods_vector[1] %in% implant_levels_vector && satellite_rods_vector[2] %in% implant_levels_vector && (satellite_rods_vector[1] !=satellite_rods_vector[2])){
       
       satellite_rods_vector_df <- main_rod_df %>%
-        filter(level %in% satellite_rods_vector) %>%
+        filter(between(vertebral_number, jh_get_vertebral_number_function(satellite_rods_vector[1]), jh_get_vertebral_number_function(satellite_rods_vector[2]))) %>%
+        # filter(level %in% satellite_rods_vector) %>%
         select(x, y) %>%
         arrange(rev(y)) %>%
         distinct()
       
       satellite_rod_matrix <- satellite_rods_vector_df %>%
-        mutate(x = if_else(x < 0.5, x + 0.003, x - 0.003)) %>%
+        mutate(x = if_else(x < 0.5, x + 0.004, x - 0.004)) %>%
         remove_missing() %>%
         select(x, y) %>%
         as.matrix()
       
       rods_list$satellite_rod_sf <- jh_sf_rod_object_from_matrix_function(satellite_rod_matrix) 
       
-      main_satellite_rod_df <- main_rod_df %>%
+      main_rod_df <- main_rod_df %>%
         anti_join(y = satellite_rods_vector_df) %>%
         mutate(x = if_else(x < 0.5, x - 0.002, x + 0.002))
       
-      main_rod_matrix <- main_satellite_rod_df %>%
+      main_rod_matrix <- main_rod_df %>%
         select(x, y) %>%
         arrange(rev(y)) %>%
         distinct() %>%
@@ -2283,71 +2245,40 @@ build_unilateral_rods_list_function <- function(unilateral_full_implant_df,
     
     #################### LINKED ROD ###################
     if(add_linked_rod == TRUE && linked_rod_vector[1] %in% all_screw_coordinates_df$level && (linked_rod_vector[1] !=linked_rod_vector[2])){
-      if(nrow(revision_rods_retained_df) > 0){
-        if(tail(revision_rods_retained_df$level, 1) == linked_rod_vector[2]){
-          revision_rod_is <-  "proximal"
-        }else if(head(revision_rods_retained_df$level, 1) == linked_rod_vector[1]){
-          revision_rod_is <-  "distal"
-        }else{
-          revision_rod_is <-  "na"
-        }  
-      }else{
-        revision_rod_is <-  "na"
-      }
-      main_rod_df <-  revision_rods_retained_df %>%
-        bind_rows(main_rod_df) %>%
-        arrange(vertebral_number) %>%
-        distinct()
       
-      if(revision_rod_is == "proximal"){
-        proximal_rod_levels_vector <- (revision_rods_retained_df %>%
-                                         filter(prior_rod_connected == "yes"))$level
-        
-      }else{
-        proximal_rod_distal_point <- (all_screw_coordinates_df %>%  filter(side == rod_side, level == linked_rod_vector[2]))$level
-        
-        proximal_rod_vector <- c(main_rod_df$level[1],
-                                 proximal_rod_distal_point)
-        
-        proximal_rod_levels_vector <- jh_connected_rod_all_implants_range_function(all_objects_df = main_rod_df, 
-                                                                                   cranial_caudal_vector = proximal_rod_vector)
-      }
+      proximal_rod_distal_point <- (all_screw_coordinates_df %>%  filter(side == rod_side, level == linked_rod_vector[2]))$level
       
-      if(revision_rod_is == "distal"){
-        distal_rod_levels_vector <- (revision_rods_retained_df %>%
-                                       filter(prior_rod_connected == "yes"))$level
-        
-      }else{
-        distal_rod_proximal_point <- (all_screw_coordinates_df %>%  filter(side == rod_side, level == linked_rod_vector[1]))$level
-        
-        distal_rod_vector <- c(distal_rod_proximal_point, 
-                               main_rod_df$level[length(main_rod_df$level)])
-        
-        
-        distal_rod_levels_vector <- jh_connected_rod_all_implants_range_function(all_objects_df = main_rod_df, 
-                                                                                 cranial_caudal_vector = distal_rod_vector)
-      }
+      proximal_rod_vector <- c(unique((main_rod_df %>%  filter(vertebral_number == min(vertebral_number)))$level),
+                               proximal_rod_distal_point)
       
+      proximal_rod_levels_vector <- jh_connected_rod_all_implants_range_function(all_objects_df = all_screw_coordinates_df %>%
+                                                                                   filter(side == rod_side), 
+                                                                                 cranial_caudal_vector = proximal_rod_vector)
       
-      x_linked_rod_modifier <- if_else(rod_side == "left", 0.004, -.004)
+      distal_rod_proximal_point <- (all_screw_coordinates_df %>%  filter(side == rod_side, level == linked_rod_vector[1]))$level
       
-      if(revision_rod_is == "proximal" | revision_rod_is == "distal"){
-        x_linked_rod_modifier <- if_else(rod_side == "left", 0.006, -.006)
-      }
+      distal_rod_vector <- c(distal_rod_proximal_point, 
+                             unique((main_rod_df %>%  filter(vertebral_number == max(vertebral_number)))$level))
       
-      proximal_linked_rod_matrix <- main_rod_df %>% 
-        filter(level %in% proximal_rod_levels_vector) %>%
+      distal_rod_levels_vector <- jh_connected_rod_all_implants_range_function(all_objects_df = all_screw_coordinates_df %>%
+                                                                                 filter(side == rod_side), 
+                                                                               cranial_caudal_vector = distal_rod_vector)
+      
+      x_linked_rod_modifier <- if_else(rod_side == "left", 0.003, -.003)
+      
+      proximal_linked_rod_matrix <- all_screw_coordinates_df %>% 
+        filter(side == rod_side) %>%
         mutate(x = if_else(level %in% distal_rod_levels_vector, x - x_linked_rod_modifier, x)) %>%
+        filter(level %in% proximal_rod_levels_vector) %>%
         select(x, y) %>%
         as.matrix()
       
-      
-      distal_linked_rod_matrix <- main_rod_df %>% 
-        filter(level %in% distal_rod_levels_vector) %>%
+      distal_linked_rod_matrix <- all_screw_coordinates_df %>%
+        filter(side == rod_side) %>%
         mutate(x = if_else(level %in% proximal_rod_levels_vector, x + x_linked_rod_modifier, x)) %>%
+        filter(level %in% distal_rod_levels_vector) %>%
         select(x, y) %>%
         as.matrix()
-      
       
       linked_rod_overlap_matrix <- all_screw_coordinates_df %>%
         filter(side == rod_side, 
@@ -2359,7 +2290,6 @@ build_unilateral_rods_list_function <- function(unilateral_full_implant_df,
         as.matrix()
       
       connector_matrix_list <- jh_rod_construct_connector_matrices_function(full_rod_matrix = linked_rod_overlap_matrix)
-      # connector_matrix_list <- jh_rod_construct_connector_matrices_function(full_rod_matrix = linked_rod_overlap_matrix, x_nudge = if_else(rod_side == "right", -0.01, 0))
       
       connector_list$linked_rod_top_connector <- jh_sf_rod_object_from_matrix_function(connector_matrix_list$top_connector_matrix)
       connector_list$linked_rod_bottom_connector <- jh_sf_rod_object_from_matrix_function(connector_matrix_list$bottom_connector_matrix)
@@ -2369,47 +2299,32 @@ build_unilateral_rods_list_function <- function(unilateral_full_implant_df,
       
       rods_list$main_rod_sf <- NULL
       
-      if(revision_rod_is == "distal"){
-        
-        rods_list$linked_distal_rod_sf <- NULL
-      }
-      if(revision_rod_is == "proximal"){
-        rods_list$linked_proximal_rod_sf <- NULL
-      }
     }
     
     #################### INTERCALARY ROD ###################
     if(add_intercalary_rod == TRUE && intercalary_rods_vector[1] %in% all_screw_coordinates_df$level && intercalary_rod_junction %in% all_screw_coordinates_df$level && (intercalary_rods_vector[1] !=intercalary_rods_vector[2])){
       
-      if(all(main_rod_df$vertebral_number > jh_get_vertebral_number_function(intercalary_rod_junction))){
-        revision_rod_is <- "proximal_intercalary"
-      }else if(all(main_rod_df$vertebral_number < jh_get_vertebral_number_function(intercalary_rod_junction))){
-        revision_rod_is <- "distal_intercalary"
-      }else{
-        revision_rod_is <- "na"
-      }
-      
-      if(all(main_rod_df$vertebral_number > jh_get_vertebral_number_function(intercalary_rod_junction)) | all(main_rod_df$vertebral_number < jh_get_vertebral_number_function(intercalary_rod_junction))){
-        main_rod_df <-   revision_rods_retained_df %>%
-          # filter(prior_rod_connected == "yes") %>%
-          select(level, vertebral_number, x, y) %>%
-          bind_rows(main_rod_df)%>%
-          arrange(y) %>%
-          distinct()
+      if(add_linked_rod == TRUE){
+        if(jh_get_vertebral_number_function(intercalary_rod_junction) > jh_get_vertebral_number_function(linked_rod_vector[[1]])){ # this would mean the junction is in the distal linked rod
+          main_rod_df <- main_rod_df %>% 
+            filter(jh_get_vertebral_number_function(level) > jh_get_vertebral_number_function(linked_rod_vector[[1]])) 
+          rods_list$linked_distal_rod_sf <- NULL
+        }else{
+          main_rod_df <- main_rod_df %>% 
+            filter(jh_get_vertebral_number_function(level) < jh_get_vertebral_number_function(linked_rod_vector[[2]])) 
+          rods_list$linked_proximal_rod_sf <- NULL
+        }
       }
       
       proximal_intercalary_rod_matrix <- main_rod_df %>%
         filter(vertebral_number <= jh_get_vertebral_number_function(level_to_get_number = intercalary_rod_junction)) %>%
         select(x, y) %>%
-        mutate(y = if_else(y == min(y), y - 0.01, y)) %>%
         as.matrix()
       
       distal_intercalary_rod_matrix <- main_rod_df %>%
         filter(vertebral_number >= jh_get_vertebral_number_function(level_to_get_number = intercalary_rod_junction)) %>%
         select(x, y) %>%
-        mutate(y = if_else(y == max(y), y + 0.01, y)) %>%
         as.matrix()
-      
       
       intercalary_rod_matrix <- all_screw_coordinates_df %>%
         filter(side == rod_side, 
@@ -2421,7 +2336,6 @@ build_unilateral_rods_list_function <- function(unilateral_full_implant_df,
         mutate(y = if_else(y == min(y), y - 0.006, y)) %>%
         mutate(x = if_else(x < 0.5, x - 0.007, x + 0.007)) %>%
         as.matrix()
-      
       
       intercalary_rod_connector_matrix <- all_screw_coordinates_df %>%
         filter(side == rod_side, 
@@ -2435,7 +2349,6 @@ build_unilateral_rods_list_function <- function(unilateral_full_implant_df,
       
       proximal_connector_matrix_list <- jh_rod_construct_connector_matrices_function(proximal_intercalary_rod_matrix)
       
-      
       intercalary_connector_matrix_list <- jh_rod_construct_connector_matrices_function(intercalary_rod_connector_matrix)
       
       distal_connector_matrix_list <- jh_rod_construct_connector_matrices_function(distal_intercalary_rod_matrix)
@@ -2446,16 +2359,10 @@ build_unilateral_rods_list_function <- function(unilateral_full_implant_df,
       connector_list$intercalary_distal_rod_top_connector <- jh_sf_rod_object_from_matrix_function(distal_connector_matrix_list$top_connector_matrix)
       connector_list$intercalary_distal_rod_bottom_connector <- jh_sf_rod_object_from_matrix_function(intercalary_connector_matrix_list$bottom_connector_matrix)
       
-      rods_list$intercalary_rod_sf <- jh_sf_rod_object_from_matrix_function(intercalary_rod_matrix)
-      # rods_list$intercalary_distal_rod_sf <- jh_sf_rod_object_from_matrix_function(distal_intercalary_rod_matrix)
-      # rods_list$intercalary_proximal_rod_sf <- jh_sf_rod_object_from_matrix_function(proximal_intercalary_rod_matrix)
       
-      if(revision_rod_is != "proximal_intercalary"){
-        rods_list$intercalary_proximal_rod_sf <- jh_sf_rod_object_from_matrix_function(proximal_intercalary_rod_matrix)
-      }
-      if(revision_rod_is != "distal_intercalary"){
-        rods_list$intercalary_distal_rod_sf <- jh_sf_rod_object_from_matrix_function(distal_intercalary_rod_matrix)
-      }
+      rods_list$intercalary_proximal_rod_sf <- jh_sf_rod_object_from_matrix_function(proximal_intercalary_rod_matrix)
+      rods_list$intercalary_rod_sf <- jh_sf_rod_object_from_matrix_function(intercalary_rod_matrix)
+      rods_list$intercalary_distal_rod_sf <- jh_sf_rod_object_from_matrix_function(distal_intercalary_rod_matrix)
       
       rods_list$main_rod_sf <- NULL
     }
@@ -2464,9 +2371,6 @@ build_unilateral_rods_list_function <- function(unilateral_full_implant_df,
     
     if(add_accessory_rod == TRUE && accessory_rod_vector[1] %in% all_screw_coordinates_df$level && (accessory_rod_vector[1] !=accessory_rod_vector[2])){
       
-      # accessory_rod_matrix <- tibble(level = accessory_rod_vector) %>%
-      #   left_join(all_screw_coordinates_df %>%
-      #   filter(side == rod_side)) %>%
       accessory_rod_matrix <- all_screw_coordinates_df %>%
         filter(side == rod_side, level %in% accessory_rod_vector) %>%
         select(x, y) %>%
@@ -2509,9 +2413,6 @@ build_unilateral_rods_list_function <- function(unilateral_full_implant_df,
       
     }
     
-    
-    
-    
     return(list(rod_list = rods_list, 
                 connector_list = connector_list))
   }else{
@@ -2520,55 +2421,6 @@ build_unilateral_rods_list_function <- function(unilateral_full_implant_df,
   }
   
 }
-
-
-
-
-jh_generate_supplemental_rod_statement_function <- function(rod_type = "accessory_rod",
-                                                            rod_side = "left", 
-                                                            rod_size = "5.5", 
-                                                            rod_material = "Titanium", 
-                                                            rod_vector = "a", 
-                                                            intercalary_rod_junction = "a"){
-  
-  if(!is.null(rod_type) && rod_side %in% c("left", "right") && (length(rod_vector) == 2 && rod_vector[1] %in% all_screw_coordinates_df$level)){
-    
-    rod_size <- if_else((!is.null(rod_size) && rod_size != "NA"), rod_size, "")
-    rod_material <- if_else((!is.null(rod_material) && rod_material != "NA"), rod_material, "")      
-    
-    if(str_detect(rod_type, "accessory")){
-      rod_statement <- str_squish(glue("To increase the overall stiffness of the construct, a {rod_size} {rod_material} accessory rod was connected to the {rod_side} main rod using side-to-side connectors spanning from {rod_vector[1]} down to {rod_vector[2]}."))
-      rod_statement <- str_replace_all(rod_statement, "a accessory", "an accessory")
-    }
-    
-    if(str_detect(rod_type, "satellite")){
-      rod_statement <- str_squish(glue("On the {rod_side} side, a {rod_size} {rod_material} rod was used in a satellite rod configuration. The satellite rod was connected proximally to {rod_vector[1]} and distally to the {rod_vector[2]} implant."))
-    }
-    
-    if(str_detect(rod_type, "intercalary")){
-      if(!is.null(intercalary_rod_junction) && (intercalary_rod_junction[1] %in% all_screw_coordinates_df$level)){
-        junction_statement <- glue("connected the proximal and distal primary rods over the {intercalary_rod_junction} level")
-      }else{
-        junction_statement <- glue("connected the proximal and distal primary rods")
-      }
-      rod_statement <- str_squish(glue("On the {rod_side} side, a {rod_size} {rod_material} rod was used in an intercalary rod configuration. The intercalary rod spanned from {rod_vector[1]} to {rod_vector[2]}, and {junction_statement}."))
-    }
-    
-    if(str_detect(rod_type, "linked_rod")){
-      rod_statement <- str_squish(glue("On the {rod_side} side, a {rod_size} {rod_material} linked rod configuration was used, with rods overlapping from the {rod_vector[1]} to the {rod_vector[2]} levels."))
-    }
-    
-    if(str_detect(rod_type, "kickstand")){
-      rod_statement <- str_squish(glue("On the {rod_side}, a {rod_size} {rod_material} kickstand rod was used to aide in coronal correction. The rod was anchored to the ilium distally and connected proximally at the {rod_vector[1]} level."))
-    }
-    
-  }else{
-    rod_statement <- NULL
-  }
-  
-  return(rod_statement)
-}
-
 
 
 procedure_classifier_type_df <- tribble(~object_name, ~procedure_label, ~paragraph_type, 
