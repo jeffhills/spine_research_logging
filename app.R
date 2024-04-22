@@ -1085,7 +1085,10 @@ ui <- dashboardPage(skin = "black",
                                        tableOutput(outputId = "rods_crossing_by_level_table")
                                    ),
                                    box(width = 12, title = div(style = "font-size:22px; font-weight:bold; text-align:center", "Intraoperative Details"),status = "success", collapsible = TRUE,solidHeader = TRUE,
-                                       tableOutput(outputId = "intraoperative_details_redcap_table")
+                                       tableOutput(outputId = "intraoperative_details_redcap_table"),
+                                       br(),
+                                       actionBttn(inputId = "open_intraoperative_details_modal", label = "Edit Details", icon = icon("fas fa-user-edit", verify_fa = FALSE), size = "sm", block = TRUE)
+                                       
                                    )
                             ),
                             column(4, 
@@ -1207,11 +1210,13 @@ server <- function(input, output, session) {
   
   rcon_reactive <- reactiveValues()
   
-  observeEvent(input$redcap_token, {
+  observeEvent(input$redcap_token, ignoreInit = TRUE, {
     
     redcap_url <- case_when(
       input$redcap_institution == "UTHSCSA" ~ 'https://redcap.uthscsa.edu/REDCap/api/',
-      input$redcap_institution == "UCSD" ~ 'https://redcap.ucsd.edu/api/'
+      # input$redcap_institution == "UCSD" ~ 'https://redcap.ucsd.edu/api/'
+      input$redcap_institution == "RCHSD" ~ 'https://redcap.rchsd.org/api/',
+      input$redcap_institution == "WashU" ~ 'https://redcap.wustl.edu/redcap/api/'
     )
     
     rcon_reactive$rcon <- redcapConnection(url = redcap_url, token = input$redcap_token)    
@@ -5109,21 +5114,32 @@ server <- function(input, output, session) {
   
   
   
-  observeEvent(input$page_2_complete_button, ignoreInit = TRUE, {
-    if(input$page_2_complete_button > 1){
+  observeEvent(list(input$page_2_complete_button, input$open_intraoperative_details_modal), ignoreInit = TRUE, {
+    if(input$page_2_complete_button > 1 | input$open_intraoperative_details_modal >= 1){
       showModal(
         operative_details_modal_box_function(primary_surgeon_first_name_input = input$primary_surgeon_first_name, 
                                              primary_surgeon_last_name_input = input$primary_surgeon_last_name, 
                                              ebl = input$ebl, 
                                              transfusion = input$transfusion,
-                                             prbc_transfused = prbc_transfused,
+                                             prbc_transfused = input$prbc_transfused,
                                              intraoperative_complications_yes_no = input$intraoperative_complications_yes_no,
                                              intraoperative_complications_vector = input$intraoperative_complications_vector,
-                                             other_intraoperative_complications = input$other_intraoperative_complications)
+                                             other_intraoperative_complications = input$other_intraoperative_complications,
+                                             
+                                             deep_drains_posterior = input$deep_drains_posterior, 
+                                             superficial_drains_posterior = input$superficial_drains_posterior,
+                                             neuromonitoring = input$neuromonitoring,
+                                             triggered_emg = input$triggered_emg,
+                                             neuromonitoring_signal_stability = input$neuromonitoring_signal_stability,
+                                             anti_fibrinolytic = input$anti_fibrinolytic,
+                                             txa_loading = input$txa_loading,
+                                             txa_maintenance = input$txa_maintenance,
+                                             procedure_approach = input$approach_sequence)
       )
     }
   }
   )
+  
   observeEvent(input$operative_details_modal_complete, ignoreNULL = TRUE, ignoreInit = TRUE, {
     removeModal()
   }
@@ -5869,9 +5885,7 @@ server <- function(input, output, session) {
   ################------------------  FIRST UPDATE THE OPTIONS USING THE DETAILS ALREADY INPUTTED    ----------------------######################  
   
   
-  
-  ########### NOW ASSEMBLE THE REACTIVE TEXT OF THE ENTIRE OP NOTE ###############
-  
+
   approach_sequence_reactive <- reactive({
     if(nrow(all_objects_to_add_list$objects_df)>0){
       approach_sequence <- glue_collapse(head(unique(all_objects_to_add_list$objects_df$approach), 3), sep = "-")
@@ -5907,7 +5921,6 @@ server <- function(input, output, session) {
               ignoreInit = TRUE,
               ignoreNULL = TRUE
     )
-  
   
   
   ##############################~~~~~~~~~~~~~~~~~~~ ##################### MAKE THE TABLES    #############~~~~~~~~~~~~~~~~~~~ ##################### #################
@@ -6057,13 +6070,19 @@ server <- function(input, output, session) {
     if(input$implants_complete > 0){
       intraoperative_details_redcap_df <- redcap_table_intraop_details_df_function(all_objects_df_input = all_objects_to_add_list$objects_df,
                                                                                    date_of_surgery_input = input$date_of_surgery,
-                                                                                   primary_surgeon_first_name = input$primary_surgeon_first_name,
-                                                                                   primary_surgeon_last_name = input$primary_surgeon_last_name,
+                                                                                   neuromonitoring_input = input$neuromonitoring,
+                                                                                   anti_fibrinolytic_input = input$anti_fibrinolytic,
+                                                                                   txa_loading_input = input$txa_loading,
+                                                                                   txa_maintenance_input = input$txa_maintenance,
+                                                                                   # primary_surgeon_first_name = input$primary_surgeon_first_name,
+                                                                                   # primary_surgeon_last_name = input$primary_surgeon_last_name,
                                                                                    ebl_input = input$ebl,
                                                                                    transfusion_input = input$transfusion,
                                                                                    prbc_transfused_input = input$prbc_transfused,
                                                                                    intraoperative_complications_vector_input = input$intraoperative_complications_vector,
-                                                                                   other_intraoperative_complications_input = input$other_intraoperative_complications
+                                                                                   other_intraoperative_complications_input = input$other_intraoperative_complications,
+                                                                                   deep_drains_posterior_input = input$deep_drains_posterior,
+                                                                                   superficial_drains_posterior_input = input$superficial_drains_posterior
       )
 
       intraoperative_details_redcap_df$intraop_details_df
@@ -6097,9 +6116,10 @@ server <- function(input, output, session) {
       
       
     }else{
-      data_wide <- tibble(redcap_repeat_instrument = character(), 
-                          redcap_repeat_instance = integer(),
-                          dos_surg_repeating = character(),
+      data_wide <- tibble(
+        # redcap_repeat_instrument = character(), 
+                          # redcap_repeat_instance = integer(),
+                          # dos_surg_repeating = character(),
                           approach = character(),
                           side = character()
       ) 

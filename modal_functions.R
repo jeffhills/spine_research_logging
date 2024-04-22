@@ -143,9 +143,14 @@ startup_modal_box <-
           radioGroupButtons(
             inputId = "redcap_institution",
             label = "Institution:",
+            # choices = c("UTHSCSA", 
+            #             "UCSD", 
+            #             "OTHER"),
             choices = c("UTHSCSA", 
-                        "UCSD", 
-                        "OTHER"),
+                        # "UCSD",
+                        "RCHSD", 
+                        "WashU"
+            ),
             individual = TRUE,
             selected = "UTHSCSA",
             checkIcon = list(
@@ -1850,6 +1855,7 @@ additional_procedure_options_vector <- c("Robotic Assisted Spine Surgery",
 )
 
 operative_details_modal_box_function  <- function(required_options_missing = FALSE,
+                                                  left_column_percent_width = 30,
                                                   primary_surgeon_first_name_input = "",
                                                   primary_surgeon_last_name_input = "",
                                                   row_label_font_size = 16,
@@ -1859,7 +1865,17 @@ operative_details_modal_box_function  <- function(required_options_missing = FAL
                                                   prbc_transfused = 0,
                                                   intraoperative_complications_yes_no = "",
                                                   intraoperative_complications_vector = NULL,
-                                                  other_intraoperative_complications = NULL
+                                                  other_intraoperative_complications = NULL,
+                                                  deep_drains_posterior = 1, 
+                                                  superficial_drains_posterior = 0,
+                                                  local_anesthesia = "None",
+                                                  neuromonitoring = c("SSEP", "tcMEP"),
+                                                  triggered_emg = "No",
+                                                  neuromonitoring_signal_stability = "Neuromonitoring signals were stable throughout the case.",
+                                                  anti_fibrinolytic = "",
+                                                  txa_loading = 30,
+                                                  txa_maintenance = 5,
+                                                  procedure_approach = "posterior"
 ) {
   
   modalDialog(
@@ -1998,7 +2014,143 @@ operative_details_modal_box_function  <- function(required_options_missing = FAL
                  )
           )
         )
+      ),
+      hr(),
+      if(str_detect(procedure_approach, "anterior")){br()},
+      if(str_detect(procedure_approach, "anterior")){
+        jh_make_shiny_table_row_function(left_column_label = "Anterior Deep drains:", 
+                                         input_type = "awesomeRadio",
+                                         input_id = "deep_drains_anterior", 
+                                         left_column_percent_width = 45, 
+                                         font_size = 16, 
+                                         initial_value_selected = deep_drains_anterior, 
+                                         choices_vector = c("0", "1", "2", "3", "4", "5"), 
+                                         checkboxes_inline = TRUE, return_as_full_table = TRUE)
+      },
+      if(str_detect(procedure_approach, "anterior")){br()},
+      if(str_detect(procedure_approach, "anterior")){
+        jh_make_shiny_table_row_function(left_column_label = "Anterior Superficial drains:", 
+                                         input_type = "awesomeRadio",
+                                         input_id = "superficial_drains_anterior", 
+                                         left_column_percent_width = 45, 
+                                         font_size = 16, 
+                                         initial_value_selected = superficial_drains_anterior, 
+                                         choices_vector = c("0", "1", "2", "3", "4", "5"), 
+                                         checkboxes_inline = TRUE, return_as_full_table = TRUE)
+      },
+      if(str_detect(procedure_approach, "posterior")){br()},
+      if(str_detect(procedure_approach, "posterior")){
+        jh_make_shiny_table_row_function(left_column_label = "Posterior Deep drains:", 
+                                         input_type = "awesomeRadio",
+                                         input_id = "deep_drains_posterior", 
+                                         left_column_percent_width = 45, 
+                                         font_size = 16, 
+                                         initial_value_selected = deep_drains_posterior, 
+                                         choices_vector = c("0", "1", "2", "3", "4", "5"), 
+                                         checkboxes_inline = TRUE, return_as_full_table = TRUE)
+      },
+      if(str_detect(procedure_approach, "posterior")){
+        jh_make_shiny_table_row_function(left_column_label = "Posterior Superficial drains:", 
+                                         input_type = "awesomeRadio",
+                                         input_id = "superficial_drains_posterior", 
+                                         left_column_percent_width = 45, 
+                                         font_size = 16, 
+                                         initial_value_selected = superficial_drains_posterior, 
+                                         choices_vector = c("0", "1", "2", "3", "4", "5"), 
+                                         checkboxes_inline = TRUE, return_as_full_table = TRUE)
+      },
+      br(),
+      hr(),
+      jh_make_shiny_table_row_function(
+        left_column_percent_width = left_column_percent_width,
+        left_column_label = "Neuromonitoring used:",
+        font_size = row_label_font_size,
+        input_type = "checkbox",
+        input_id = "neuromonitoring",
+        choices_vector = c("EMG", "SSEP", "tcMEP", "DNEP (Cord Stimulation)", "H reflex", "None"),
+        checkboxes_inline = TRUE,
+        initial_value_selected = neuromonitoring
+      ),
+      br(),
+      conditionalPanel(condition = "input.neuromonitoring.indexOf('EMG') > -1",
+                       jh_make_shiny_table_row_function(
+                         left_column_percent_width = left_column_percent_width,
+                         left_column_label = "Did you test screws with triggered EMG?",
+                         font_size = row_label_font_size,
+                         input_type = "awesomeRadio",
+                         input_id = "triggered_emg", 
+                         choices_vector = c("No", 
+                                            "Triggered EMG was used to test screws and all responses were above 10mA.", 
+                                            "Triggered EMG was used to test screws and all responses were above 20mA.", 
+                                            "Triggered EMG was used to test screws and showed a response of *** at ***."),
+                         checkboxes_inline = FALSE,
+                         initial_value_selected = triggered_emg
+                       )),
+      br(),
+      conditionalPanel(condition = "input.neuromonitoring.indexOf('SSEP') > -1",
+                       jh_make_shiny_table_row_function(
+                         left_column_percent_width = left_column_percent_width,
+                         left_column_label = "   - Neuromonitoring:",
+                         font_size = row_label_font_size,
+                         input_type = "awesomeRadio",
+                         input_id = "neuromonitoring_signal_stability", 
+                         choices_vector = c("Neuromonitoring signals were stable throughout the case.", 
+                                            "There were intermittent loss of neuromonitoring signals during the case due to ***.",
+                                            "Following the decompression, neuromonitoring signals showed signs of improvement.",
+                                            "During the case, neuromonitoring signals ***. ", 
+                                            "***"),
+                         checkboxes_inline = FALSE,
+                         initial_value_selected = neuromonitoring_signal_stability
+                       )
+      ),
+      br(),
+      hr(),
+      hr(),
+      jh_make_shiny_table_row_function(
+        left_column_label = "Antifibrinolytic:",
+        input_type = "checkbox",
+        input_id = "anti_fibrinolytic",
+        left_column_percent_width = left_column_percent_width,
+        font_size = row_label_font_size,
+        choices_vector = c(
+          "None",
+          "Tranexamic Acid (TXA)",
+          "Amicar",
+          "Desmopressin (DDAVP)",
+          "Other"
+        ),
+        initial_value_selected = anti_fibrinolytic,
+      ),
+      conditionalPanel(
+        condition = "input.anti_fibrinolytic.indexOf('Tranexamic Acid (TXA)') > -1",
+        jh_make_shiny_table_row_function(
+          left_column_label = "TXA Loading (mg/kg):    ",
+          input_type = "numeric",
+          input_id = "txa_loading",
+          left_column_percent_width = 50,
+          font_size = row_label_font_size -
+            1,
+          min = 0,
+          max = 200,
+          initial_value_selected = txa_loading,
+          step = 5,
+          text_align = "right",
+        ),
+        jh_make_shiny_table_row_function(
+          left_column_label = "TXA Maintenance (mg/kg/hr):    ",
+          input_type = "numeric",
+          input_id = "txa_maintenance",
+          left_column_percent_width = 50,
+          font_size = row_label_font_size -
+            1,
+          min = 0,
+          max = 50,
+          initial_value_selected = txa_maintenance,
+          step = 5,
+          text_align = "right",
+        )
       )
+      # },
     )
   )
 }

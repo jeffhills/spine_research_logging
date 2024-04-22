@@ -744,10 +744,122 @@ redcap_table_surgical_details_df_function <- function(all_objects_df_input = tib
 ################################ ################################ INTRAOP DETAILS DF ############################## ################################ 
 ################################ ################################ INTRAOP DETAILS DF ############################## ################################ 
 
+# redcap_table_intraop_details_df_function <- function(all_objects_df_input = tibble(level = character(), vertebral_number = double(), side = character(), object = character()),
+#                                                      date_of_surgery_input = "1900-01-01", 
+#                                                      primary_surgeon_first_name = "",
+#                                                      primary_surgeon_last_name = "",
+#                                                      preop_antibiotics_input = c(), 
+#                                                      neuromonitoring_input = c(),
+#                                                      anti_fibrinolytic_input = c(),
+#                                                      txa_loading_input = "",
+#                                                      txa_maintenance_input = "",
+#                                                      surgical_findings_input = "",
+#                                                      specimens_removed_input = "",
+#                                                      ebl_input = "xx",
+#                                                      urine_output_input = "xx",
+#                                                      crystalloids_administered_input = NA,
+#                                                      colloids_administered_input = NA,
+#                                                      transfusion_input = NA,
+#                                                      cell_saver_transfused_input = NA,
+#                                                      prbc_transfused_input = NA,
+#                                                      ffp_transfused_input = NA,
+#                                                      cryoprecipitate_transfused_input = NA,
+#                                                      platelets_transfused_input = NA,
+#                                                      intraoperative_complications_vector_input = c(),
+#                                                      other_intraoperative_complications_input = "",
+#                                                      deep_drains_anterior_input = NA,
+#                                                      superficial_drains_anterior_input = NA,
+#                                                      deep_drains_posterior_input = NA,
+#                                                      superficial_drains_posterior_input = NA,
+#                                                      additional_end_procedure_details_anterior_input = NA,
+#                                                      additional_end_procedure_details_posterior_input = NA,
+#                                                      closure_details_anterior_input = NA,
+#                                                      dressing_details_anterior_input = NA,
+#                                                      closure_details_posterior_input = NA,
+#                                                      dressing_details_posterior_input = NA
+# ){
+#   intraop_details_list <- list()
+#   
+#   intraop_details_list$dos_intraop_repeating <- as.character(date_of_surgery_input)
+#   
+#   ####### Surgeon  #####
+#   intraop_details_list$primary_surgeon <- paste(primary_surgeon_first_name, primary_surgeon_last_name)
+#   
+#   ################### Abx  #########################
+#   # if(length(preop_antibiotics_input)>0){
+#   #   intraop_details_list$antibiotics <- glue_collapse(preop_antibiotics_input, sep = '; ')
+#   # }else{
+#   #   intraop_details_list$antibiotics <- "unknown"
+#   # }
+#   
+#   
+#   ################### NEUROMONINTORING  #########################
+#   # if(length(neuromonitoring_input)>0){
+#   #   intraop_details_list$neuromonitoring <-  glue_collapse(neuromonitoring_input, sep = '; ')
+#   # }else{
+#   #   intraop_details_list$neuromonitoring <- "none"
+#   # }
+#   
+#   ################### antifibrinolytic  #########################
+#   # if(length(anti_fibrinolytic_input) > 0){
+#   #   antifibrinolytics_vector <- str_to_lower(as.character(glue_collapse(anti_fibrinolytic_input, sep = "; ")))
+#   #   intraop_details_list$anti_fibrinolytic <- str_replace_all(string = antifibrinolytics_vector,
+#   #                                                             pattern = "tranexamic acid \\(txa\\)",
+#   #                                                             replacement = glue("tranexamic acid (txa) Loading: {txa_loading_input}mg/kg, Maint: {txa_maintenance_input}mg/kg/hr"))
+#   # }else{
+#   #   intraop_details_list$anti_fibrinolytic <- "none"
+#   # }
+#   
+#   
+#   ####### EBL  #####
+#   intraop_details_list$ebl_ml <- if_else(is.na(ebl_input), "xx", paste(ebl_input))
+#   
+#   ####### Transfusion  #####
+#   intraop_details_list$transfusion <- if_else(transfusion_input == TRUE, "yes", "no")
+#   
+#   ####### cell_saver  #####
+#   # intraop_details_list$cell_saver_cc <- if_else(is.na(cell_saver_transfused_input), "xx", paste(cell_saver_transfused_input)) 
+#   
+#   ####### prbc  #####
+#   intraop_details_list$prbc_units <- if_else(is.na(prbc_transfused_input), "xx", paste(prbc_transfused_input)) 
+#   
+#   ####### ffp  #####
+#   intraop_details_list$ffp_units <- if_else(is.na(ffp_transfused_input), "xx", paste(ffp_transfused_input)) 
+#   
+#   ####### cryoprecipitate  #####
+#   intraop_details_list$cryoprecipitate_units <- if_else(is.na(cryoprecipitate_transfused_input), "xx", paste(cryoprecipitate_transfused_input)) 
+#   
+#   ####### platelets  #####
+#   intraop_details_list$platelets_units <- if_else(is.na(platelets_transfused_input), "xx", paste(platelets_transfused_input))  
+#   
+#   ####### complications  #####
+#   complication_df <- tibble(complication = append(intraoperative_complications_vector_input, other_intraoperative_complications_input)) %>%
+#     filter(complication != "") %>%
+#     filter(complication != " ") %>%
+#     remove_empty()
+#   
+#   if(nrow(complication_df) > 0){
+#     intraop_details_list$intraoperative_complications <- glue_collapse(complication_df$complication, sep = '; ')
+#   }else{
+#     intraop_details_list$intraoperative_complications <- "none"
+#   }
+#   
+#   ####### GENERATE DATAFRAME #####
+#   
+#   intraop_details_df <- enframe(intraop_details_list) %>%
+#     mutate(across(everything(), ~ as.character(.x))) %>%
+#     filter(value != "xx")%>%
+#     filter(value != "")%>%
+#     filter(value != " ")
+#   
+#   
+#   return(list(intraop_details_df = intraop_details_df, 
+#               intraop_details_list = intraop_details_list))
+#   
+# }
+
 redcap_table_intraop_details_df_function <- function(all_objects_df_input = tibble(level = character(), vertebral_number = double(), side = character(), object = character()),
                                                      date_of_surgery_input = "1900-01-01", 
-                                                     primary_surgeon_first_name = "",
-                                                     primary_surgeon_last_name = "",
                                                      preop_antibiotics_input = c(), 
                                                      neuromonitoring_input = c(),
                                                      anti_fibrinolytic_input = c(),
@@ -782,43 +894,54 @@ redcap_table_intraop_details_df_function <- function(all_objects_df_input = tibb
   
   intraop_details_list$dos_intraop_repeating <- as.character(date_of_surgery_input)
   
-  ####### Surgeon  #####
-  intraop_details_list$primary_surgeon <- paste(primary_surgeon_first_name, primary_surgeon_last_name)
-  
   ################### Abx  #########################
-  # if(length(preop_antibiotics_input)>0){
-  #   intraop_details_list$antibiotics <- glue_collapse(preop_antibiotics_input, sep = '; ')
-  # }else{
-  #   intraop_details_list$antibiotics <- "unknown"
-  # }
+  if(length(preop_antibiotics_input)>0){
+    intraop_details_list$antibiotics <- glue_collapse(preop_antibiotics_input, sep = '; ')
+  }else{
+    intraop_details_list$antibiotics <- "unknown"
+  }
   
   
   ################### NEUROMONINTORING  #########################
-  # if(length(neuromonitoring_input)>0){
-  #   intraop_details_list$neuromonitoring <-  glue_collapse(neuromonitoring_input, sep = '; ')
-  # }else{
-  #   intraop_details_list$neuromonitoring <- "none"
-  # }
+  if(length(neuromonitoring_input)>0){
+    intraop_details_list$neuromonitoring <-  glue_collapse(neuromonitoring_input, sep = '; ')
+  }else{
+    intraop_details_list$neuromonitoring <- "none"
+  }
   
   ################### antifibrinolytic  #########################
-  # if(length(anti_fibrinolytic_input) > 0){
-  #   antifibrinolytics_vector <- str_to_lower(as.character(glue_collapse(anti_fibrinolytic_input, sep = "; ")))
-  #   intraop_details_list$anti_fibrinolytic <- str_replace_all(string = antifibrinolytics_vector,
-  #                                                             pattern = "tranexamic acid \\(txa\\)",
-  #                                                             replacement = glue("tranexamic acid (txa) Loading: {txa_loading_input}mg/kg, Maint: {txa_maintenance_input}mg/kg/hr"))
-  # }else{
-  #   intraop_details_list$anti_fibrinolytic <- "none"
-  # }
+  if(length(anti_fibrinolytic_input) > 0){
+    antifibrinolytics_vector <- str_to_lower(as.character(glue_collapse(anti_fibrinolytic_input, sep = "; ")))
+    intraop_details_list$anti_fibrinolytic <- str_replace_all(string = antifibrinolytics_vector,
+                                                              pattern = "tranexamic acid \\(txa\\)",
+                                                              replacement = glue("tranexamic acid (txa) Loading: {txa_loading_input}mg/kg, Maint: {txa_maintenance_input}mg/kg/hr"))
+  }else{
+    intraop_details_list$anti_fibrinolytic <- "none"
+  }
   
+  ####### surgical findings #####
+  intraop_details_list$surgical_findings <- if_else(surgical_findings_input == "", "xx", surgical_findings_input)
+  
+  ####### Specimens  #####
+  intraop_details_list$specimens <- if_else(specimens_removed_input == "", "xx", specimens_removed_input)
   
   ####### EBL  #####
   intraop_details_list$ebl_ml <- if_else(is.na(ebl_input), "xx", paste(ebl_input))
+  
+  ####### Urine Output  #####
+  intraop_details_list$urine_output <- if_else(is.na(urine_output_input), "xx", paste(urine_output_input)) 
+  
+  ####### Crystalloids  #####
+  intraop_details_list$crystalloids_ml <- if_else(is.na(crystalloids_administered_input), "xx", paste(crystalloids_administered_input))
+  
+  ####### Colloids  #####
+  intraop_details_list$colloids_ml <- if_else(is.na(colloids_administered_input), "xx", paste(colloids_administered_input)) 
   
   ####### Transfusion  #####
   intraop_details_list$transfusion <- if_else(transfusion_input == TRUE, "yes", "no")
   
   ####### cell_saver  #####
-  # intraop_details_list$cell_saver_cc <- if_else(is.na(cell_saver_transfused_input), "xx", paste(cell_saver_transfused_input)) 
+  intraop_details_list$cell_saver_cc <- if_else(is.na(cell_saver_transfused_input), "xx", paste(cell_saver_transfused_input)) 
   
   ####### prbc  #####
   intraop_details_list$prbc_units <- if_else(is.na(prbc_transfused_input), "xx", paste(prbc_transfused_input)) 
@@ -844,16 +967,53 @@ redcap_table_intraop_details_df_function <- function(all_objects_df_input = tibb
     intraop_details_list$intraoperative_complications <- "none"
   }
   
+  # ####### other procedures  #####
+  if(any(all_objects_df_input$approach == "anterior")){
+    intraop_details_list$deep_drains_anterior <- paste(deep_drains_anterior_input)
+    intraop_details_list$superficial_drains_anterior <- paste(superficial_drains_anterior_input)
+  }
+  if(any(all_objects_df_input$approach == "posterior")){
+    intraop_details_list$deep_drains_posterior <- paste(deep_drains_posterior_input)
+    intraop_details_list$superficial_drains_posterior <- paste(superficial_drains_posterior_input)
+  }
+  
+  if(length(additional_end_procedure_details_anterior_input)>0){
+    intraop_details_list$end_procedure_details_anterior <- glue_collapse(additional_end_procedure_details_anterior_input, sep = "; ")
+  }else{
+    intraop_details_list$end_procedure_details_anterior <- " "
+  }
+  if(length(additional_end_procedure_details_posterior_input)>0){
+    intraop_details_list$end_procedure_details_posterior <- glue_collapse(additional_end_procedure_details_posterior_input, sep = "; ")
+  }else{
+    intraop_details_list$end_procedure_details_posterior <- " "
+  }
+  
+  # if(length(closure_details_anterior_input)>0){
+  #   intraop_details_list$closure_details_anterior <- glue_collapse(closure_details_anterior_input, sep = "; ")
+  # }
+  # if(length(dressing_details_anterior_input)>0){
+  #   intraop_details_list$closure_details_anterior <- glue_collapse(dressing_details_anterior_input, sep = "; ")
+  # }
+  # 
+  # if(length(closure_details_posterior_input)>0){
+  #   intraop_details_list$closure_details_posterior <- glue_collapse(closure_details_posterior_input, sep = "; ")
+  # }
+  # if(length(dressing_details_posterior_input)>0){
+  #   intraop_details_list$dressing_details_posterior <- glue_collapse(dressing_details_posterior_input, sep = "; ")
+  # }
+  
   ####### GENERATE DATAFRAME #####
   
   intraop_details_df <- enframe(intraop_details_list) %>%
     mutate(across(everything(), ~ as.character(.x))) %>%
     filter(value != "xx")%>%
     filter(value != "")%>%
-    filter(value != " ")
+    filter(value != " ") %>%
+    filter(!is.na(value))
   
   
   return(list(intraop_details_df = intraop_details_df, 
               intraop_details_list = intraop_details_list))
   
 }
+
