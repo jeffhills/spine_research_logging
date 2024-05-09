@@ -70,14 +70,19 @@ jh_make_posterior_geoms_function <- function(all_posterior_objects_df, plot_with
   }
   
   if(any(str_detect(all_posterior_objects_df$object, pattern = "grade_2"))){
-    geoms_list_posterior$osteotomy_2_sf_geom <- ggpattern::geom_sf_pattern(
-      data = st_union(st_combine(st_multipolygon((all_posterior_objects_df %>% filter(object == "grade_2"))$object_constructed)), by_feature = TRUE, is_coverage = TRUE),
-      pattern = "stripe",
-      pattern_colour = "red",
-      alpha = 0.75,
-      pattern_angle = 10,
-      pattern_spacing = 0.01,
-      pattern_density = 0.15,
+    # geoms_list_posterior$osteotomy_2_sf_geom <- ggpattern::geom_sf_pattern(
+    #   data = st_union(st_combine(st_multipolygon((all_posterior_objects_df %>% filter(object == "grade_2"))$object_constructed)), by_feature = TRUE, is_coverage = TRUE),
+    #   pattern = "stripe",
+    #   pattern_colour = "red",
+    #   alpha = 0.75,
+    #   pattern_angle = 10,
+    #   pattern_spacing = 0.01,
+    #   pattern_density = 0.15,
+    # )
+    geoms_list_posterior$osteotomy_2_sf_geom <- geom_sf(
+      data = st_multipolygon((all_posterior_objects_df %>% filter(object == "grade_2"))$object_constructed),
+      fill = "darkred",
+      alpha = 0.75
     )
   }else{
     geoms_list_posterior$osteotomy_2_sf_geom <- NULL
@@ -164,7 +169,7 @@ jh_make_posterior_geoms_function <- function(all_posterior_objects_df, plot_with
       pattern = "stripe",
       pattern_colour = "red",
       alpha = 0.75,
-      pattern_spacing = 0.01
+      pattern_spacing = 0.03
     )
   }else{
     geoms_list_posterior$sublaminar_decompression_sf_geom <- NULL

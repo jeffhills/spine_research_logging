@@ -1,3 +1,9 @@
+clear_reactive_values_function <- function(reactive_value_list_to_clear){
+  for (name in names(reactive_value_list_to_clear)){
+    reactive_value_list_to_clear[[name]] <- NULL
+  } 
+}
+
 jh_replace_checkbox_other_with_text_function <- function(input_vector = c(" "), 
                                                          text_to_replace = "Other",
                                                          replacement_text = " "){
